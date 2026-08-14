@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#5b4bdb">
+  <meta name="description" content="A growing collection of lightweight classroom tools for teachers.">
+  <title>Teacher Tools</title>
+  <link rel="stylesheet" href="assets/css/teacher-tools.css">
+  <style>
+    :root {
+      --ink:#14213d;
+      --muted:#61708a;
+      --accent:#5b4bdb;
+      --accent-2:#7c65ff;
+      --surface:#ffffff;
+      --line:#dfe6f2;
+      --bg:#f4f7fb;
+    }
+    body {
+      min-height:100vh;
+      background:radial-gradient(circle at top right,#ebe7ff 0,transparent 34%),linear-gradient(180deg,#f8faff 0,#eef3f9 100%);
+      color:var(--ink);
+    }
+    .shell { width:min(1080px,calc(100% - 32px)); margin:0 auto; padding:56px 0 72px; }
+    .hero { display:grid; grid-template-columns:1.4fr .8fr; gap:30px; align-items:center; margin-bottom:42px; }
+    .eyebrow { color:var(--accent); font-weight:800; letter-spacing:.12em; text-transform:uppercase; font-size:.78rem; margin:0 0 10px; }
+    h1 { font-size:clamp(2.7rem,8vw,5.4rem); line-height:.92; letter-spacing:-.055em; margin:0 0 20px; }
+    .lead { max-width:660px; font-size:clamp(1.05rem,2vw,1.25rem); line-height:1.65; color:var(--muted); margin:0; }
+    .hero-mark { min-height:250px; display:grid; place-items:center; border:1px solid var(--line); border-radius:32px; background:rgba(255,255,255,.78); box-shadow:var(--tt-shadow); font-size:7rem; transform:rotate(2deg); }
+    .section-title { display:flex; justify-content:space-between; gap:20px; align-items:end; margin-bottom:18px; }
+    .section-title h2 { margin:0; font-size:1.65rem; }
+    .section-title p { margin:0; color:var(--muted); }
+    .tools { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+    .tool-card { position:relative; overflow:hidden; display:flex; flex-direction:column; min-height:300px; padding:28px; border:1px solid var(--line); border-radius:26px; background:var(--surface); box-shadow:0 15px 45px rgba(21,33,61,.08); text-decoration:none; color:inherit; transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease; }
+    .tool-card:hover { transform:translateY(-4px); box-shadow:0 22px 55px rgba(21,33,61,.14); border-color:#c9c1ff; }
+    .tool-icon { width:66px; height:66px; display:grid; place-items:center; border-radius:20px; background:#eeeaff; font-size:2.1rem; margin-bottom:24px; }
+    .tool-card h3 { font-size:1.7rem; margin:0 0 10px; }
+    .tool-card p { color:var(--muted); line-height:1.55; margin:0 0 26px; }
+    .open { margin-top:auto; display:inline-flex; align-items:center; gap:8px; font-weight:800; color:var(--accent); }
+    .coming { border-style:dashed; background:rgba(255,255,255,.5); }
+    .coming .tool-icon { background:#edf1f6; }
+    .coming h3,.coming p { color:#7b8799; }
+    footer { margin-top:34px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); font-size:.9rem; }
+    @media (max-width:760px) {
+      .shell { width:min(100% - 22px,1080px); padding:34px 0 50px; }
+      .hero { grid-template-columns:1fr; gap:22px; }
+      .hero-mark { min-height:150px; font-size:4.8rem; }
+      .tools { grid-template-columns:1fr; }
+      .section-title { align-items:start; flex-direction:column; gap:5px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Brent Clark · Classroom Collection</p>
+        <h1>Teacher Tools</h1>
+        <p class="lead">Quick, practical web tools designed for classroom use. Each tool works directly in the browser and is built to be easy to use on a projector, laptop or phone.</p>
+      </div>
+      <div class="hero-mark" aria-hidden="true">🧰</div>
+    </section>
+
+    <section aria-labelledby="toolsHeading">
+      <div class="section-title">
+        <h2 id="toolsHeading">Available tools</h2>
+        <p>More tools will be added here over time.</p>
+      </div>
+      <div class="tools">
+        <a class="tool-card" href="tools/random-student-picker/">
+          <div class="tool-icon" aria-hidden="true">🎲</div>
+          <h3>Random Student Picker</h3>
+          <p>Pick students with nine animated modes, create random groups, save class lists locally, use presentation mode, and more.</p>
+          <span class="open">Open tool <span aria-hidden="true">→</span></span>
+        </a>
+        <div class="tool-card coming" aria-label="More teacher tools coming soon">
+          <div class="tool-icon" aria-hidden="true">＋</div>
+          <h3>More coming soon</h3>
+          <p>This Teacher Tools home page will become the launch point for the full collection as new classroom apps are added.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>Teacher Tools · lightweight classroom web apps</footer>
+  </main>
+</body>
+</html>
