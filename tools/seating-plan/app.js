@@ -2,23 +2,75 @@
   'use strict';
 
   const MAX_STUDENTS = 28;
-  const GRID_SIZE = 10;
-  const CELL_COUNT = GRID_SIZE * GRID_SIZE;
+  const MIN_GRID = 4;
+  const MAX_GRID = 12;
+  const DEFAULT_ROWS = 8;
+  const DEFAULT_COLS = 8;
   const SAVED_CLASSES_KEY = 'teacherToolsRandomPickerSavedClasses';
   const SAVED_LAYOUTS_KEY = 'teacherToolsSeatingPlanLayoutsV1';
+  const SAVED_ROOMS_KEY = 'teacherToolsSeatingPlanRoomsV1';
   const CURRENT_KEY = 'teacherToolsSeatingPlanCurrentV1';
   const THEME_KEY = 'teacherToolsTheme';
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
   const refs = {
-    namesInput: $('#namesInput'), studentCount: $('#studentCount'), rosterWarning: $('#rosterWarning'),
-    savedClassSelect: $('#savedClassSelect'), classNameInput: $('#classNameInput'), saveClassBtn: $('#saveClassBtn'),
-    loadClassBtn: $('#loadClassBtn'), deleteClassBtn: $('#deleteClassBtn'), cleanBtn: $('#cleanBtn'), sortBtn: $('#sortBtn'), clearBtn: $('#clearBtn'),
-    arrangementSelect: $('#arrangementSelect'), arrangeBtn: $('#arrangeBtn'), schemeSelect: $('#schemeSelect'), singleColour: $('#singleColour'), applySchemeBtn: $('#applySchemeBtn'),
-    classroomGrid: $('#classroomGrid'), placedCount: $('#placedCount'), clearFixturesBtn: $('#clearFixturesBtn'), resetRoomBtn: $('#resetRoomBtn'), clearPositionsBtn: $('#clearPositionsBtn'),
-    selectionBar: $('#selectionBar'), selectedStudentName: $('#selectedStudentName'), studentColour: $('#studentColour'), closeSelectionBtn: $('#closeSelectionBtn'),
-    printBtn: $('#printBtn'), themeBtn: $('#themeBtn'), showPlanBtn: $('#showPlanBtn'), planPanel: $('#planPanel'), toast: $('#toast')
+    namesInput: $('#namesInput'),
+    studentCount: $('#studentCount'),
+    rosterWarning: $('#rosterWarning'),
+    savedClassSelect: $('#savedClassSelect'),
+    classNameInput: $('#classNameInput'),
+    saveClassBtn: $('#saveClassBtn'),
+    loadClassBtn: $('#loadClassBtn'),
+    deleteClassBtn: $('#deleteClassBtn'),
+    cleanBtn: $('#cleanBtn'),
+    sortBtn: $('#sortBtn'),
+    clearBtn: $('#clearBtn'),
+    arrangementSelect: $('#arrangementSelect'),
+    groupSizeWrap: $('#groupSizeWrap'),
+    groupSize: $('#groupSize'),
+    arrangeBtn: $('#arrangeBtn'),
+    gridCols: $('#gridCols'),
+    gridRows: $('#gridRows'),
+    applyGridBtn: $('#applyGridBtn'),
+    gridStatus: $('#gridStatus'),
+    schemeSelect: $('#schemeSelect'),
+    singleColour: $('#singleColour'),
+    applySchemeBtn: $('#applySchemeBtn'),
+    classroomGrid: $('#classroomGrid'),
+    topRail: $('#topRail'),
+    bottomRail: $('#bottomRail'),
+    leftRail: $('#leftRail'),
+    rightRail: $('#rightRail'),
+    roomLayout: $('#roomLayout'),
+    placedCount: $('#placedCount'),
+    clearFixturesBtn: $('#clearFixturesBtn'),
+    resetRoomBtn: $('#resetRoomBtn'),
+    clearPositionsBtn: $('#clearPositionsBtn'),
+    selectionBar: $('#selectionBar'),
+    selectedStudentName: $('#selectedStudentName'),
+    studentColour: $('#studentColour'),
+    closeSelectionBtn: $('#closeSelectionBtn'),
+    fixtureSelectionBar: $('#fixtureSelectionBar'),
+    selectedFixtureName: $('#selectedFixtureName'),
+    teacherSizeControls: $('#teacherSizeControls'),
+    teacherDeskWidth: $('#teacherDeskWidth'),
+    teacherDeskHeight: $('#teacherDeskHeight'),
+    applyTeacherSizeBtn: $('#applyTeacherSizeBtn'),
+    removeSelectedFixtureBtn: $('#removeSelectedFixtureBtn'),
+    closeFixtureSelectionBtn: $('#closeFixtureSelectionBtn'),
+    savedRoomSelect: $('#savedRoomSelect'),
+    roomNameInput: $('#roomNameInput'),
+    saveRoomBtn: $('#saveRoomBtn'),
+    loadRoomBtn: $('#loadRoomBtn'),
+    deleteRoomBtn: $('#deleteRoomBtn'),
+    printBtn: $('#printBtn'),
+    themeBtn: $('#themeBtn'),
+    showPlanBtn: $('#showPlanBtn'),
+    planPanel: $('#planPanel'),
+    toast: $('#toast')
   };
 
   const palettes = {
@@ -30,15 +82,24 @@
   };
 
   const fixtureMeta = {
-    teacher: { label: 'Teacher desk', icon: '🧑‍🏫' },
-    door: { label: 'Door', icon: '🚪' },
-    whiteboard: { label: 'Whiteboard', icon: '▭' },
-    screen: { label: 'Screen', icon: '🖥️' }
+    teacher: { label: 'Teacher desk', icon: '🧑‍🏫', placement: 'interior' },
+    door: { label: 'Door', icon: '🚪', placement: 'perimeter' },
+    whiteboard: { label: 'Whiteboard', icon: '▭', placement: 'perimeter' },
+    screen: { label: 'Screen', icon: '🖥️', placement: 'perimeter' }
   };
 
   const state = {
-    students: [], fixtures: [], selected: null, dragItem: null,
-    scheme: 'pastel', arrangement: 'rows', overLimit: false, fixtureCounter: 1
+    students: [],
+    fixtures: [],
+    selected: null,
+    dragItem: null,
+    scheme: 'pastel',
+    arrangement: 'rows',
+    groupSize: 4,
+    gridRows: DEFAULT_ROWS,
+    gridCols: DEFAULT_COLS,
+    overLimit: false,
+    fixtureCounter: 1
   };
 
   function escapeHtml(value) {
@@ -137,73 +198,272 @@
     return palette[(hashString(name) + index * 3) % palette.length];
   }
 
-  function createDefaultFixtures() {
-    state.fixtures = [
-      { id: 'fixture-default-board', type: 'whiteboard', cell: 4 },
-      { id: 'fixture-default-desk', type: 'teacher', cell: 17 },
-      { id: 'fixture-default-door', type: 'door', cell: 90 }
-    ];
-    state.fixtureCounter = 1;
+  function cellCount() {
+    return state.gridRows * state.gridCols;
   }
 
-  function occupiedMap() {
+  function cellIndex(row, col) {
+    return row * state.gridCols + col;
+  }
+
+  function rowCol(cell) {
+    return { row: Math.floor(cell / state.gridCols), col: cell % state.gridCols };
+  }
+
+  function uniqueCells(values) {
+    const seen = new Set();
+    return values.filter(value => Number.isInteger(value) && value >= 0 && value < cellCount() && !seen.has(value) && seen.add(value));
+  }
+
+  function footprintForTeacher(item, targetCell = item.cell, width = item.w || 1, height = item.h || 1) {
+    if (!Number.isInteger(targetCell)) return null;
+    const { row, col } = rowCol(targetCell);
+    if (row < 0 || col < 0 || row + height > state.gridRows || col + width > state.gridCols) return null;
+    const cells = [];
+    for (let r = row; r < row + height; r++) {
+      for (let c = col; c < col + width; c++) cells.push(cellIndex(r,c));
+    }
+    return cells;
+  }
+
+  function occupiedInteriorMap({ excludeStudentId = null, excludeFixtureId = null } = {}) {
     const map = new Map();
-    state.students.forEach(student => { if (Number.isInteger(student.cell)) map.set(student.cell, { kind: 'student', id: student.id }); });
-    state.fixtures.forEach(item => { if (Number.isInteger(item.cell)) map.set(item.cell, { kind: 'fixture', id: item.id }); });
+    state.students.forEach(student => {
+      if (student.id === excludeStudentId || !Number.isInteger(student.cell)) return;
+      map.set(student.cell, { kind: 'student', id: student.id });
+    });
+    state.fixtures.forEach(item => {
+      if (item.id === excludeFixtureId || item.type !== 'teacher') return;
+      const cells = footprintForTeacher(item) || [];
+      cells.forEach(cell => map.set(cell, { kind: 'fixture', id: item.id }));
+    });
     return map;
   }
 
-  function availableCells(order = [...Array(CELL_COUNT).keys()]) {
-    const fixtureCells = new Set(state.fixtures.map(item => item.cell));
-    return order.filter(cell => !fixtureCells.has(cell));
+  function perimeterSlots(zone) {
+    return zone === 'top' || zone === 'bottom' ? state.gridCols : state.gridRows;
   }
 
-  function seatingOrder(type) {
-    const cell = (r, c) => r * GRID_SIZE + c;
-    let order = [];
+  function perimeterFixtureAt(zone, slot, excludeId = null) {
+    return state.fixtures.find(item => item.id !== excludeId && fixtureMeta[item.type]?.placement === 'perimeter' && item.zone === zone && item.slot === slot) || null;
+  }
 
-    if (type === 'pairs') {
-      const cols = [0,1,4,5,8,9];
-      for (let r = 2; r < 10; r++) cols.forEach(c => order.push(cell(r,c)));
-      for (let r = 1; r >= 0; r--) cols.forEach(c => order.push(cell(r,c)));
-    } else if (type === 'groups') {
-      const rowPairs = [[2,3],[5,6],[8,9],[0,1]];
-      const colPairs = [[0,1],[4,5],[8,9]];
-      rowPairs.forEach(rows => colPairs.forEach(cols => rows.forEach(r => cols.forEach(c => order.push(cell(r,c))))));
-    } else if (type === 'ushape') {
-      const seen = new Set();
-      const push = (r,c) => { const value = cell(r,c); if (!seen.has(value)) { seen.add(value); order.push(value); } };
-      for (let r = 2; r <= 9; r++) { push(r,0); push(r,1); push(r,8); push(r,9); }
-      for (let c = 2; c <= 7; c++) { push(9,c); push(8,c); }
-      for (let r = 2; r <= 7; r++) { push(r,2); push(r,7); }
-      for (let i = 0; i < CELL_COUNT; i++) push(Math.floor(i/10), i%10);
-    } else if (type === 'random') {
-      order = shuffled([...Array(CELL_COUNT).keys()]);
-    } else {
-      const rows = [2,3,4,5,6,7,8,9,1,0];
-      rows.forEach(r => { for (let c = 0; c < 10; c++) order.push(cell(r,c)); });
+  function firstFreePerimeter(preferredZones = ['top','right','bottom','left'], excludeId = null) {
+    for (const zone of preferredZones) {
+      for (let slot = 0; slot < perimeterSlots(zone); slot++) {
+        if (!perimeterFixtureAt(zone, slot, excludeId)) return { zone, slot };
+      }
     }
-    return availableCells(order);
+    return null;
+  }
+
+  function defaultPerimeterPosition(type) {
+    if (type === 'door') {
+      const preferred = [
+        { zone: 'left', slot: Math.max(0, state.gridRows - 1) },
+        { zone: 'right', slot: Math.max(0, state.gridRows - 1) }
+      ];
+      for (const pos of preferred) if (!perimeterFixtureAt(pos.zone, pos.slot)) return pos;
+      return firstFreePerimeter(['left','right','bottom','top']);
+    }
+    const center = Math.floor(state.gridCols / 2);
+    const preferred = type === 'whiteboard'
+      ? [{ zone: 'top', slot: center }, { zone: 'top', slot: Math.max(0, center - 1) }]
+      : [{ zone: 'top', slot: Math.min(state.gridCols - 1, center + 2) }, { zone: 'bottom', slot: center }];
+    for (const pos of preferred) if (!perimeterFixtureAt(pos.zone, pos.slot)) return pos;
+    return firstFreePerimeter(['top','bottom','right','left']);
+  }
+
+  function findFirstFreeCell(order = null) {
+    const occupied = occupiedInteriorMap();
+    const preferred = order || seatingOrder(state.arrangement, state.students.length);
+    return preferred.find(cell => !occupied.has(cell)) ?? [...Array(cellCount()).keys()].find(cell => !occupied.has(cell)) ?? null;
+  }
+
+  function createDefaultFixtures() {
+    state.fixtures = [];
+    const boardPos = defaultPerimeterPosition('whiteboard');
+    if (boardPos) state.fixtures.push({ id: 'fixture-default-board', type: 'whiteboard', ...boardPos });
+
+    const deskWidth = Math.min(2, state.gridCols);
+    const deskCol = Math.max(0, state.gridCols - deskWidth);
+    const deskCell = cellIndex(0, deskCol);
+    state.fixtures.push({ id: 'fixture-default-desk', type: 'teacher', cell: deskCell, w: deskWidth, h: 1 });
+
+    const doorPos = defaultPerimeterPosition('door');
+    if (doorPos) state.fixtures.push({ id: 'fixture-default-door', type: 'door', ...doorPos });
+    state.fixtureCounter = 1;
+  }
+
+  function spreadIndices(count, total, startAtOne = false) {
+    if (count <= 0 || total <= 0) return [];
+    const start = startAtOne && total > count ? 1 : 0;
+    const end = total - 1;
+    if (count === 1) return [Math.round((start + end) / 2)];
+    const values = [];
+    for (let i = 0; i < count; i++) values.push(Math.round(start + (i * (end - start)) / (count - 1)));
+    return [...new Set(values)];
+  }
+
+  function appendFallbackCells(order) {
+    const seen = new Set(order);
+    for (let i = 0; i < cellCount(); i++) if (!seen.has(i)) order.push(i);
+    return order;
+  }
+
+  function rowsOrder(studentCount) {
+    if (!studentCount) return appendFallbackCells([]);
+    const idealPerRow = Math.min(state.gridCols, state.gridCols >= 5 ? 5 : state.gridCols);
+    let rowsNeeded = Math.ceil(studentCount / Math.max(1, idealPerRow));
+    rowsNeeded = Math.min(state.gridRows, Math.max(1, rowsNeeded));
+    const perRow = Math.ceil(studentCount / rowsNeeded);
+    rowsNeeded = Math.min(state.gridRows, Math.ceil(studentCount / Math.max(1, perRow)));
+
+    const rowIndices = spreadIndices(rowsNeeded, state.gridRows, true);
+    const base = Math.floor(studentCount / rowsNeeded);
+    let remainder = studentCount % rowsNeeded;
+    const order = [];
+    rowIndices.forEach(row => {
+      const count = Math.min(state.gridCols, base + (remainder-- > 0 ? 1 : 0));
+      const columns = spreadIndices(count, state.gridCols, false);
+      columns.forEach(col => order.push(cellIndex(row, col)));
+    });
+    return appendFallbackCells(uniqueCells(order));
+  }
+
+  function pairColumns() {
+    const cols = [];
+    for (let c = 0; c < state.gridCols; ) {
+      cols.push(c);
+      if (c + 1 < state.gridCols) cols.push(c + 1);
+      c += 3;
+    }
+    if (cols.length < Math.min(2, state.gridCols)) return [...Array(state.gridCols).keys()];
+    return cols;
+  }
+
+  function pairsOrder(studentCount) {
+    const cols = pairColumns();
+    const rowsNeeded = Math.min(state.gridRows, Math.max(1, Math.ceil(studentCount / Math.max(1, cols.length))));
+    const rows = spreadIndices(rowsNeeded, state.gridRows, true);
+    const order = [];
+    rows.forEach(row => cols.forEach(col => order.push(cellIndex(row,col))));
+    return appendFallbackCells(uniqueCells(order));
+  }
+
+  function groupsOrder(studentCount, groupSize) {
+    const size = clamp(parseInt(groupSize, 10) || 4, 2, 8);
+    const groupCount = Math.ceil(studentCount / size);
+    const blockW = Math.min(state.gridCols, Math.ceil(Math.sqrt(size)));
+    const blockH = Math.min(state.gridRows, Math.ceil(size / blockW));
+    const gapCol = state.gridCols >= blockW * 2 + 1 ? 1 : 0;
+    const gapRow = state.gridRows >= blockH * 2 + 1 ? 1 : 0;
+    const origins = [];
+
+    for (let r = 0; r <= state.gridRows - blockH; r += blockH + gapRow) {
+      for (let c = 0; c <= state.gridCols - blockW; c += blockW + gapCol) origins.push({ row: r, col: c });
+    }
+    if (origins.length < groupCount) {
+      for (let r = 0; r <= state.gridRows - blockH; r++) {
+        for (let c = 0; c <= state.gridCols - blockW; c++) {
+          if (!origins.some(origin => origin.row === r && origin.col === c)) origins.push({ row: r, col: c });
+        }
+      }
+    }
+
+    const order = [];
+    let remaining = studentCount;
+    for (let g = 0; g < groupCount && g < origins.length; g++) {
+      const origin = origins[g];
+      const thisGroup = Math.min(size, remaining);
+      let added = 0;
+      for (let r = 0; r < blockH && added < thisGroup; r++) {
+        for (let c = 0; c < blockW && added < thisGroup; c++) {
+          order.push(cellIndex(origin.row + r, origin.col + c));
+          added += 1;
+        }
+      }
+      remaining -= thisGroup;
+    }
+    return appendFallbackCells(uniqueCells(order));
+  }
+
+  function uPath(inset = 0) {
+    const left = inset;
+    const right = state.gridCols - 1 - inset;
+    const bottom = state.gridRows - 1 - inset;
+    const top = Math.min(bottom, inset + (state.gridRows - inset * 2 > 4 ? 1 : 0));
+    if (left > right || top > bottom) return [];
+    const path = [];
+    for (let r = top; r <= bottom; r++) path.push(cellIndex(r,left));
+    for (let c = left + 1; c <= right; c++) path.push(cellIndex(bottom,c));
+    for (let r = bottom - 1; r >= top; r--) path.push(cellIndex(r,right));
+    return uniqueCells(path);
+  }
+
+  function sampleEvenly(path, count) {
+    if (count >= path.length) return [...path];
+    if (count <= 0) return [];
+    if (count === 1) return [path[Math.floor(path.length / 2)]];
+    const picks = [];
+    for (let i = 0; i < count; i++) picks.push(path[Math.round(i * (path.length - 1) / (count - 1))]);
+    return uniqueCells(picks);
+  }
+
+  function uShapeOrder(studentCount) {
+    const outer = uPath(0);
+    const order = [];
+    if (studentCount <= outer.length) {
+      order.push(...sampleEvenly(outer, studentCount));
+    } else {
+      order.push(...outer);
+      let remaining = studentCount - outer.length;
+      let inset = 1;
+      while (remaining > 0 && inset < Math.min(state.gridRows, state.gridCols) / 2) {
+        const inner = uPath(inset);
+        if (!inner.length) break;
+        const picks = sampleEvenly(inner, Math.min(remaining, inner.length));
+        order.push(...picks);
+        remaining -= picks.length;
+        inset += 1;
+      }
+    }
+    return appendFallbackCells(uniqueCells(order));
+  }
+
+  function seatingOrder(type = state.arrangement, studentCount = state.students.length) {
+    let order;
+    if (type === 'pairs') order = pairsOrder(studentCount);
+    else if (type === 'groups') order = groupsOrder(studentCount, state.groupSize);
+    else if (type === 'ushape') order = uShapeOrder(studentCount);
+    else if (type === 'random') order = shuffled([...Array(cellCount()).keys()]);
+    else order = rowsOrder(studentCount);
+
+    const occupiedByTeacher = occupiedInteriorMap();
+    return order.filter(cell => {
+      const occupant = occupiedByTeacher.get(cell);
+      return !occupant || occupant.kind !== 'fixture';
+    });
+  }
+
+  function labelForArrangement(type) {
+    if (type === 'groups') return `Groups of ${state.groupSize}`;
+    return ({ rows:'Rows', pairs:'Pairs + aisles', ushape:'U-shape', random:'Random seating' })[type] || 'Layout';
   }
 
   function arrangeStudents(type = refs.arrangementSelect.value, announce = true) {
     state.arrangement = type;
-    const cells = seatingOrder(type);
+    state.groupSize = clamp(parseInt(refs.groupSize.value, 10) || state.groupSize || 4, 2, 8);
+    refs.groupSize.value = state.groupSize;
+    const cells = seatingOrder(type, state.students.length);
     state.students.forEach((student, index) => { student.cell = cells[index] ?? null; });
     state.selected = null;
     render();
     saveCurrent();
-    if (announce) toast(`${labelForArrangement(type)} applied.`);
-  }
-
-  function labelForArrangement(type) {
-    return ({ rows:'Rows', pairs:'Pairs + aisles', groups:'Groups of 4', ushape:'U-shape', random:'Random seating' })[type] || 'Layout';
-  }
-
-  function findFirstFreeCell() {
-    const occupied = occupiedMap();
-    const preferred = seatingOrder(state.arrangement);
-    return preferred.find(cell => !occupied.has(cell)) ?? [...Array(CELL_COUNT).keys()].find(cell => !occupied.has(cell)) ?? null;
+    if (announce) {
+      const unseated = state.students.filter(student => student.cell == null).length;
+      toast(unseated ? `${labelForArrangement(type)} applied. ${unseated} student${unseated === 1 ? '' : 's'} could not fit — increase the grid size.` : `${labelForArrangement(type)} applied.`);
+    }
   }
 
   function syncStudents({ keepPositions = true } = {}) {
@@ -216,7 +476,7 @@
 
     const names = cleanedDisplayNames(refs.namesInput.value, true);
     const oldByName = new Map(state.students.map(student => [student.name.toLocaleLowerCase(), student]));
-    const next = names.map((name, index) => {
+    state.students = names.map((name, index) => {
       const old = oldByName.get(name.toLocaleLowerCase());
       return old ? { ...old, name } : {
         id: `student-${Date.now()}-${index}-${hashString(name)}`,
@@ -226,53 +486,137 @@
         customColour: false
       };
     });
-    state.students = next;
+
+    const validCells = new Set([...Array(cellCount()).keys()]);
+    state.students.forEach(student => {
+      if (!validCells.has(student.cell)) student.cell = null;
+    });
 
     if (!keepPositions) {
       arrangeStudents(state.arrangement, false);
     } else {
+      const order = seatingOrder(state.arrangement, state.students.length);
       state.students.forEach(student => {
-        if (student.cell == null) student.cell = findFirstFreeCell();
+        if (student.cell == null) student.cell = findFirstFreeCell(order);
       });
       render();
       saveCurrent();
     }
   }
 
+  function gridPositionStyle(element, cell, width = 1, height = 1) {
+    const { row, col } = rowCol(cell);
+    element.style.gridColumn = `${col + 1} / span ${width}`;
+    element.style.gridRow = `${row + 1} / span ${height}`;
+  }
+
+  function attachInteriorTargetEvents(cellElement, cell) {
+    cellElement.addEventListener('dragover', event => {
+      if (!state.dragItem) return;
+      event.preventDefault();
+      cellElement.classList.add('drag-over');
+    });
+    cellElement.addEventListener('dragleave', () => cellElement.classList.remove('drag-over'));
+    cellElement.addEventListener('drop', event => {
+      event.preventDefault();
+      cellElement.classList.remove('drag-over');
+      if (!state.dragItem) return;
+      if (state.dragItem.kind === 'student') moveStudentToCell(state.dragItem.id, cell);
+      else moveFixtureToInterior(state.dragItem.id, cell);
+    });
+    cellElement.addEventListener('click', () => {
+      if (!state.selected) return;
+      if (state.selected.kind === 'student') moveStudentToCell(state.selected.id, cell);
+      else moveFixtureToInterior(state.selected.id, cell);
+    });
+    cellElement.addEventListener('keydown', event => {
+      if ((event.key !== 'Enter' && event.key !== ' ') || !state.selected) return;
+      event.preventDefault();
+      if (state.selected.kind === 'student') moveStudentToCell(state.selected.id, cell);
+      else moveFixtureToInterior(state.selected.id, cell);
+    });
+  }
+
   function renderGrid() {
     refs.classroomGrid.innerHTML = '';
-    const studentsByCell = new Map(state.students.filter(s => s.cell != null).map(s => [s.cell, s]));
-    const fixturesByCell = new Map(state.fixtures.filter(f => f.cell != null).map(f => [f.cell, f]));
+    refs.classroomGrid.setAttribute('aria-label', `${state.gridRows} by ${state.gridCols} classroom seating grid`);
 
-    for (let i = 0; i < CELL_COUNT; i++) {
+    for (let i = 0; i < cellCount(); i++) {
       const cell = document.createElement('div');
       cell.className = 'grid-cell';
       cell.dataset.cell = String(i);
       cell.setAttribute('role', 'gridcell');
       cell.tabIndex = 0;
-      cell.addEventListener('dragover', event => { event.preventDefault(); cell.classList.add('drag-over'); });
-      cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
-      cell.addEventListener('drop', event => {
-        event.preventDefault();
-        cell.classList.remove('drag-over');
-        if (state.dragItem) moveItemToCell(state.dragItem.kind, state.dragItem.id, i);
-      });
-      cell.addEventListener('click', event => {
-        if (event.target.closest('.room-item')) return;
-        if (state.selected) moveItemToCell(state.selected.kind, state.selected.id, i);
-      });
-      cell.addEventListener('keydown', event => {
-        if ((event.key === 'Enter' || event.key === ' ') && state.selected) {
-          event.preventDefault();
-          moveItemToCell(state.selected.kind, state.selected.id, i);
-        }
-      });
-
-      if (studentsByCell.has(i)) cell.append(createStudentCard(studentsByCell.get(i)));
-      else if (fixturesByCell.has(i)) cell.append(createFixtureCard(fixturesByCell.get(i)));
+      gridPositionStyle(cell, i);
+      attachInteriorTargetEvents(cell, i);
       refs.classroomGrid.append(cell);
     }
-    refs.placedCount.textContent = state.students.filter(student => student.cell != null).length;
+
+    state.students.forEach(student => {
+      if (!Number.isInteger(student.cell) || student.cell < 0 || student.cell >= cellCount()) return;
+      const card = createStudentCard(student);
+      gridPositionStyle(card, student.cell);
+      refs.classroomGrid.append(card);
+    });
+
+    state.fixtures.filter(item => item.type === 'teacher').forEach(item => {
+      const footprint = footprintForTeacher(item);
+      if (!footprint?.length) return;
+      const card = createFixtureCard(item);
+      card.classList.add('teacher-card');
+      gridPositionStyle(card, item.cell, item.w || 1, item.h || 1);
+      refs.classroomGrid.append(card);
+    });
+
+    refs.placedCount.textContent = state.students.filter(student => Number.isInteger(student.cell) && student.cell >= 0 && student.cell < cellCount()).length;
+  }
+
+  function railElement(zone) {
+    return ({ top: refs.topRail, bottom: refs.bottomRail, left: refs.leftRail, right: refs.rightRail })[zone];
+  }
+
+  function attachPerimeterTargetEvents(cellElement, zone, slot) {
+    cellElement.addEventListener('dragover', event => {
+      if (!state.dragItem) return;
+      event.preventDefault();
+      cellElement.classList.add('drag-over');
+    });
+    cellElement.addEventListener('dragleave', () => cellElement.classList.remove('drag-over'));
+    cellElement.addEventListener('drop', event => {
+      event.preventDefault();
+      cellElement.classList.remove('drag-over');
+      if (state.dragItem?.kind === 'fixture') moveFixtureToPerimeter(state.dragItem.id, zone, slot);
+    });
+    cellElement.addEventListener('click', event => {
+      if (event.target.closest('.room-item')) return;
+      if (state.selected?.kind === 'fixture') moveFixtureToPerimeter(state.selected.id, zone, slot);
+    });
+    cellElement.addEventListener('keydown', event => {
+      if ((event.key !== 'Enter' && event.key !== ' ') || state.selected?.kind !== 'fixture') return;
+      event.preventDefault();
+      moveFixtureToPerimeter(state.selected.id, zone, slot);
+    });
+  }
+
+  function renderPerimeterRail(zone) {
+    const rail = railElement(zone);
+    rail.innerHTML = '';
+    const count = perimeterSlots(zone);
+    const bySlot = new Map(state.fixtures
+      .filter(item => fixtureMeta[item.type]?.placement === 'perimeter' && item.zone === zone && Number.isInteger(item.slot))
+      .map(item => [item.slot, item]));
+
+    for (let slot = 0; slot < count; slot++) {
+      const cell = document.createElement('div');
+      cell.className = 'perimeter-cell';
+      cell.tabIndex = 0;
+      cell.dataset.zone = zone;
+      cell.dataset.slot = String(slot);
+      attachPerimeterTargetEvents(cell, zone, slot);
+      const item = bySlot.get(slot);
+      if (item) cell.append(createFixtureCard(item));
+      rail.append(cell);
+    }
   }
 
   function createStudentCard(student) {
@@ -307,8 +651,10 @@
     button.className = 'room-item fixture-card';
     if (state.selected?.kind === 'fixture' && state.selected.id === item.id) button.classList.add('selected');
     button.draggable = true;
-    button.innerHTML = `<span class="fixture-icon" aria-hidden="true">${meta.icon}</span><span>${escapeHtml(meta.label)}</span><span class="fixture-remove" aria-hidden="true">×</span>`;
-    button.title = `${meta.label} — drag to move; double-click to remove`;
+    button.dataset.kind = 'fixture';
+    button.dataset.id = item.id;
+    button.innerHTML = `<span class="fixture-icon" aria-hidden="true">${meta.icon}</span><span class="fixture-label">${escapeHtml(meta.label)}</span><span class="fixture-remove" aria-hidden="true">×</span>`;
+    button.title = `${meta.label} — drag to move, tap to select, or double-click to remove`;
     button.addEventListener('dragstart', event => {
       state.dragItem = { kind: 'fixture', id: item.id };
       event.dataTransfer.effectAllowed = 'move';
@@ -330,33 +676,94 @@
     render();
   }
 
-  function moveItemToCell(kind, id, targetCell) {
-    const items = kind === 'student' ? state.students : state.fixtures;
-    const moving = items.find(item => item.id === id);
-    if (!moving || moving.cell === targetCell) { state.selected = null; render(); return; }
+  function moveStudentToCell(id, targetCell) {
+    const student = state.students.find(item => item.id === id);
+    if (!student || !Number.isInteger(targetCell) || targetCell < 0 || targetCell >= cellCount()) return;
+    if (student.cell === targetCell) { state.selected = null; render(); return; }
 
-    const occupied = occupiedMap().get(targetCell);
-    const oldCell = moving.cell;
-    if (occupied) {
-      const targetList = occupied.kind === 'student' ? state.students : state.fixtures;
-      const target = targetList.find(item => item.id === occupied.id);
-      if (target) target.cell = oldCell;
+    const occupied = occupiedInteriorMap({ excludeStudentId: id }).get(targetCell);
+    const oldCell = student.cell;
+    if (occupied?.kind === 'fixture') {
+      toast('That square is occupied by the teacher desk.');
+      return;
     }
-    moving.cell = targetCell;
-    state.selected = { kind, id };
+    if (occupied?.kind === 'student') {
+      const other = state.students.find(item => item.id === occupied.id);
+      if (other) other.cell = oldCell;
+    }
+    student.cell = targetCell;
+    state.selected = { kind: 'student', id };
+    render();
+    saveCurrent();
+  }
+
+  function moveFixtureToInterior(id, targetCell) {
+    const item = state.fixtures.find(fixture => fixture.id === id);
+    if (!item) return;
+    if (fixtureMeta[item.type]?.placement !== 'interior') {
+      toast(`${fixtureMeta[item.type].label} belongs on the outside border.`);
+      return;
+    }
+    const footprint = footprintForTeacher(item, targetCell, item.w || 1, item.h || 1);
+    if (!footprint) {
+      toast('The teacher desk would extend outside the student grid.');
+      return;
+    }
+    const occupied = occupiedInteriorMap({ excludeFixtureId: id });
+    if (footprint.some(cell => occupied.has(cell))) {
+      toast('Move the students out of those squares before placing the teacher desk there.');
+      return;
+    }
+    item.cell = targetCell;
+    state.selected = { kind: 'fixture', id };
+    render();
+    saveCurrent();
+  }
+
+  function moveFixtureToPerimeter(id, zone, slot) {
+    const item = state.fixtures.find(fixture => fixture.id === id);
+    if (!item) return;
+    if (fixtureMeta[item.type]?.placement !== 'perimeter') {
+      toast('The teacher desk belongs inside the student grid.');
+      return;
+    }
+    if (!['top','bottom','left','right'].includes(zone) || slot < 0 || slot >= perimeterSlots(zone)) return;
+    if (item.zone === zone && item.slot === slot) { state.selected = null; render(); return; }
+
+    const other = perimeterFixtureAt(zone, slot, id);
+    const oldZone = item.zone;
+    const oldSlot = item.slot;
+    if (other) {
+      other.zone = oldZone;
+      other.slot = oldSlot;
+    }
+    item.zone = zone;
+    item.slot = slot;
+    state.selected = { kind: 'fixture', id };
     render();
     saveCurrent();
   }
 
   function addFixture(type) {
-    const cell = findFirstFreeCell();
-    if (cell == null) { toast('No empty squares left in the classroom.'); return; }
-    const item = { id: `fixture-${type}-${Date.now()}-${state.fixtureCounter++}`, type, cell };
+    const meta = fixtureMeta[type];
+    if (!meta) return;
+    let item;
+    if (meta.placement === 'interior') {
+      const width = Math.min(2, state.gridCols);
+      const cell = findFirstFreeCell();
+      if (cell == null) { toast('No empty squares left in the student grid.'); return; }
+      item = { id: `fixture-${type}-${Date.now()}-${state.fixtureCounter++}`, type, cell, w: width, h: 1 };
+      if (!footprintForTeacher(item) || footprintForTeacher(item).some(c => occupiedInteriorMap().has(c))) item.w = 1;
+    } else {
+      const pos = defaultPerimeterPosition(type);
+      if (!pos) { toast('No empty border positions left.'); return; }
+      item = { id: `fixture-${type}-${Date.now()}-${state.fixtureCounter++}`, type, ...pos };
+    }
     state.fixtures.push(item);
     state.selected = { kind: 'fixture', id: item.id };
     render();
     saveCurrent();
-    toast(`${fixtureMeta[type].label} added — move it where you want.`);
+    toast(`${meta.label} added — move it where you want.`);
   }
 
   function removeFixture(id) {
@@ -364,6 +771,27 @@
     if (state.selected?.id === id) state.selected = null;
     render();
     saveCurrent();
+  }
+
+  function resizeSelectedTeacher() {
+    if (state.selected?.kind !== 'fixture') return;
+    const item = state.fixtures.find(fixture => fixture.id === state.selected.id && fixture.type === 'teacher');
+    if (!item) return;
+    const width = clamp(parseInt(refs.teacherDeskWidth.value, 10) || 1, 1, Math.min(4, state.gridCols));
+    const height = clamp(parseInt(refs.teacherDeskHeight.value, 10) || 1, 1, Math.min(3, state.gridRows));
+    const footprint = footprintForTeacher(item, item.cell, width, height);
+    const occupied = occupiedInteriorMap({ excludeFixtureId: item.id });
+    if (!footprint || footprint.some(cell => occupied.has(cell))) {
+      refs.teacherDeskWidth.value = item.w || 1;
+      refs.teacherDeskHeight.value = item.h || 1;
+      toast('That desk size would overlap students or extend outside the grid.');
+      return;
+    }
+    item.w = width;
+    item.h = height;
+    render();
+    saveCurrent();
+    toast(`Teacher desk resized to ${width} × ${height}.`);
   }
 
   function applyScheme() {
@@ -387,21 +815,53 @@
     saveCurrent();
   }
 
-  function renderSelectionBar() {
-    if (state.selected?.kind !== 'student') {
-      refs.selectionBar.hidden = true;
+  function renderSelectionBars() {
+    refs.selectionBar.hidden = true;
+    refs.fixtureSelectionBar.hidden = true;
+
+    if (state.selected?.kind === 'student') {
+      const student = state.students.find(item => item.id === state.selected.id);
+      if (!student) return;
+      refs.selectionBar.hidden = false;
+      refs.selectedStudentName.textContent = student.name;
+      refs.studentColour.value = student.colour;
       return;
     }
-    const student = state.students.find(item => item.id === state.selected.id);
-    if (!student) { refs.selectionBar.hidden = true; return; }
-    refs.selectionBar.hidden = false;
-    refs.selectedStudentName.textContent = student.name;
-    refs.studentColour.value = student.colour;
+
+    if (state.selected?.kind === 'fixture') {
+      const item = state.fixtures.find(fixture => fixture.id === state.selected.id);
+      if (!item) return;
+      refs.fixtureSelectionBar.hidden = false;
+      refs.selectedFixtureName.textContent = fixtureMeta[item.type].label;
+      refs.teacherSizeControls.hidden = item.type !== 'teacher';
+      if (item.type === 'teacher') {
+        refs.teacherDeskWidth.value = item.w || 1;
+        refs.teacherDeskHeight.value = item.h || 1;
+        refs.teacherDeskWidth.max = String(Math.min(4, state.gridCols));
+        refs.teacherDeskHeight.max = String(Math.min(3, state.gridRows));
+      }
+    }
+  }
+
+  function renderGroupSizeControl() {
+    refs.groupSizeWrap.hidden = state.arrangement !== 'groups';
   }
 
   function render() {
+    const root = document.documentElement;
+    root.style.setProperty('--grid-cols', state.gridCols);
+    root.style.setProperty('--grid-rows', state.gridRows);
+    root.style.setProperty('--room-ratio', String(Math.max(.85, state.gridCols / (state.gridRows * .62))));
+    refs.gridCols.value = state.gridCols;
+    refs.gridRows.value = state.gridRows;
+    refs.gridStatus.textContent = `${state.gridCols} × ${state.gridRows}`;
     renderGrid();
-    renderSelectionBar();
+    renderPerimeterRail('top');
+    renderPerimeterRail('bottom');
+    renderPerimeterRail('left');
+    renderPerimeterRail('right');
+    renderSelectionBars();
+    renderGroupSizeControl();
   }
 
   function cleanRoster() {
@@ -428,6 +888,45 @@
     toast('Student list cleared.');
   }
 
+  function applyGridSize({ announce = true } = {}) {
+    const rows = clamp(parseInt(refs.gridRows.value, 10) || state.gridRows, MIN_GRID, MAX_GRID);
+    const cols = clamp(parseInt(refs.gridCols.value, 10) || state.gridCols, MIN_GRID, MAX_GRID);
+    refs.gridRows.value = rows;
+    refs.gridCols.value = cols;
+    if (rows === state.gridRows && cols === state.gridCols) return;
+
+    const oldCols = state.gridCols;
+    const oldToNewCell = cell => {
+      if (!Number.isInteger(cell)) return null;
+      const row = Math.floor(cell / oldCols);
+      const col = cell % oldCols;
+      return row < rows && col < cols ? row * cols + col : null;
+    };
+
+    state.students.forEach(student => { student.cell = oldToNewCell(student.cell); });
+    state.fixtures.forEach(item => {
+      if (item.type === 'teacher') item.cell = oldToNewCell(item.cell);
+    });
+    state.gridRows = rows;
+    state.gridCols = cols;
+
+    state.fixtures.forEach(item => {
+      if (item.type === 'teacher') {
+        item.w = clamp(item.w || 1, 1, Math.min(4, cols));
+        item.h = clamp(item.h || 1, 1, Math.min(3, rows));
+        if (!Number.isInteger(item.cell) || !footprintForTeacher(item)) item.cell = findFirstFreeCell();
+      } else {
+        if (!['top','bottom','left','right'].includes(item.zone) || !Number.isInteger(item.slot) || item.slot >= perimeterSlots(item.zone)) {
+          const pos = defaultPerimeterPosition(item.type) || firstFreePerimeter();
+          if (pos) Object.assign(item, pos);
+        }
+      }
+    });
+
+    arrangeStudents(state.arrangement, false);
+    if (announce) toast(`Grid resized to ${cols} × ${rows}. Students re-arranged to fit.`);
+  }
+
   function readJson(key, fallback) {
     try {
       const value = JSON.parse(localStorage.getItem(key) || 'null');
@@ -450,25 +949,59 @@
     return layouts && typeof layouts === 'object' && !Array.isArray(layouts) ? layouts : {};
   }
 
+  function readSavedRooms() {
+    const rooms = readJson(SAVED_ROOMS_KEY, {});
+    return rooms && typeof rooms === 'object' && !Array.isArray(rooms) ? rooms : {};
+  }
+
   function refreshSavedClasses(selected = '') {
     const classes = readSavedClasses();
     const names = Object.keys(classes).sort((a,b) => a.localeCompare(b));
     refs.savedClassSelect.innerHTML = '<option value="">Choose saved class…</option>';
     names.forEach(name => {
       const option = document.createElement('option');
-      option.value = name; option.textContent = name;
+      option.value = name;
+      option.textContent = name;
       refs.savedClassSelect.append(option);
     });
     if (names.includes(selected)) refs.savedClassSelect.value = selected;
+  }
+
+  function refreshSavedRooms(selected = '') {
+    const rooms = readSavedRooms();
+    const names = Object.keys(rooms).sort((a,b) => a.localeCompare(b));
+    refs.savedRoomSelect.innerHTML = '<option value="">Choose saved layout…</option>';
+    names.forEach(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      refs.savedRoomSelect.append(option);
+    });
+    if (names.includes(selected)) refs.savedRoomSelect.value = selected;
+  }
+
+  function serialiseFixtures() {
+    return state.fixtures.map(item => ({ ...item }));
+  }
+
+  function serialiseRoomLayout() {
+    return {
+      gridRows: state.gridRows,
+      gridCols: state.gridCols,
+      fixtures: serialiseFixtures()
+    };
   }
 
   function serialiseLayout() {
     return {
       names: state.students.map(student => student.name),
       students: state.students.map(student => ({ name: student.name, cell: student.cell, colour: student.colour, customColour: !!student.customColour })),
-      fixtures: state.fixtures.map(item => ({ ...item })),
+      fixtures: serialiseFixtures(),
       scheme: state.scheme,
       arrangement: state.arrangement,
+      groupSize: state.groupSize,
+      gridRows: state.gridRows,
+      gridCols: state.gridCols,
       singleColour: refs.singleColour.value
     };
   }
@@ -495,33 +1028,98 @@
     toast(`${name} saved with its seating layout.`);
   }
 
+  function saveRoomLayout() {
+    const name = refs.roomNameInput.value.trim();
+    if (!name) { toast('Enter a classroom layout name first.'); refs.roomNameInput.focus(); return; }
+    const rooms = readSavedRooms();
+    rooms[name] = serialiseRoomLayout();
+    if (!writeJson(SAVED_ROOMS_KEY, rooms)) return;
+    refreshSavedRooms(name);
+    refs.savedRoomSelect.value = name;
+    toast(`${name} classroom layout saved.`);
+  }
+
+  function normaliseFixture(raw, index = 0, assumeLegacy = false) {
+    if (!raw || !fixtureMeta[raw.type]) return null;
+    const id = raw.id || `fixture-restored-${raw.type}-${Date.now()}-${index}`;
+    if (raw.type === 'teacher') {
+      const cell = Number.isInteger(raw.cell) ? clamp(raw.cell, 0, Math.max(0, cellCount() - 1)) : 0;
+      return {
+        id,
+        type: 'teacher',
+        cell,
+        w: clamp(parseInt(raw.w, 10) || 1, 1, Math.min(4, state.gridCols)),
+        h: clamp(parseInt(raw.h, 10) || 1, 1, Math.min(3, state.gridRows))
+      };
+    }
+
+    if (!assumeLegacy && ['top','bottom','left','right'].includes(raw.zone) && Number.isInteger(raw.slot)) {
+      return { id, type: raw.type, zone: raw.zone, slot: clamp(raw.slot, 0, perimeterSlots(raw.zone) - 1) };
+    }
+    const pos = defaultPerimeterPosition(raw.type) || firstFreePerimeter();
+    return pos ? { id, type: raw.type, ...pos } : null;
+  }
+
+  function restoreFixtures(fixtures, { legacy = false } = {}) {
+    state.fixtures = [];
+    if (!Array.isArray(fixtures) || !fixtures.length) {
+      createDefaultFixtures();
+      return;
+    }
+    fixtures.forEach((raw, index) => {
+      const item = normaliseFixture(raw, index, legacy);
+      if (!item) return;
+      if (fixtureMeta[item.type].placement === 'perimeter') {
+        const occupied = perimeterFixtureAt(item.zone, item.slot);
+        if (occupied) {
+          const alternative = defaultPerimeterPosition(item.type) || firstFreePerimeter();
+          if (!alternative) return;
+          Object.assign(item, alternative);
+        }
+      }
+      state.fixtures.push(item);
+    });
+    if (!state.fixtures.length) createDefaultFixtures();
+  }
+
   function restoreLayout(layout, fallbackNames = []) {
     if (!layout || typeof layout !== 'object') {
       refs.namesInput.value = fallbackNames.join('\n');
       syncStudents({ keepPositions: false });
       return;
     }
+
+    const legacyGrid = !Number.isInteger(layout.gridRows) || !Number.isInteger(layout.gridCols);
+    state.gridRows = clamp(parseInt(layout.gridRows, 10) || (legacyGrid ? 10 : DEFAULT_ROWS), MIN_GRID, MAX_GRID);
+    state.gridCols = clamp(parseInt(layout.gridCols, 10) || (legacyGrid ? 10 : DEFAULT_COLS), MIN_GRID, MAX_GRID);
+    refs.gridRows.value = state.gridRows;
+    refs.gridCols.value = state.gridCols;
+
     const names = Array.isArray(layout.names) ? layout.names : fallbackNames;
     refs.namesInput.value = names.join('\n');
     const savedStudents = Array.isArray(layout.students) ? layout.students : [];
     const byName = new Map(savedStudents.map(student => [String(student.name).toLocaleLowerCase(), student]));
     state.scheme = layout.scheme || 'pastel';
     state.arrangement = layout.arrangement || 'rows';
+    state.groupSize = clamp(parseInt(layout.groupSize, 10) || 4, 2, 8);
     refs.schemeSelect.value = state.scheme;
     refs.arrangementSelect.value = state.arrangement;
+    refs.groupSize.value = state.groupSize;
     if (layout.singleColour) refs.singleColour.value = layout.singleColour;
+
+    restoreFixtures(layout.fixtures, { legacy: legacyGrid });
+
     state.students = names.slice(0, MAX_STUDENTS).map((name, index) => {
       const saved = byName.get(String(name).toLocaleLowerCase());
+      const cell = Number.isInteger(saved?.cell) && saved.cell >= 0 && saved.cell < cellCount() ? saved.cell : null;
       return {
         id: `student-${Date.now()}-${index}-${hashString(name)}`,
         name,
-        cell: Number.isInteger(saved?.cell) ? saved.cell : null,
+        cell,
         colour: saved?.colour || colourFor(name, index, state.scheme),
         customColour: !!saved?.customColour
       };
     });
-    state.fixtures = Array.isArray(layout.fixtures) ? layout.fixtures.filter(item => fixtureMeta[item.type] && Number.isInteger(item.cell)) : [];
-    if (!state.fixtures.length) createDefaultFixtures();
     syncStudents({ keepPositions: true });
   }
 
@@ -550,6 +1148,32 @@
     toast(`${name} deleted from saved classes.`);
   }
 
+  function loadRoomLayout() {
+    const name = refs.savedRoomSelect.value;
+    if (!name) { toast('Choose a saved classroom layout first.'); return; }
+    const rooms = readSavedRooms();
+    const room = rooms[name];
+    if (!room) { toast('That classroom layout could not be found.'); return; }
+    state.gridRows = clamp(parseInt(room.gridRows, 10) || DEFAULT_ROWS, MIN_GRID, MAX_GRID);
+    state.gridCols = clamp(parseInt(room.gridCols, 10) || DEFAULT_COLS, MIN_GRID, MAX_GRID);
+    restoreFixtures(room.fixtures);
+    refs.roomNameInput.value = name;
+    arrangeStudents(state.arrangement, false);
+    saveCurrent();
+    toast(`${name} classroom layout loaded.`);
+  }
+
+  function deleteRoomLayout() {
+    const name = refs.savedRoomSelect.value;
+    if (!name) { toast('Choose a saved classroom layout first.'); return; }
+    const rooms = readSavedRooms();
+    delete rooms[name];
+    writeJson(SAVED_ROOMS_KEY, rooms);
+    refreshSavedRooms();
+    if (refs.roomNameInput.value === name) refs.roomNameInput.value = '';
+    toast(`${name} classroom layout deleted.`);
+  }
+
   function applyTheme(theme, persist = true) {
     const dark = theme === 'dark';
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
@@ -566,13 +1190,13 @@
     refs.toast.textContent = message;
     refs.toast.classList.add('show');
     clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => refs.toast.classList.remove('show'), 2200);
+    toast.timer = setTimeout(() => refs.toast.classList.remove('show'), 2400);
   }
 
   function initialiseGridState() {
     const current = readJson(CURRENT_KEY, null);
-    if (current?.names?.length) {
-      restoreLayout(current, current.names);
+    if (current?.names?.length || current?.fixtures?.length) {
+      restoreLayout(current, current.names || []);
     } else {
       createDefaultFixtures();
       render();
@@ -587,23 +1211,64 @@
   refs.loadClassBtn.addEventListener('click', loadClass);
   refs.deleteClassBtn.addEventListener('click', deleteClass);
   refs.savedClassSelect.addEventListener('change', () => { if (refs.savedClassSelect.value) refs.classNameInput.value = refs.savedClassSelect.value; });
+
   refs.arrangeBtn.addEventListener('click', () => arrangeStudents(refs.arrangementSelect.value));
-  refs.arrangementSelect.addEventListener('change', () => { state.arrangement = refs.arrangementSelect.value; saveCurrent(); });
+  refs.arrangementSelect.addEventListener('change', () => {
+    state.arrangement = refs.arrangementSelect.value;
+    renderGroupSizeControl();
+    saveCurrent();
+  });
+  refs.groupSize.addEventListener('change', () => {
+    state.groupSize = clamp(parseInt(refs.groupSize.value, 10) || 4, 2, 8);
+    refs.groupSize.value = state.groupSize;
+    if (state.arrangement === 'groups') arrangeStudents('groups');
+  });
+
+  refs.applyGridBtn.addEventListener('click', () => applyGridSize());
+  [refs.gridRows, refs.gridCols].forEach(input => input.addEventListener('keydown', event => {
+    if (event.key === 'Enter') applyGridSize();
+  }));
+
   refs.applySchemeBtn.addEventListener('click', applyScheme);
   refs.schemeSelect.addEventListener('change', () => { state.scheme = refs.schemeSelect.value; });
   refs.singleColour.addEventListener('input', () => { if (refs.schemeSelect.value === 'single') applyScheme(); });
+
   $$('.fixture-button').forEach(button => button.addEventListener('click', () => addFixture(button.dataset.fixture)));
-  refs.clearFixturesBtn.addEventListener('click', () => { state.fixtures = []; state.selected = null; render(); saveCurrent(); toast('Room items cleared.'); });
-  refs.resetRoomBtn.addEventListener('click', () => { createDefaultFixtures(); arrangeStudents(state.arrangement, false); toast('Default classroom restored.'); });
+  refs.clearFixturesBtn.addEventListener('click', () => {
+    state.fixtures = [];
+    state.selected = null;
+    render();
+    saveCurrent();
+    toast('Room items cleared.');
+  });
+  refs.resetRoomBtn.addEventListener('click', () => {
+    createDefaultFixtures();
+    arrangeStudents(state.arrangement, false);
+    toast('Default classroom restored.');
+  });
   refs.clearPositionsBtn.addEventListener('click', () => arrangeStudents(state.arrangement));
+
   $$('.colour-swatch').forEach(button => button.addEventListener('click', () => setSelectedStudentColour(button.dataset.colour)));
   refs.studentColour.addEventListener('input', () => setSelectedStudentColour(refs.studentColour.value));
   refs.closeSelectionBtn.addEventListener('click', () => { state.selected = null; render(); });
+
+  refs.applyTeacherSizeBtn.addEventListener('click', resizeSelectedTeacher);
+  refs.removeSelectedFixtureBtn.addEventListener('click', () => {
+    if (state.selected?.kind === 'fixture') removeFixture(state.selected.id);
+  });
+  refs.closeFixtureSelectionBtn.addEventListener('click', () => { state.selected = null; render(); });
+
+  refs.saveRoomBtn.addEventListener('click', saveRoomLayout);
+  refs.loadRoomBtn.addEventListener('click', loadRoomLayout);
+  refs.deleteRoomBtn.addEventListener('click', deleteRoomLayout);
+  refs.savedRoomSelect.addEventListener('change', () => { if (refs.savedRoomSelect.value) refs.roomNameInput.value = refs.savedRoomSelect.value; });
+
   refs.printBtn.addEventListener('click', () => window.print());
   refs.themeBtn.addEventListener('click', () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
   refs.showPlanBtn.addEventListener('click', () => refs.planPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   try { applyTheme(localStorage.getItem(THEME_KEY) || 'light', false); } catch (_) { applyTheme('light', false); }
   refreshSavedClasses();
+  refreshSavedRooms();
   initialiseGridState();
 })();
