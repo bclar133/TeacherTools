@@ -2,6 +2,13 @@
 
 A growing collection of lightweight web tools for teachers.
 
+## Live site
+
+- Teacher Tools: https://www.brent-clark.com/teacher-tools/
+- Random Student Picker: https://www.brent-clark.com/teacher-tools/random-student-picker/
+
+This repository is the development/source home for the Teacher Tools collection. Production copies are published through the Cloudflare-connected `bclar133/brent-clark` repository.
+
 ## Structure
 
 ```text
