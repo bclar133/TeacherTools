@@ -161,7 +161,9 @@
       const car = sceneLayer.querySelector('.race-car');
       const finish = sceneLayer.querySelector('.finish-flag');
       if (car) { car.style.left = `${start.x / 10}%`; car.style.top = `${start.y / 6}%`; orientAt(roadPath, 0, car, 0); }
-      if (finish) { finish.style.left = `${finishPoint.x / 10}%`; finish.style.top = `${finishPoint.y / 6}%`; orientAt(roadPath, Math.max(0, len - 12), finish, 90); }
+      // The finish strip is drawn vertically by default, so matching its rotation to the
+      // road tangent makes the strip's long axis perpendicular to the direction of travel.
+      if (finish) { finish.style.left = `${finishPoint.x / 10}%`; finish.style.top = `${finishPoint.y / 6}%`; orientAt(roadPath, Math.max(0, len - 12), finish, 0); }
     });
   }
 
