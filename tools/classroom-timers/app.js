@@ -19,7 +19,7 @@
     .race-road .race-edge { fill:none; stroke:#f5f6ef; stroke-width:130; stroke-linecap:round; stroke-linejoin:round; }
     .race-road .race-path { fill:none; stroke:#3d4145 !important; stroke-width:118 !important; stroke-linecap:round !important; stroke-linejoin:round !important; }
     .race-road .race-centre { fill:none; stroke:#f6dd7b !important; stroke-width:5 !important; stroke-dasharray:24 22 !important; stroke-linecap:round; opacity:.92; }
-    .race-car { width:76px !important; height:40px !important; transform:translate(-50%,-50%) !important; transform-origin:50% 50%; filter:drop-shadow(0 7px 6px rgba(0,0,0,.34)); }
+    .race-car { width:76px !important; height:40px !important; transform:translate(-50%,-50%) !important; transform-origin:50% 50%; rotate:0deg !important; filter:drop-shadow(0 7px 6px rgba(0,0,0,.34)); }
     .race-car .car-body { inset:2px 1px !important; border-radius:15px 23px 23px 15px !important; background:linear-gradient(180deg,#ff6a5f 0%,#e53032 50%,#b91924 100%) !important; box-shadow:inset 0 0 0 2px rgba(88,0,8,.25), inset 0 7px 8px rgba(255,255,255,.2); }
     .race-car .car-body::before { content:""; position:absolute; right:4px; top:7px; width:5px; height:8px; border-radius:3px; background:#fff4b6; box-shadow:0 18px 0 #fff4b6; }
     .race-car .car-body::after { content:""; position:absolute; left:4px; top:8px; width:5px; height:7px; border-radius:2px; background:#8f1018; box-shadow:0 17px 0 #8f1018; }
@@ -158,12 +158,41 @@
       const len = roadPath.getTotalLength();
       const start = roadPath.getPointAtLength(0);
       const finishPoint = roadPath.getPointAtLength(len);
+      const beforeFinish = roadPath.getPointAtLength(Math.max(0, len - 12));
       const car = sceneLayer.querySelector('.race-car');
       const finish = sceneLayer.querySelector('.finish-flag');
-      if (car) { car.style.left = `${start.x / 10}%`; car.style.top = `${start.y / 6}%`; orientAt(roadPath, 0, car, 0); }
-      // The finish strip is drawn vertically by default, so matching its rotation to the
-      // road tangent makes the strip's long axis perpendicular to the direction of travel.
-      if (finish) { finish.style.left = `${finishPoint.x / 10}%`; finish.style.top = `${finishPoint.y / 6}%`; orientAt(roadPath, Math.max(0, len - 12), finish, 0); }
+      const rect = sceneLayer.getBoundingClientRect();
+
+      if (car) {
+        car.style.left = `${start.x / 10}%`;
+        car.style.top = `${start.y / 6}%`;
+        car.style.rotate = '0deg';
+      }
+
+      if (finish && rect.width && rect.height) {
+        // Work in screen pixels because the SVG is stretched to the stage dimensions.
+        // The car stays fixed (no rotation), so use the rectangle's projected half-size
+        // along the road tangent. At progress 100%, the car centre is at the SVG endpoint
+        // and its leading edge therefore touches — but does not cross — the finish strip.
+        const dx = (finishPoint.x - beforeFinish.x) * (rect.width / 1000);
+        const dy = (finishPoint.y - beforeFinish.y) * (rect.height / 600);
+        const mag = Math.hypot(dx, dy) || 1;
+        const tx = dx / mag;
+        const ty = dy / mag;
+        const carRect = car?.getBoundingClientRect();
+        const halfW = (carRect?.width || 76) / 2;
+        const halfH = (carRect?.height || 40) / 2;
+        const frontProjection = Math.abs(tx) * halfW + Math.abs(ty) * halfH;
+
+        const endScreenX = finishPoint.x * rect.width / 1000;
+        const endScreenY = finishPoint.y * rect.height / 600;
+        const lineScreenX = endScreenX + tx * frontProjection;
+        const lineScreenY = endScreenY + ty * frontProjection;
+
+        finish.style.left = `${lineScreenX / rect.width * 100}%`;
+        finish.style.top = `${lineScreenY / rect.height * 100}%`;
+        orientAt(roadPath, Math.max(0, len - 12), finish, 0);
+      }
     });
   }
 
@@ -199,7 +228,6 @@
       }
     });
 
-    // Direction arrows make the alternating roll/drop motion obvious from the back of a classroom.
     lines.filter((_,i) => i % 2 === 0).forEach((line,i) => {
       const x1 = Number(line.getAttribute('x1')), x2 = Number(line.getAttribute('x2'));
       const y1 = Number(line.getAttribute('y1')), y2 = Number(line.getAttribute('y2'));
