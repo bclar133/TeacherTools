@@ -15,100 +15,66 @@
     }
     .race-cloud { display: none !important; }
     .race-road svg { overflow: visible; shape-rendering: geometricPrecision; }
-    .race-road .race-shoulder {
-      fill: none;
-      stroke: #d8c69a;
-      stroke-width: 142;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+    .race-road .race-shoulder { fill:none; stroke:#d8c69a; stroke-width:142; stroke-linecap:round; stroke-linejoin:round; }
+    .race-road .race-edge { fill:none; stroke:#f5f6ef; stroke-width:130; stroke-linecap:round; stroke-linejoin:round; }
+    .race-road .race-path { fill:none; stroke:#3d4145 !important; stroke-width:118 !important; stroke-linecap:round !important; stroke-linejoin:round !important; }
+    .race-road .race-centre { fill:none; stroke:#f6dd7b !important; stroke-width:5 !important; stroke-dasharray:24 22 !important; stroke-linecap:round; opacity:.92; }
+    .race-car { width:76px !important; height:40px !important; transform:translate(-50%,-50%) !important; transform-origin:50% 50%; filter:drop-shadow(0 7px 6px rgba(0,0,0,.34)); }
+    .race-car .car-body { inset:2px 1px !important; border-radius:15px 23px 23px 15px !important; background:linear-gradient(180deg,#ff6a5f 0%,#e53032 50%,#b91924 100%) !important; box-shadow:inset 0 0 0 2px rgba(88,0,8,.25), inset 0 7px 8px rgba(255,255,255,.2); }
+    .race-car .car-body::before { content:""; position:absolute; right:4px; top:7px; width:5px; height:8px; border-radius:3px; background:#fff4b6; box-shadow:0 18px 0 #fff4b6; }
+    .race-car .car-body::after { content:""; position:absolute; left:4px; top:8px; width:5px; height:7px; border-radius:2px; background:#8f1018; box-shadow:0 17px 0 #8f1018; }
+    .race-car .car-cabin { left:27px !important; top:6px !important; width:30px !important; height:28px !important; border:0 !important; border-radius:8px 12px 12px 8px !important; background:linear-gradient(90deg,#183848 0 45%,#5aa8c2 48% 72%,#183848 75%) !important; clip-path:polygon(13% 0,82% 0,100% 24%,100% 76%,82% 100%,13% 100%,0 73%,0 27%); box-shadow:inset 0 0 0 2px rgba(255,255,255,.16); }
+    .race-car .car-wheel { width:10px !important; height:5px !important; border:0 !important; border-radius:2px !important; background:#17191b !important; bottom:auto !important; }
+    .race-car .car-wheel.w1 { left:18px !important; top:-2px !important; box-shadow:0 39px 0 #17191b; }
+    .race-car .car-wheel.w2 { right:16px !important; top:-2px !important; box-shadow:0 39px 0 #17191b; }
+    .finish-flag { width:18px !important; height:112px !important; background:conic-gradient(#fff 25%,#111 0 50%,#fff 0 75%,#111 0) 0 0 / 18px 18px !important; transform:translate(-50%,-50%) !important; border:2px solid rgba(255,255,255,.7); box-shadow:0 4px 10px rgba(0,0,0,.28); }
+    .finish-flag::before { display:none !important; }
+
+    /* Ramp Ball: Rube Goldberg machine */
+    .ramp-scene {
+      background:
+        radial-gradient(circle at 15% 18%, rgba(255,255,255,.08) 0 3px, transparent 4px),
+        radial-gradient(circle at 81% 37%, rgba(255,255,255,.06) 0 3px, transparent 4px),
+        linear-gradient(145deg,#243650,#101925) !important;
     }
-    .race-road .race-edge {
-      fill: none;
-      stroke: #f5f6ef;
-      stroke-width: 130;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+    .ramp-svg { filter:drop-shadow(0 8px 7px rgba(0,0,0,.35)) !important; }
+    .ramp-svg line.rube-ramp {
+      display:block !important;
+      stroke:#e3ad4c !important;
+      stroke-width:14 !important;
+      stroke-linecap:round !important;
     }
-    .race-road .race-path {
-      fill: none;
-      stroke: #3d4145 !important;
-      stroke-width: 118 !important;
-      stroke-linecap: round !important;
-      stroke-linejoin: round !important;
+    .ramp-svg line.rube-ramp-shadow {
+      stroke:#845727 !important;
     }
-    .race-road .race-centre {
-      fill: none;
-      stroke: #f6dd7b !important;
-      stroke-width: 5 !important;
-      stroke-dasharray: 24 22 !important;
-      stroke-linecap: round;
-      opacity: .92;
+    .ramp-svg line.rube-drop { stroke:transparent !important; }
+    .ramp-svg circle.rube-bumper { fill:#ef6658; stroke:#ffd77a; stroke-width:5; filter:drop-shadow(0 4px 3px rgba(0,0,0,.3)); }
+    .ramp-svg circle.rube-bolt { fill:#f4d47c; stroke:#6c4822; stroke-width:4; }
+    .rube-arrow { position:absolute; z-index:2; color:rgba(255,255,255,.42); font-size:25px; font-weight:900; transform:translate(-50%,-50%); }
+    .rube-bucket {
+      position:absolute; z-index:4; width:86px; height:64px; transform:translateX(-50%);
+      border:6px solid #d5dde5; border-top:10px solid #f5f8fa; border-radius:8px 8px 22px 22px;
+      background:linear-gradient(90deg,#6f7c88,#c7d0d8 45%,#75828d);
+      box-shadow:0 10px 16px rgba(0,0,0,.35), inset 0 7px 8px rgba(255,255,255,.16);
+      clip-path:polygon(5% 0,95% 0,82% 100%,18% 100%);
     }
-    .race-car {
-      width: 76px !important;
-      height: 40px !important;
-      transform: translate(-50%, -50%) !important;
-      transform-origin: 50% 50%;
-      filter: drop-shadow(0 7px 6px rgba(0,0,0,.34));
+    .rube-bucket::before {
+      content:""; position:absolute; left:9px; right:9px; top:-11px; height:16px; border-radius:50%;
+      background:#19222d; box-shadow:inset 0 3px 4px rgba(0,0,0,.6);
     }
-    .race-car .car-body {
-      inset: 2px 1px !important;
-      border-radius: 15px 23px 23px 15px !important;
-      background: linear-gradient(180deg, #ff6a5f 0%, #e53032 50%, #b91924 100%) !important;
-      box-shadow: inset 0 0 0 2px rgba(88,0,8,.25), inset 0 7px 8px rgba(255,255,255,.2);
+    .rube-bucket::after {
+      content:"BUCKET"; position:absolute; left:50%; top:23px; transform:translateX(-50%);
+      color:#34404a; font-size:10px; font-weight:1000; letter-spacing:.08em;
     }
-    .race-car .car-body::before {
-      content: "";
-      position: absolute;
-      right: 4px;
-      top: 7px;
-      width: 5px;
-      height: 8px;
-      border-radius: 3px;
-      background: #fff4b6;
-      box-shadow: 0 18px 0 #fff4b6;
+    .ramp-ball { z-index:8 !important; width:40px !important; height:40px !important; transition:filter .15s ease; }
+    .timer-stage.finished .ramp-ball {
+      animation:rubeBucketDrop .55s cubic-bezier(.35,.05,.7,.25) forwards;
     }
-    .race-car .car-body::after {
-      content: "";
-      position: absolute;
-      left: 4px;
-      top: 8px;
-      width: 5px;
-      height: 7px;
-      border-radius: 2px;
-      background: #8f1018;
-      box-shadow: 0 17px 0 #8f1018;
+    @keyframes rubeBucketDrop {
+      0% { transform:translate(-50%,-50%) translateY(0) scale(1); opacity:1; }
+      70% { transform:translate(-50%,-50%) translateY(34px) scale(.92); opacity:1; }
+      100% { transform:translate(-50%,-50%) translateY(49px) scale(.68); opacity:.15; }
     }
-    .race-car .car-cabin {
-      left: 27px !important;
-      top: 6px !important;
-      width: 30px !important;
-      height: 28px !important;
-      border: 0 !important;
-      border-radius: 8px 12px 12px 8px !important;
-      background: linear-gradient(90deg, #183848 0 45%, #5aa8c2 48% 72%, #183848 75%) !important;
-      clip-path: polygon(13% 0, 82% 0, 100% 24%, 100% 76%, 82% 100%, 13% 100%, 0 73%, 0 27%);
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.16);
-    }
-    .race-car .car-wheel {
-      width: 10px !important;
-      height: 5px !important;
-      border: 0 !important;
-      border-radius: 2px !important;
-      background: #17191b !important;
-      bottom: auto !important;
-    }
-    .race-car .car-wheel.w1 { left: 18px !important; top: -2px !important; box-shadow: 0 39px 0 #17191b; }
-    .race-car .car-wheel.w2 { right: 16px !important; top: -2px !important; box-shadow: 0 39px 0 #17191b; }
-    .finish-flag {
-      width: 18px !important;
-      height: 112px !important;
-      background: conic-gradient(#fff 25%, #111 0 50%, #fff 0 75%, #111 0) 0 0 / 18px 18px !important;
-      transform: translate(-50%, -50%) !important;
-      border: 2px solid rgba(255,255,255,.7);
-      box-shadow: 0 4px 10px rgba(0,0,0,.28);
-    }
-    .finish-flag::before { display: none !important; }
   `;
   document.head.appendChild(style);
 
@@ -130,9 +96,7 @@
     for (let i = 0; i < count; i++) {
       const t = i / (count - 1);
       const x = startX + (endX - startX) * t;
-      let y = mid
-        + Math.sin(phase1 + t * Math.PI * cycles) * amp1
-        + Math.sin(phase2 + t * Math.PI * cycles * 1.85) * amp2;
+      let y = mid + Math.sin(phase1 + t * Math.PI * cycles) * amp1 + Math.sin(phase2 + t * Math.PI * cycles * 1.85) * amp2;
       y = clamp(y, 125, 475);
       points.push({ x, y });
     }
@@ -181,19 +145,12 @@
     roadPath.setAttribute('d', d);
 
     const oldCentre = [...svg.querySelectorAll('path')].find(p => p !== roadPath);
-    if (oldCentre) {
-      oldCentre.setAttribute('d', d);
-      oldCentre.classList.add('race-centre');
-    }
+    if (oldCentre) { oldCentre.setAttribute('d', d); oldCentre.classList.add('race-centre'); }
 
     const shoulder = roadPath.cloneNode(false);
-    shoulder.removeAttribute('class');
-    shoulder.setAttribute('class', 'race-shoulder');
-    shoulder.setAttribute('d', d);
+    shoulder.removeAttribute('class'); shoulder.setAttribute('class', 'race-shoulder'); shoulder.setAttribute('d', d);
     const edge = roadPath.cloneNode(false);
-    edge.removeAttribute('class');
-    edge.setAttribute('class', 'race-edge');
-    edge.setAttribute('d', d);
+    edge.removeAttribute('class'); edge.setAttribute('class', 'race-edge'); edge.setAttribute('d', d);
     svg.insertBefore(shoulder, roadPath);
     svg.insertBefore(edge, roadPath);
 
@@ -203,23 +160,69 @@
       const finishPoint = roadPath.getPointAtLength(len);
       const car = sceneLayer.querySelector('.race-car');
       const finish = sceneLayer.querySelector('.finish-flag');
-
-      if (car) {
-        car.style.left = `${start.x / 10}%`;
-        car.style.top = `${start.y / 6}%`;
-        orientAt(roadPath, 0, car, 0);
-      }
-      if (finish) {
-        finish.style.left = `${finishPoint.x / 10}%`;
-        finish.style.top = `${finishPoint.y / 6}%`;
-        orientAt(roadPath, Math.max(0, len - 12), finish, 90);
-      }
+      if (car) { car.style.left = `${start.x / 10}%`; car.style.top = `${start.y / 6}%`; orientAt(roadPath, 0, car, 0); }
+      if (finish) { finish.style.left = `${finishPoint.x / 10}%`; finish.style.top = `${finishPoint.y / 6}%`; orientAt(roadPath, Math.max(0, len - 12), finish, 90); }
     });
   }
 
+  function upgradeRampMachine() {
+    if (!sceneLayer) return;
+    const scene = sceneLayer.querySelector('.ramp-scene');
+    const svg = scene?.querySelector('.ramp-svg');
+    if (!scene || !svg || svg.dataset.rubeV2 === 'true') return;
+
+    const lines = [...svg.querySelectorAll('line')];
+    if (!lines.length) return;
+    svg.dataset.rubeV2 = 'true';
+
+    lines.forEach((line, i) => {
+      line.classList.add(i % 2 === 0 ? 'rube-ramp' : 'rube-drop');
+      if (i % 2 === 0) {
+        const x1 = Number(line.getAttribute('x1'));
+        const y1 = Number(line.getAttribute('y1'));
+        const x2 = Number(line.getAttribute('x2'));
+        const y2 = Number(line.getAttribute('y2'));
+
+        const bolt1 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        bolt1.setAttribute('cx', x1); bolt1.setAttribute('cy', y1); bolt1.setAttribute('r','8'); bolt1.setAttribute('class','rube-bolt');
+        const bolt2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        bolt2.setAttribute('cx', x2); bolt2.setAttribute('cy', y2); bolt2.setAttribute('r','8'); bolt2.setAttribute('class','rube-bolt');
+        svg.append(bolt1, bolt2);
+
+        if (i < lines.length - 1) {
+          const bumper = document.createElementNS('http://www.w3.org/2000/svg','circle');
+          bumper.setAttribute('cx', x2); bumper.setAttribute('cy', y2 + 17); bumper.setAttribute('r','12'); bumper.setAttribute('class','rube-bumper');
+          svg.appendChild(bumper);
+        }
+      }
+    });
+
+    // Direction arrows make the alternating roll/drop motion obvious from the back of a classroom.
+    lines.filter((_,i) => i % 2 === 0).forEach((line,i) => {
+      const x1 = Number(line.getAttribute('x1')), x2 = Number(line.getAttribute('x2'));
+      const y1 = Number(line.getAttribute('y1')), y2 = Number(line.getAttribute('y2'));
+      const arrow = document.createElement('div');
+      arrow.className = 'rube-arrow';
+      arrow.textContent = x2 > x1 ? '↘' : '↙';
+      arrow.style.left = `${((x1+x2)/2)/10}%`;
+      arrow.style.top = `${((y1+y2)/2)/6}%`;
+      scene.appendChild(arrow);
+    });
+
+    const finalLine = lines[lines.length - 1];
+    const endX = Number(finalLine.getAttribute('x2')) / 10;
+    const endY = Number(finalLine.getAttribute('y2')) / 6;
+    const bucket = document.createElement('div');
+    bucket.className = 'rube-bucket';
+    bucket.style.left = `${endX}%`;
+    bucket.style.top = `${Math.min(91, endY + 3.2)}%`;
+    scene.appendChild(bucket);
+  }
+
   if (sceneLayer) {
-    new MutationObserver(upgradeRoad).observe(sceneLayer, { childList: true, subtree: true });
-    upgradeRoad();
+    const upgradeScenes = () => { upgradeRoad(); upgradeRampMachine(); };
+    new MutationObserver(upgradeScenes).observe(sceneLayer, { childList:true, subtree:true });
+    upgradeScenes();
   }
 
   const current = document.currentScript;
