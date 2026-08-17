@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/teacher-tools.css">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="presentation-view.css">
   <style>
     .perimeter-rail > .fixture-card { z-index: 4; }
     .window-fixture-card {
@@ -268,15 +269,18 @@
         <div class="plan-footer-actions">
           <button id="resetRoomBtn" class="soft-button" type="button">↺ Reset default room</button>
           <button id="clearPositionsBtn" class="soft-button" type="button">↔ Re-seat students</button>
+          <button id="presentationBtn" class="soft-button presentation-launch" type="button" aria-pressed="false">⛶ Full screen</button>
           <span class="autosave-note">Changes are automatically remembered in this browser.</span>
         </div>
       </section>
     </section>
   </main>
 
+  <button id="presentationExitBtn" class="presentation-exit" type="button" aria-label="Exit full screen seating view">✕ Exit full screen</button>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
   <script src="footprint-drag.js"></script>
   <script src="group-layout-fix.js"></script>
+  <script src="presentation-view.js"></script>
 </body>
 </html>
