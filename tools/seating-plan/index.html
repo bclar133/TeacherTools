@@ -31,11 +31,10 @@
     }
     .window-size-controls { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
 
-    /* Side-wall labels: use vertical writing mode so they stay inside narrow rail cells. */
+    /* Keep wall-item labels readable when placed on the left or right wall. */
     .perimeter-rail.vertical .window-fixture-card,
     .perimeter-rail.vertical .door-fixture-card {
       overflow: hidden;
-      padding: 5px 3px;
     }
     .perimeter-rail.vertical .window-fixture-card .fixture-icon,
     .perimeter-rail.vertical .door-fixture-card .fixture-icon {
@@ -43,19 +42,15 @@
     }
     .perimeter-rail.vertical .window-fixture-card .fixture-label,
     .perimeter-rail.vertical .door-fixture-card .fixture-label {
-      position: static;
-      display: block;
-      width: auto;
-      max-width: 100%;
-      min-width: 0;
-      max-height: calc(100% - 4px);
-      overflow: visible;
-      text-overflow: clip;
-      white-space: nowrap;
       writing-mode: vertical-rl;
       text-orientation: mixed;
       transform: rotate(180deg);
-      transform-origin: center;
+      width: auto;
+      max-width: 100%;
+      max-height: 100%;
+      overflow: visible;
+      text-overflow: clip;
+      white-space: nowrap;
       line-height: 1;
     }
   </style>
@@ -282,5 +277,6 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
   <script src="footprint-drag.js"></script>
+  <script src="group-layout-fix.js"></script>
 </body>
 </html>
