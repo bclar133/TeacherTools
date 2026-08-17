@@ -1,4 +1,21 @@
 /* Projector / presentation view for the seating plan. */
+.presentation-launch {
+  min-height: 42px;
+  padding: 0 16px;
+  border-color: transparent !important;
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  font-size: .8rem;
+  box-shadow: 0 5px 14px rgba(91,75,219,.24);
+}
+
+.presentation-launch:hover,
+.presentation-launch:focus-visible {
+  background: var(--accent-strong) !important;
+  box-shadow: 0 7px 18px rgba(91,75,219,.3);
+  transform: translateY(-1px);
+}
+
 .presentation-exit {
   display: none;
   position: fixed;
