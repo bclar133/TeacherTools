@@ -44,7 +44,6 @@
     bottomRail: $('#bottomRail'),
     leftRail: $('#leftRail'),
     rightRail: $('#rightRail'),
-    roomLayout: $('#roomLayout'),
     placedCount: $('#placedCount'),
     clearFixturesBtn: $('#clearFixturesBtn'),
     resetRoomBtn: $('#resetRoomBtn'),
@@ -59,6 +58,9 @@
     teacherDeskWidth: $('#teacherDeskWidth'),
     teacherDeskHeight: $('#teacherDeskHeight'),
     applyTeacherSizeBtn: $('#applyTeacherSizeBtn'),
+    windowSizeControls: $('#windowSizeControls'),
+    windowSpan: $('#windowSpan'),
+    applyWindowSizeBtn: $('#applyWindowSizeBtn'),
     removeSelectedFixtureBtn: $('#removeSelectedFixtureBtn'),
     closeFixtureSelectionBtn: $('#closeFixtureSelectionBtn'),
     savedRoomSelect: $('#savedRoomSelect'),
@@ -85,7 +87,8 @@
     teacher: { label: 'Teacher desk', icon: '🧑‍🏫', placement: 'interior' },
     door: { label: 'Door', icon: '🚪', placement: 'perimeter' },
     whiteboard: { label: 'Whiteboard', icon: '▭', placement: 'perimeter' },
-    screen: { label: 'Screen', icon: '🖥️', placement: 'perimeter' }
+    screen: { label: 'Screen', icon: '🖥️', placement: 'perimeter' },
+    window: { label: 'Window', icon: '🪟', placement: 'perimeter' }
   };
 
   const state = {
@@ -244,34 +247,65 @@
     return zone === 'top' || zone === 'bottom' ? state.gridCols : state.gridRows;
   }
 
-  function perimeterFixtureAt(zone, slot, excludeId = null) {
-    return state.fixtures.find(item => item.id !== excludeId && fixtureMeta[item.type]?.placement === 'perimeter' && item.zone === zone && item.slot === slot) || null;
+  function perimeterSpan(item, zone = item.zone) {
+    if (item.type !== 'window') return 1;
+    return clamp(parseInt(item.span, 10) || 3, 1, Math.max(1, perimeterSlots(zone)));
   }
 
-  function firstFreePerimeter(preferredZones = ['top','right','bottom','left'], excludeId = null) {
+  function perimeterRange(zone, slot, span = 1) {
+    const max = perimeterSlots(zone);
+    if (!Number.isInteger(slot) || slot < 0 || span < 1 || slot + span > max) return null;
+    return [...Array(span).keys()].map(offset => slot + offset);
+  }
+
+  function perimeterConflicts(zone, slot, span = 1, excludeId = null) {
+    const target = new Set(perimeterRange(zone, slot, span) || []);
+    if (!target.size) return [];
+    return state.fixtures.filter(item => {
+      if (item.id === excludeId || fixtureMeta[item.type]?.placement !== 'perimeter' || item.zone !== zone) return false;
+      const covered = perimeterRange(item.zone, item.slot, perimeterSpan(item)) || [];
+      return covered.some(value => target.has(value));
+    });
+  }
+
+  function perimeterFixtureAt(zone, slot, excludeId = null) {
+    return perimeterConflicts(zone, slot, 1, excludeId)[0] || null;
+  }
+
+  function firstFreePerimeter(preferredZones = ['top','right','bottom','left'], excludeId = null, requestedSpan = 1) {
     for (const zone of preferredZones) {
-      for (let slot = 0; slot < perimeterSlots(zone); slot++) {
-        if (!perimeterFixtureAt(zone, slot, excludeId)) return { zone, slot };
+      const span = clamp(requestedSpan, 1, perimeterSlots(zone));
+      const maxStart = perimeterSlots(zone) - span;
+      for (let slot = 0; slot <= maxStart; slot++) {
+        if (!perimeterConflicts(zone, slot, span, excludeId).length) return { zone, slot, span };
       }
     }
     return null;
   }
 
-  function defaultPerimeterPosition(type) {
+  function defaultPerimeterPosition(type, requestedSpan = type === 'window' ? 3 : 1) {
+    const spanFor = zone => clamp(requestedSpan, 1, perimeterSlots(zone));
+    const candidate = (zone, slot) => {
+      const span = spanFor(zone);
+      const start = clamp(slot, 0, Math.max(0, perimeterSlots(zone) - span));
+      return perimeterConflicts(zone, start, span).length ? null : { zone, slot: start, span };
+    };
+
     if (type === 'door') {
-      const preferred = [
-        { zone: 'left', slot: Math.max(0, state.gridRows - 1) },
-        { zone: 'right', slot: Math.max(0, state.gridRows - 1) }
-      ];
-      for (const pos of preferred) if (!perimeterFixtureAt(pos.zone, pos.slot)) return pos;
-      return firstFreePerimeter(['left','right','bottom','top']);
+      return candidate('left', state.gridRows - 1) || candidate('right', state.gridRows - 1) || firstFreePerimeter(['left','right','bottom','top'], null, 1);
     }
+
+    if (type === 'window') {
+      const sideSpan = spanFor('left');
+      const sideStart = Math.max(0, Math.floor((state.gridRows - sideSpan) / 2));
+      return candidate('left', sideStart) || candidate('right', sideStart) || firstFreePerimeter(['left','right','bottom','top'], null, requestedSpan);
+    }
+
     const center = Math.floor(state.gridCols / 2);
-    const preferred = type === 'whiteboard'
-      ? [{ zone: 'top', slot: center }, { zone: 'top', slot: Math.max(0, center - 1) }]
-      : [{ zone: 'top', slot: Math.min(state.gridCols - 1, center + 2) }, { zone: 'bottom', slot: center }];
-    for (const pos of preferred) if (!perimeterFixtureAt(pos.zone, pos.slot)) return pos;
-    return firstFreePerimeter(['top','bottom','right','left']);
+    if (type === 'whiteboard') {
+      return candidate('top', center) || candidate('top', center - 1) || firstFreePerimeter(['top','bottom','right','left'], null, 1);
+    }
+    return candidate('top', center + 2) || candidate('bottom', center) || firstFreePerimeter(['top','bottom','right','left'], null, 1);
   }
 
   function findFirstFreeCell(order = null) {
@@ -283,15 +317,14 @@
   function createDefaultFixtures() {
     state.fixtures = [];
     const boardPos = defaultPerimeterPosition('whiteboard');
-    if (boardPos) state.fixtures.push({ id: 'fixture-default-board', type: 'whiteboard', ...boardPos });
+    if (boardPos) state.fixtures.push({ id: 'fixture-default-board', type: 'whiteboard', zone: boardPos.zone, slot: boardPos.slot });
 
     const deskWidth = Math.min(2, state.gridCols);
     const deskCol = Math.max(0, state.gridCols - deskWidth);
-    const deskCell = cellIndex(0, deskCol);
-    state.fixtures.push({ id: 'fixture-default-desk', type: 'teacher', cell: deskCell, w: deskWidth, h: 1 });
+    state.fixtures.push({ id: 'fixture-default-desk', type: 'teacher', cell: cellIndex(0, deskCol), w: deskWidth, h: 1 });
 
     const doorPos = defaultPerimeterPosition('door');
-    if (doorPos) state.fixtures.push({ id: 'fixture-default-door', type: 'door', ...doorPos });
+    if (doorPos) state.fixtures.push({ id: 'fixture-default-door', type: 'door', zone: doorPos.zone, slot: doorPos.slot });
     state.fixtureCounter = 1;
   }
 
@@ -325,21 +358,18 @@
     const order = [];
     rowIndices.forEach(row => {
       const count = Math.min(state.gridCols, base + (remainder-- > 0 ? 1 : 0));
-      const columns = spreadIndices(count, state.gridCols, false);
-      columns.forEach(col => order.push(cellIndex(row, col)));
+      spreadIndices(count, state.gridCols).forEach(col => order.push(cellIndex(row, col)));
     });
     return appendFallbackCells(uniqueCells(order));
   }
 
   function pairColumns() {
     const cols = [];
-    for (let c = 0; c < state.gridCols; ) {
+    for (let c = 0; c < state.gridCols; c += 3) {
       cols.push(c);
       if (c + 1 < state.gridCols) cols.push(c + 1);
-      c += 3;
     }
-    if (cols.length < Math.min(2, state.gridCols)) return [...Array(state.gridCols).keys()];
-    return cols;
+    return cols.length ? cols : [...Array(state.gridCols).keys()];
   }
 
   function pairsOrder(studentCount) {
@@ -361,12 +391,12 @@
     const origins = [];
 
     for (let r = 0; r <= state.gridRows - blockH; r += blockH + gapRow) {
-      for (let c = 0; c <= state.gridCols - blockW; c += blockW + gapCol) origins.push({ row: r, col: c });
+      for (let c = 0; c <= state.gridCols - blockW; c += blockW + gapCol) origins.push({ row:r, col:c });
     }
     if (origins.length < groupCount) {
       for (let r = 0; r <= state.gridRows - blockH; r++) {
         for (let c = 0; c <= state.gridCols - blockW; c++) {
-          if (!origins.some(origin => origin.row === r && origin.col === c)) origins.push({ row: r, col: c });
+          if (!origins.some(origin => origin.row === r && origin.col === c)) origins.push({ row:r, col:c });
         }
       }
     }
@@ -439,11 +469,8 @@
     else if (type === 'random') order = shuffled([...Array(cellCount()).keys()]);
     else order = rowsOrder(studentCount);
 
-    const occupiedByTeacher = occupiedInteriorMap();
-    return order.filter(cell => {
-      const occupant = occupiedByTeacher.get(cell);
-      return !occupant || occupant.kind !== 'fixture';
-    });
+    const occupied = occupiedInteriorMap();
+    return order.filter(cell => occupied.get(cell)?.kind !== 'fixture');
   }
 
   function labelForArrangement(type) {
@@ -487,9 +514,8 @@
       };
     });
 
-    const validCells = new Set([...Array(cellCount()).keys()]);
     state.students.forEach(student => {
-      if (!validCells.has(student.cell)) student.cell = null;
+      if (!Number.isInteger(student.cell) || student.cell < 0 || student.cell >= cellCount()) student.cell = null;
     });
 
     if (!keepPositions) {
@@ -572,12 +598,12 @@
   }
 
   function railElement(zone) {
-    return ({ top: refs.topRail, bottom: refs.bottomRail, left: refs.leftRail, right: refs.rightRail })[zone];
+    return ({ top:refs.topRail, bottom:refs.bottomRail, left:refs.leftRail, right:refs.rightRail })[zone];
   }
 
   function attachPerimeterTargetEvents(cellElement, zone, slot) {
     cellElement.addEventListener('dragover', event => {
-      if (!state.dragItem) return;
+      if (state.dragItem?.kind !== 'fixture') return;
       event.preventDefault();
       cellElement.classList.add('drag-over');
     });
@@ -602,9 +628,6 @@
     const rail = railElement(zone);
     rail.innerHTML = '';
     const count = perimeterSlots(zone);
-    const bySlot = new Map(state.fixtures
-      .filter(item => fixtureMeta[item.type]?.placement === 'perimeter' && item.zone === zone && Number.isInteger(item.slot))
-      .map(item => [item.slot, item]));
 
     for (let slot = 0; slot < count; slot++) {
       const cell = document.createElement('div');
@@ -613,10 +636,23 @@
       cell.dataset.zone = zone;
       cell.dataset.slot = String(slot);
       attachPerimeterTargetEvents(cell, zone, slot);
-      const item = bySlot.get(slot);
-      if (item) cell.append(createFixtureCard(item));
       rail.append(cell);
     }
+
+    state.fixtures
+      .filter(item => fixtureMeta[item.type]?.placement === 'perimeter' && item.zone === zone && Number.isInteger(item.slot))
+      .forEach(item => {
+        const span = perimeterSpan(item, zone);
+        const card = createFixtureCard(item);
+        if (zone === 'top' || zone === 'bottom') {
+          card.style.gridColumn = `${item.slot + 1} / span ${span}`;
+          card.style.gridRow = '1';
+        } else {
+          card.style.gridColumn = '1';
+          card.style.gridRow = `${item.slot + 1} / span ${span}`;
+        }
+        rail.append(card);
+      });
   }
 
   function createStudentCard(student) {
@@ -632,7 +668,7 @@
     button.innerHTML = `<span>${escapeHtml(student.name)}</span>`;
     button.title = `${student.name} — drag to move, or tap to select`;
     button.addEventListener('dragstart', event => {
-      state.dragItem = { kind: 'student', id: student.id };
+      state.dragItem = { kind:'student', id:student.id };
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', student.id);
     });
@@ -648,15 +684,17 @@
     const meta = fixtureMeta[item.type];
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'room-item fixture-card';
+    button.className = `room-item fixture-card ${item.type}-fixture-card`;
     if (state.selected?.kind === 'fixture' && state.selected.id === item.id) button.classList.add('selected');
     button.draggable = true;
     button.dataset.kind = 'fixture';
     button.dataset.id = item.id;
     button.innerHTML = `<span class="fixture-icon" aria-hidden="true">${meta.icon}</span><span class="fixture-label">${escapeHtml(meta.label)}</span><span class="fixture-remove" aria-hidden="true">×</span>`;
-    button.title = `${meta.label} — drag to move, tap to select, or double-click to remove`;
+    button.title = item.type === 'window'
+      ? `${meta.label} — spans ${perimeterSpan(item)} border spaces; drag to move or tap to resize`
+      : `${meta.label} — drag to move, tap to select, or double-click to remove`;
     button.addEventListener('dragstart', event => {
-      state.dragItem = { kind: 'fixture', id: item.id };
+      state.dragItem = { kind:'fixture', id:item.id };
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', item.id);
     });
@@ -681,7 +719,7 @@
     if (!student || !Number.isInteger(targetCell) || targetCell < 0 || targetCell >= cellCount()) return;
     if (student.cell === targetCell) { state.selected = null; render(); return; }
 
-    const occupied = occupiedInteriorMap({ excludeStudentId: id }).get(targetCell);
+    const occupied = occupiedInteriorMap({ excludeStudentId:id }).get(targetCell);
     const oldCell = student.cell;
     if (occupied?.kind === 'fixture') {
       toast('That square is occupied by the teacher desk.');
@@ -692,7 +730,7 @@
       if (other) other.cell = oldCell;
     }
     student.cell = targetCell;
-    state.selected = { kind: 'student', id };
+    state.selected = { kind:'student', id };
     render();
     saveCurrent();
   }
@@ -709,37 +747,52 @@
       toast('The teacher desk would extend outside the student grid.');
       return;
     }
-    const occupied = occupiedInteriorMap({ excludeFixtureId: id });
+    const occupied = occupiedInteriorMap({ excludeFixtureId:id });
     if (footprint.some(cell => occupied.has(cell))) {
       toast('Move the students out of those squares before placing the teacher desk there.');
       return;
     }
     item.cell = targetCell;
-    state.selected = { kind: 'fixture', id };
+    state.selected = { kind:'fixture', id };
     render();
     saveCurrent();
   }
 
-  function moveFixtureToPerimeter(id, zone, slot) {
+  function moveFixtureToPerimeter(id, zone, droppedSlot) {
     const item = state.fixtures.find(fixture => fixture.id === id);
     if (!item) return;
     if (fixtureMeta[item.type]?.placement !== 'perimeter') {
       toast('The teacher desk belongs inside the student grid.');
       return;
     }
-    if (!['top','bottom','left','right'].includes(zone) || slot < 0 || slot >= perimeterSlots(zone)) return;
-    if (item.zone === zone && item.slot === slot) { state.selected = null; render(); return; }
+    if (!['top','bottom','left','right'].includes(zone)) return;
 
-    const other = perimeterFixtureAt(zone, slot, id);
-    const oldZone = item.zone;
-    const oldSlot = item.slot;
-    if (other) {
-      other.zone = oldZone;
-      other.slot = oldSlot;
+    const span = perimeterSpan(item, zone);
+    const slot = clamp(droppedSlot, 0, Math.max(0, perimeterSlots(zone) - span));
+    if (item.zone === zone && item.slot === slot && perimeterSpan(item) === span) {
+      state.selected = null;
+      render();
+      return;
     }
+
+    const conflicts = perimeterConflicts(zone, slot, span, id);
+    if (conflicts.length) {
+      const other = conflicts[0];
+      const oldSpan = perimeterSpan(item);
+      const otherSpan = perimeterSpan(other);
+      if (conflicts.length === 1 && span === 1 && otherSpan === 1 && Number.isInteger(item.slot) && item.zone) {
+        other.zone = item.zone;
+        other.slot = item.slot;
+      } else {
+        toast('That section of the wall is already occupied.');
+        return;
+      }
+    }
+
     item.zone = zone;
     item.slot = slot;
-    state.selected = { kind: 'fixture', id };
+    if (item.type === 'window') item.span = span;
+    state.selected = { kind:'fixture', id };
     render();
     saveCurrent();
   }
@@ -748,19 +801,24 @@
     const meta = fixtureMeta[type];
     if (!meta) return;
     let item;
+
     if (meta.placement === 'interior') {
       const width = Math.min(2, state.gridCols);
       const cell = findFirstFreeCell();
       if (cell == null) { toast('No empty squares left in the student grid.'); return; }
-      item = { id: `fixture-${type}-${Date.now()}-${state.fixtureCounter++}`, type, cell, w: width, h: 1 };
-      if (!footprintForTeacher(item) || footprintForTeacher(item).some(c => occupiedInteriorMap().has(c))) item.w = 1;
+      item = { id:`fixture-${type}-${Date.now()}-${state.fixtureCounter++}`, type, cell, w:width, h:1 };
+      const footprint = footprintForTeacher(item);
+      if (!footprint || footprint.some(c => occupiedInteriorMap().has(c))) item.w = 1;
     } else {
-      const pos = defaultPerimeterPosition(type);
+      const requestedSpan = type === 'window' ? Math.min(3, Math.max(state.gridRows, state.gridCols)) : 1;
+      const pos = defaultPerimeterPosition(type, requestedSpan);
       if (!pos) { toast('No empty border positions left.'); return; }
-      item = { id: `fixture-${type}-${Date.now()}-${state.fixtureCounter++}`, type, ...pos };
+      item = { id:`fixture-${type}-${Date.now()}-${state.fixtureCounter++}`, type, zone:pos.zone, slot:pos.slot };
+      if (type === 'window') item.span = pos.span;
     }
+
     state.fixtures.push(item);
-    state.selected = { kind: 'fixture', id: item.id };
+    state.selected = { kind:'fixture', id:item.id };
     render();
     saveCurrent();
     toast(`${meta.label} added — move it where you want.`);
@@ -780,7 +838,7 @@
     const width = clamp(parseInt(refs.teacherDeskWidth.value, 10) || 1, 1, Math.min(4, state.gridCols));
     const height = clamp(parseInt(refs.teacherDeskHeight.value, 10) || 1, 1, Math.min(3, state.gridRows));
     const footprint = footprintForTeacher(item, item.cell, width, height);
-    const occupied = occupiedInteriorMap({ excludeFixtureId: item.id });
+    const occupied = occupiedInteriorMap({ excludeFixtureId:item.id });
     if (!footprint || footprint.some(cell => occupied.has(cell))) {
       refs.teacherDeskWidth.value = item.w || 1;
       refs.teacherDeskHeight.value = item.h || 1;
@@ -792,6 +850,25 @@
     render();
     saveCurrent();
     toast(`Teacher desk resized to ${width} × ${height}.`);
+  }
+
+  function resizeSelectedWindow() {
+    if (state.selected?.kind !== 'fixture') return;
+    const item = state.fixtures.find(fixture => fixture.id === state.selected.id && fixture.type === 'window');
+    if (!item || !item.zone) return;
+    const max = perimeterSlots(item.zone);
+    const span = clamp(parseInt(refs.windowSpan.value, 10) || 1, 1, max);
+    const slot = clamp(item.slot, 0, Math.max(0, max - span));
+    if (perimeterConflicts(item.zone, slot, span, item.id).length) {
+      refs.windowSpan.value = perimeterSpan(item);
+      toast('That window size would overlap another wall item.');
+      return;
+    }
+    item.slot = slot;
+    item.span = span;
+    render();
+    saveCurrent();
+    toast(`Window resized to ${span} border space${span === 1 ? '' : 's'}.`);
   }
 
   function applyScheme() {
@@ -818,6 +895,8 @@
   function renderSelectionBars() {
     refs.selectionBar.hidden = true;
     refs.fixtureSelectionBar.hidden = true;
+    refs.teacherSizeControls.hidden = true;
+    refs.windowSizeControls.hidden = true;
 
     if (state.selected?.kind === 'student') {
       const student = state.students.find(item => item.id === state.selected.id);
@@ -833,12 +912,19 @@
       if (!item) return;
       refs.fixtureSelectionBar.hidden = false;
       refs.selectedFixtureName.textContent = fixtureMeta[item.type].label;
-      refs.teacherSizeControls.hidden = item.type !== 'teacher';
+
       if (item.type === 'teacher') {
+        refs.teacherSizeControls.hidden = false;
         refs.teacherDeskWidth.value = item.w || 1;
         refs.teacherDeskHeight.value = item.h || 1;
         refs.teacherDeskWidth.max = String(Math.min(4, state.gridCols));
         refs.teacherDeskHeight.max = String(Math.min(3, state.gridRows));
+      }
+
+      if (item.type === 'window') {
+        refs.windowSizeControls.hidden = false;
+        refs.windowSpan.max = String(perimeterSlots(item.zone));
+        refs.windowSpan.value = perimeterSpan(item);
       }
     }
   }
@@ -867,7 +953,7 @@
   function cleanRoster() {
     const cleaned = cleanedDisplayNames(refs.namesInput.value, false);
     refs.namesInput.value = cleaned.join('\n');
-    syncStudents({ keepPositions: true });
+    syncStudents({ keepPositions:true });
     const extra = Math.max(0, cleaned.length - MAX_STUDENTS);
     toast(extra ? `Cleaned ${cleaned.length} names. Remove ${extra} to use the plan.` : `Cleaned ${cleaned.length} student name${cleaned.length === 1 ? '' : 's'}.`);
   }
@@ -875,7 +961,7 @@
   function sortRoster() {
     const names = cleanedDisplayNames(refs.namesInput.value, false).sort((a,b) => a.localeCompare(b));
     refs.namesInput.value = names.join('\n');
-    syncStudents({ keepPositions: true });
+    syncStudents({ keepPositions:true });
   }
 
   function clearRoster() {
@@ -888,6 +974,44 @@
     toast('Student list cleared.');
   }
 
+  function rebuildPerimeterAfterResize(items) {
+    const interior = state.fixtures.filter(item => fixtureMeta[item.type]?.placement === 'interior');
+    state.fixtures = [...interior];
+
+    items.forEach(item => {
+      let desiredSpan = item.type === 'window' ? clamp(parseInt(item.span, 10) || 3, 1, MAX_GRID) : 1;
+      let zone = ['top','bottom','left','right'].includes(item.zone) ? item.zone : null;
+      let placed = false;
+
+      if (zone) {
+        desiredSpan = clamp(desiredSpan, 1, perimeterSlots(zone));
+        const slot = clamp(parseInt(item.slot, 10) || 0, 0, Math.max(0, perimeterSlots(zone) - desiredSpan));
+        if (!perimeterConflicts(zone, slot, desiredSpan, item.id).length) {
+          item.zone = zone;
+          item.slot = slot;
+          if (item.type === 'window') item.span = desiredSpan;
+          state.fixtures.push(item);
+          placed = true;
+        }
+      }
+
+      if (!placed) {
+        let span = desiredSpan;
+        let pos = firstFreePerimeter(['top','right','bottom','left'], item.id, span);
+        while (!pos && item.type === 'window' && span > 1) {
+          span -= 1;
+          pos = firstFreePerimeter(['top','right','bottom','left'], item.id, span);
+        }
+        if (pos) {
+          item.zone = pos.zone;
+          item.slot = pos.slot;
+          if (item.type === 'window') item.span = pos.span;
+          state.fixtures.push(item);
+        }
+      }
+    });
+  }
+
   function applyGridSize({ announce = true } = {}) {
     const rows = clamp(parseInt(refs.gridRows.value, 10) || state.gridRows, MIN_GRID, MAX_GRID);
     const cols = clamp(parseInt(refs.gridCols.value, 10) || state.gridCols, MIN_GRID, MAX_GRID);
@@ -895,6 +1019,7 @@
     refs.gridCols.value = cols;
     if (rows === state.gridRows && cols === state.gridCols) return;
 
+    const oldRows = state.gridRows;
     const oldCols = state.gridCols;
     const oldToNewCell = cell => {
       if (!Number.isInteger(cell)) return null;
@@ -904,25 +1029,19 @@
     };
 
     state.students.forEach(student => { student.cell = oldToNewCell(student.cell); });
-    state.fixtures.forEach(item => {
-      if (item.type === 'teacher') item.cell = oldToNewCell(item.cell);
-    });
+    state.fixtures.filter(item => item.type === 'teacher').forEach(item => { item.cell = oldToNewCell(item.cell); });
+    const perimeterItems = state.fixtures.filter(item => fixtureMeta[item.type]?.placement === 'perimeter').map(item => ({ ...item }));
+
     state.gridRows = rows;
     state.gridCols = cols;
 
-    state.fixtures.forEach(item => {
-      if (item.type === 'teacher') {
-        item.w = clamp(item.w || 1, 1, Math.min(4, cols));
-        item.h = clamp(item.h || 1, 1, Math.min(3, rows));
-        if (!Number.isInteger(item.cell) || !footprintForTeacher(item)) item.cell = findFirstFreeCell();
-      } else {
-        if (!['top','bottom','left','right'].includes(item.zone) || !Number.isInteger(item.slot) || item.slot >= perimeterSlots(item.zone)) {
-          const pos = defaultPerimeterPosition(item.type) || firstFreePerimeter();
-          if (pos) Object.assign(item, pos);
-        }
-      }
+    state.fixtures.filter(item => item.type === 'teacher').forEach(item => {
+      item.w = clamp(item.w || 1, 1, Math.min(4, cols));
+      item.h = clamp(item.h || 1, 1, Math.min(3, rows));
+      if (!Number.isInteger(item.cell) || !footprintForTeacher(item)) item.cell = 0;
     });
 
+    rebuildPerimeterAfterResize(perimeterItems);
     arrangeStudents(state.arrangement, false);
     if (announce) toast(`Grid resized to ${cols} × ${rows}. Students re-arranged to fit.`);
   }
@@ -985,17 +1104,13 @@
   }
 
   function serialiseRoomLayout() {
-    return {
-      gridRows: state.gridRows,
-      gridCols: state.gridCols,
-      fixtures: serialiseFixtures()
-    };
+    return { gridRows:state.gridRows, gridCols:state.gridCols, fixtures:serialiseFixtures() };
   }
 
   function serialiseLayout() {
     return {
       names: state.students.map(student => student.name),
-      students: state.students.map(student => ({ name: student.name, cell: student.cell, colour: student.colour, customColour: !!student.customColour })),
+      students: state.students.map(student => ({ name:student.name, cell:student.cell, colour:student.colour, customColour:!!student.customColour })),
       fixtures: serialiseFixtures(),
       scheme: state.scheme,
       arrangement: state.arrangement,
@@ -1042,22 +1157,32 @@
   function normaliseFixture(raw, index = 0, assumeLegacy = false) {
     if (!raw || !fixtureMeta[raw.type]) return null;
     const id = raw.id || `fixture-restored-${raw.type}-${Date.now()}-${index}`;
+
     if (raw.type === 'teacher') {
       const cell = Number.isInteger(raw.cell) ? clamp(raw.cell, 0, Math.max(0, cellCount() - 1)) : 0;
       return {
         id,
-        type: 'teacher',
+        type:'teacher',
         cell,
-        w: clamp(parseInt(raw.w, 10) || 1, 1, Math.min(4, state.gridCols)),
-        h: clamp(parseInt(raw.h, 10) || 1, 1, Math.min(3, state.gridRows))
+        w:clamp(parseInt(raw.w, 10) || 1, 1, Math.min(4, state.gridCols)),
+        h:clamp(parseInt(raw.h, 10) || 1, 1, Math.min(3, state.gridRows))
       };
     }
 
+    const desiredSpan = raw.type === 'window' ? clamp(parseInt(raw.span, 10) || 3, 1, MAX_GRID) : 1;
     if (!assumeLegacy && ['top','bottom','left','right'].includes(raw.zone) && Number.isInteger(raw.slot)) {
-      return { id, type: raw.type, zone: raw.zone, slot: clamp(raw.slot, 0, perimeterSlots(raw.zone) - 1) };
+      const span = clamp(desiredSpan, 1, perimeterSlots(raw.zone));
+      const slot = clamp(raw.slot, 0, Math.max(0, perimeterSlots(raw.zone) - span));
+      const item = { id, type:raw.type, zone:raw.zone, slot };
+      if (raw.type === 'window') item.span = span;
+      return item;
     }
-    const pos = defaultPerimeterPosition(raw.type) || firstFreePerimeter();
-    return pos ? { id, type: raw.type, ...pos } : null;
+
+    const pos = defaultPerimeterPosition(raw.type, desiredSpan) || firstFreePerimeter(['top','right','bottom','left'], null, desiredSpan);
+    if (!pos) return null;
+    const item = { id, type:raw.type, zone:pos.zone, slot:pos.slot };
+    if (raw.type === 'window') item.span = pos.span;
+    return item;
   }
 
   function restoreFixtures(fixtures, { legacy = false } = {}) {
@@ -1066,26 +1191,35 @@
       createDefaultFixtures();
       return;
     }
+
     fixtures.forEach((raw, index) => {
       const item = normaliseFixture(raw, index, legacy);
       if (!item) return;
+
       if (fixtureMeta[item.type].placement === 'perimeter') {
-        const occupied = perimeterFixtureAt(item.zone, item.slot);
-        if (occupied) {
-          const alternative = defaultPerimeterPosition(item.type) || firstFreePerimeter();
-          if (!alternative) return;
-          Object.assign(item, alternative);
+        let span = perimeterSpan(item);
+        if (perimeterConflicts(item.zone, item.slot, span, item.id).length) {
+          let pos = firstFreePerimeter(['top','right','bottom','left'], item.id, span);
+          while (!pos && item.type === 'window' && span > 1) {
+            span -= 1;
+            pos = firstFreePerimeter(['top','right','bottom','left'], item.id, span);
+          }
+          if (!pos) return;
+          item.zone = pos.zone;
+          item.slot = pos.slot;
+          if (item.type === 'window') item.span = pos.span;
         }
       }
       state.fixtures.push(item);
     });
+
     if (!state.fixtures.length) createDefaultFixtures();
   }
 
   function restoreLayout(layout, fallbackNames = []) {
     if (!layout || typeof layout !== 'object') {
       refs.namesInput.value = fallbackNames.join('\n');
-      syncStudents({ keepPositions: false });
+      syncStudents({ keepPositions:false });
       return;
     }
 
@@ -1107,20 +1241,20 @@
     refs.groupSize.value = state.groupSize;
     if (layout.singleColour) refs.singleColour.value = layout.singleColour;
 
-    restoreFixtures(layout.fixtures, { legacy: legacyGrid });
+    restoreFixtures(layout.fixtures, { legacy:legacyGrid });
 
     state.students = names.slice(0, MAX_STUDENTS).map((name, index) => {
       const saved = byName.get(String(name).toLocaleLowerCase());
       const cell = Number.isInteger(saved?.cell) && saved.cell >= 0 && saved.cell < cellCount() ? saved.cell : null;
       return {
-        id: `student-${Date.now()}-${index}-${hashString(name)}`,
+        id:`student-${Date.now()}-${index}-${hashString(name)}`,
         name,
         cell,
-        colour: saved?.colour || colourFor(name, index, state.scheme),
-        customColour: !!saved?.customColour
+        colour:saved?.colour || colourFor(name, index, state.scheme),
+        customColour:!!saved?.customColour
       };
     });
-    syncStudents({ keepPositions: true });
+    syncStudents({ keepPositions:true });
   }
 
   function loadClass() {
@@ -1195,15 +1329,14 @@
 
   function initialiseGridState() {
     const current = readJson(CURRENT_KEY, null);
-    if (current?.names?.length || current?.fixtures?.length) {
-      restoreLayout(current, current.names || []);
-    } else {
+    if (current?.names?.length || current?.fixtures?.length) restoreLayout(current, current.names || []);
+    else {
       createDefaultFixtures();
       render();
     }
   }
 
-  refs.namesInput.addEventListener('input', () => syncStudents({ keepPositions: true }));
+  refs.namesInput.addEventListener('input', () => syncStudents({ keepPositions:true }));
   refs.cleanBtn.addEventListener('click', cleanRoster);
   refs.sortBtn.addEventListener('click', sortRoster);
   refs.clearBtn.addEventListener('click', clearRoster);
@@ -1253,6 +1386,8 @@
   refs.closeSelectionBtn.addEventListener('click', () => { state.selected = null; render(); });
 
   refs.applyTeacherSizeBtn.addEventListener('click', resizeSelectedTeacher);
+  refs.applyWindowSizeBtn.addEventListener('click', resizeSelectedWindow);
+  refs.windowSpan.addEventListener('keydown', event => { if (event.key === 'Enter') resizeSelectedWindow(); });
   refs.removeSelectedFixtureBtn.addEventListener('click', () => {
     if (state.selected?.kind === 'fixture') removeFixture(state.selected.id);
   });
@@ -1265,7 +1400,7 @@
 
   refs.printBtn.addEventListener('click', () => window.print());
   refs.themeBtn.addEventListener('click', () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
-  refs.showPlanBtn.addEventListener('click', () => refs.planPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  refs.showPlanBtn.addEventListener('click', () => refs.planPanel.scrollIntoView({ behavior:'smooth', block:'start' }));
 
   try { applyTheme(localStorage.getItem(THEME_KEY) || 'light', false); } catch (_) { applyTheme('light', false); }
   refreshSavedClasses();
