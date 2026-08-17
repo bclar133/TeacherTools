@@ -30,6 +30,29 @@
       border-color: rgba(180,225,255,.35);
     }
     .window-size-controls { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
+
+    /* Keep wall-item labels readable when placed on the left or right wall. */
+    .perimeter-rail.vertical .window-fixture-card,
+    .perimeter-rail.vertical .door-fixture-card {
+      overflow: visible;
+    }
+    .perimeter-rail.vertical .window-fixture-card .fixture-icon,
+    .perimeter-rail.vertical .door-fixture-card .fixture-icon {
+      display: none;
+    }
+    .perimeter-rail.vertical .window-fixture-card .fixture-label,
+    .perimeter-rail.vertical .door-fixture-card .fixture-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: max-content;
+      max-width: none;
+      overflow: visible;
+      text-overflow: clip;
+      white-space: nowrap;
+      transform: translate(-50%, -50%) rotate(-90deg);
+      transform-origin: center;
+    }
   </style>
 </head>
 <body>
