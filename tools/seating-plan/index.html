@@ -12,73 +12,24 @@
   <link rel="stylesheet" href="../../assets/css/teacher-tools.css">
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Compact Step 2 controls: keep the room builder tidy without shrinking usability. */
-    .plan-heading { margin-bottom: 9px; }
-    .toolbars { gap: 8px; }
-    .toolbar-group { padding: 8px 9px; gap: 6px; border-radius: 12px; }
-    .toolbar-group .toolbar-label { font-size: .72rem; line-height: 1.1; }
-    .toolbar-group select,
-    .toolbar-group input[type="number"] { min-height: 36px; }
-    .toolbar-group .soft-button,
-    .toolbar-group .primary-button { min-height: 36px; }
-
-    .arrange-group { grid-template-columns: minmax(112px, 1fr) auto auto; }
-    .arrange-group select { min-width: 112px; }
-    .arrange-group .inline-number { grid-template-columns: auto 42px; gap: 4px; font-size: .62rem; }
-    .arrange-group .inline-number input { width: 42px; }
-    .arrange-group .primary-button { padding-inline: 12px; white-space: nowrap; }
-
-    .grid-size-group { grid-template-columns: auto auto auto auto; }
-    .grid-size-group .inline-number { grid-template-columns: auto 46px; gap: 4px; font-size: .64rem; }
-    .grid-size-group .inline-number input { width: 46px; }
-    .grid-size-group .times-mark { padding: 0 1px; align-self: center; }
-    .grid-size-group .soft-button { padding-inline: 10px; white-space: nowrap; }
-
-    .colour-group { grid-template-columns: minmax(140px, 1fr) 36px auto; }
-    .colour-group .colour-input { width: 36px; height: 36px; }
-    .colour-group .soft-button { padding-inline: 10px; }
-
-    .room-tools { margin-top: 8px; padding: 8px 10px; gap: 10px; grid-template-columns: minmax(180px, .52fr) minmax(0, 1.48fr); }
-    .room-tool-copy { gap: 0; }
-    .room-tool-copy strong { font-size: .92rem; }
-    .room-tool-copy span { font-size: .66rem; line-height: 1.25; }
-    .room-tool-buttons { gap: 5px; flex-wrap: nowrap; }
-    .room-tool-buttons .fixture-button,
-    .room-tool-buttons .soft-button { min-height: 34px; padding-inline: 8px; white-space: nowrap; font-size: .69rem; }
-
-    .saved-room-box { margin-top: 8px; padding: 9px 10px; }
-    .saved-room-heading { margin-bottom: 6px; }
-    .saved-room-heading strong { font-size: .82rem; }
-    .saved-room-heading span { font-size: .64rem; }
-    .saved-room-controls { gap: 5px; }
-    .saved-room-controls .soft-button,
-    .saved-room-controls select,
-    .saved-room-controls input { min-height: 36px; }
-
-    @media (min-width: 1221px) {
-      .toolbars { grid-template-columns: minmax(300px, 1.08fr) minmax(260px, .92fr) minmax(300px, 1fr); }
+    .perimeter-rail > .fixture-card { z-index: 4; }
+    .window-fixture-card {
+      background:
+        linear-gradient(90deg, transparent 48%, rgba(54,110,145,.28) 48% 52%, transparent 52%),
+        linear-gradient(180deg, transparent 48%, rgba(54,110,145,.20) 48% 52%, transparent 52%),
+        #dff4ff;
+      color: #28506b;
+      border-color: rgba(54,110,145,.4);
     }
-
-    @media (max-width: 1220px) and (min-width: 901px) {
-      .toolbars { grid-template-columns: 1fr 1fr; }
-      .colour-group { grid-column: 1 / -1; }
-      .room-tools { grid-template-columns: 1fr; }
-      .room-tool-copy { flex-direction: row; align-items: baseline; gap: 8px; }
-      .room-tool-buttons { justify-content: flex-start; flex-wrap: wrap; }
+    html[data-theme="dark"] .window-fixture-card {
+      background:
+        linear-gradient(90deg, transparent 48%, rgba(180,225,255,.22) 48% 52%, transparent 52%),
+        linear-gradient(180deg, transparent 48%, rgba(180,225,255,.16) 48% 52%, transparent 52%),
+        #263f51;
+      color: #d8f2ff;
+      border-color: rgba(180,225,255,.35);
     }
-
-    @media (max-width: 900px) {
-      .toolbar-group { padding: 8px; }
-      .room-tools { grid-template-columns: 1fr; }
-      .room-tool-buttons { justify-content: flex-start; flex-wrap: wrap; }
-    }
-
-    @media (max-width: 520px) {
-      .arrange-group { grid-template-columns: minmax(0, 1fr) auto; }
-      .arrange-group .inline-number { grid-column: 1 / -1; }
-      .grid-size-group { grid-template-columns: 1fr auto 1fr; }
-      .grid-size-group .soft-button { grid-column: 1 / -1; }
-    }
+    .window-size-controls { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
   </style>
 </head>
 <body>
@@ -199,13 +150,14 @@
         <div class="room-tools">
           <div class="room-tool-copy">
             <strong>Room items</strong>
-            <span>Whiteboards, doors and screens live on the outside border. Teacher desks sit inside the student grid.</span>
+            <span>Whiteboards, doors, screens and windows live on the outside border. Teacher desks sit inside the student grid.</span>
           </div>
           <div class="room-tool-buttons">
             <button class="fixture-button" type="button" data-fixture="teacher">🧑‍🏫 Teacher desk</button>
             <button class="fixture-button" type="button" data-fixture="door">🚪 Door</button>
             <button class="fixture-button" type="button" data-fixture="whiteboard">▭ Whiteboard</button>
             <button class="fixture-button" type="button" data-fixture="screen">🖥️ Screen</button>
+            <button class="fixture-button" type="button" data-fixture="window">🪟 Window</button>
             <button id="clearFixturesBtn" class="soft-button danger-quiet" type="button">Clear room items</button>
           </div>
         </div>
@@ -259,6 +211,12 @@
               </label>
               <button id="applyTeacherSizeBtn" class="soft-button" type="button">Resize desk</button>
             </div>
+            <div id="windowSizeControls" class="window-size-controls" hidden>
+              <label class="inline-number">Length
+                <input id="windowSpan" type="number" min="1" max="12" value="3" aria-label="Window length in border grid spaces">
+              </label>
+              <button id="applyWindowSizeBtn" class="soft-button" type="button">Resize window</button>
+            </div>
             <button id="removeSelectedFixtureBtn" class="soft-button danger-quiet" type="button">Remove</button>
             <button id="closeFixtureSelectionBtn" class="text-button" type="button">Done</button>
           </div>
@@ -266,7 +224,8 @@
 
         <div class="plan-instructions">
           <span>↕ Drag students and the teacher desk inside the grid</span>
-          <span>↔ Drag doors, whiteboards and screens around the outside border</span>
+          <span>↔ Drag doors, whiteboards, screens and windows around the outside border</span>
+          <span>↔ Select a window to change how many border spaces it spans</span>
           <span>👆 On touch screens: tap an item, then tap its destination</span>
         </div>
 
