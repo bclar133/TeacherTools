@@ -200,4 +200,85 @@
   window.addEventListener('load', () => {
     if (arrangementSelect.value === 'groups') scheduleEvenGroups();
   });
+
+  /* Keep perimeter drop-zones in exactly one wall row/column. Without explicit
+     placement, CSS Grid treats fixture cards as occupied tracks and pushes
+     some drop-zone cells into an unwanted second row. */
+  function fixPerimeterRails() {
+    document.querySelectorAll('.perimeter-rail').forEach(rail => {
+      const horizontal = rail.classList.contains('horizontal');
+      rail.querySelectorAll('.perimeter-cell').forEach(cell => {
+        const slot = parseInt(cell.dataset.slot, 10);
+        if (!Number.isInteger(slot)) return;
+        if (horizontal) {
+          cell.style.gridColumn = String(slot + 1);
+          cell.style.gridRow = '1';
+        } else {
+          cell.style.gridColumn = '1';
+          cell.style.gridRow = String(slot + 1);
+        }
+      });
+    });
+  }
+
+  const perimeterStyle = document.createElement('style');
+  perimeterStyle.textContent = `
+    .perimeter-rail.horizontal {
+      grid-template-rows: minmax(0, 1fr) !important;
+      grid-auto-rows: 0 !important;
+    }
+    .perimeter-rail.vertical {
+      grid-template-columns: minmax(0, 1fr) !important;
+      grid-auto-columns: 0 !important;
+    }
+
+    /* The base stylesheet hides every label on side walls. Door and Window
+       are exceptions: keep their names visible and rotate the word as a unit. */
+    .perimeter-rail.vertical .door-fixture-card .fixture-label,
+    .perimeter-rail.vertical .window-fixture-card .fixture-label {
+      display: block !important;
+      position: absolute !important;
+      left: 50% !important;
+      top: 50% !important;
+      width: max-content !important;
+      max-width: none !important;
+      max-height: none !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      white-space: nowrap !important;
+      writing-mode: horizontal-tb !important;
+      text-orientation: mixed !important;
+      transform: translate(-50%, -50%) rotate(-90deg) !important;
+      transform-origin: center !important;
+      font-size: clamp(.54rem, .72vw, .68rem) !important;
+      line-height: 1 !important;
+      z-index: 2 !important;
+    }
+    .perimeter-rail.vertical .door-fixture-card,
+    .perimeter-rail.vertical .window-fixture-card {
+      overflow: hidden !important;
+    }
+    .perimeter-rail.vertical .door-fixture-card .fixture-icon,
+    .perimeter-rail.vertical .window-fixture-card .fixture-icon {
+      display: none !important;
+    }
+  `;
+  document.head.append(perimeterStyle);
+
+  let perimeterRepairQueued = false;
+  function schedulePerimeterRepair() {
+    if (perimeterRepairQueued) return;
+    perimeterRepairQueued = true;
+    requestAnimationFrame(() => {
+      perimeterRepairQueued = false;
+      fixPerimeterRails();
+    });
+  }
+
+  const rails = ['#topRail', '#bottomRail', '#leftRail', '#rightRail']
+    .map(selector => document.querySelector(selector))
+    .filter(Boolean);
+  const perimeterObserver = new MutationObserver(schedulePerimeterRepair);
+  rails.forEach(rail => perimeterObserver.observe(rail, { childList: true }));
+  schedulePerimeterRepair();
 })();
