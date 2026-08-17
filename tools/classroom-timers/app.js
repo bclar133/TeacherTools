@@ -127,6 +127,18 @@
     space: ['Space Journey', 'A spacecraft crosses the stars from Earth to Saturn.']
   };
 
+  let themeFilter = storage.get('themeFilter', 'all');
+
+  function setThemeFilter(filter) {
+    themeFilter = ['all','minimal','calm','fun','action'].includes(filter) ? filter : 'all';
+    storage.set('themeFilter', themeFilter);
+    $$('.theme-filters button').forEach(btn => btn.classList.toggle('active', btn.dataset.themeFilter === themeFilter));
+    $$('.theme-card').forEach(card => {
+      const categories = (card.dataset.category || '').split(/\s+/);
+      card.hidden = themeFilter !== 'all' && !categories.includes(themeFilter);
+    });
+  }
+
   let countdown = {
     totalMs: 300000,
     remainingMs: 300000,
@@ -273,11 +285,9 @@
       countdown.sceneData.points = points;
       const ramps = points.slice(0,-1).map((p,i) => {
         const q = points[i+1];
-        const dx = q.x-p.x, dy=q.y-p.y;
-        const len = Math.hypot(dx,dy); const ang = Math.atan2(dy,dx)*180/Math.PI;
-        return `<div class="ramp" style="left:${p.x}%;top:${p.y}%;width:${len}%;transform:translateY(-50%) rotate(${ang}deg)"></div>`;
+        return `<line x1="${p.x * 10}" y1="${p.y * 6}" x2="${q.x * 10}" y2="${q.y * 6}" />`;
       }).join('');
-      layer.innerHTML = `<div class="ramp-scene">${ramps}<div class="ramp-ball"></div></div>`;
+      layer.innerHTML = `<div class="ramp-scene"><svg class="ramp-svg" viewBox="0 0 1000 600" preserveAspectRatio="none">${ramps}</svg><div class="ramp-ball"></div></div>`;
     }
 
     if (theme === 'rocket') {
@@ -392,6 +402,7 @@
 
   function renderCountdown(progress, justFinished = false) {
     progress = clamp(progress,0,1);
+    $('#countdownStage').classList.toggle('finished', progress >= 1);
     $('#countdownDisplay').textContent = formatClock(Math.ceil(countdown.remainingMs/1000));
     $('#countdownMessage').textContent = progress >= 1 ? 'Time’s up!' : countdown.running ? `${Math.round((1-progress)*100)}% remaining` : (progress > 0 ? 'Paused' : 'Ready when you are');
     const layer=$('#sceneLayer');
@@ -525,6 +536,7 @@
 
   $$('.quick-times button').forEach(btn=>btn.addEventListener('click',()=>setCountdownDuration(Number(btn.dataset.seconds))));
   ['countdownMinutes','countdownSeconds'].forEach(id=>$('#'+id).addEventListener('change',()=>{if(countdown.running)return;setCountdownDuration(getInputSeconds());}));
+  $$('.theme-filters button').forEach(btn=>btn.addEventListener('click',()=>setThemeFilter(btn.dataset.themeFilter)));
   $$('.theme-card').forEach(btn=>btn.addEventListener('click',()=>chooseCountdownTheme(btn.dataset.theme)));
   $('#resetSceneBtn').addEventListener('click',()=>{buildCountdownScene(countdown.theme);renderCountdown(countdownProgress());showToast('Fresh scene generated');});
   $('#countdownStartBtn').addEventListener('click',startPauseCountdown);
@@ -568,6 +580,7 @@
   setDarkMode(Boolean(storage.get('dark', false)));
   updateMuteUI();
   setWorkspace(storage.get('workspace','countdown'));
+  setThemeFilter(themeFilter);
   chooseCountdownTheme(countdown.theme);
   setCountdownDuration(storage.get('durationSeconds',300));
   chooseClockStyle(clockStyle);
