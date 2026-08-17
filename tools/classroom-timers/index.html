@@ -69,19 +69,26 @@
 
           <div class="setting-block">
             <div class="setting-heading"><span>Visual theme</span><small id="themeDescription">The whole day passes as your time runs out.</small></div>
+            <div class="theme-filters" aria-label="Filter countdown themes">
+              <button class="active" type="button" data-theme-filter="all">All</button>
+              <button type="button" data-theme-filter="minimal">Minimal</button>
+              <button type="button" data-theme-filter="calm">Calm</button>
+              <button type="button" data-theme-filter="fun">Fun</button>
+              <button type="button" data-theme-filter="action">Action</button>
+            </div>
             <div id="themeGrid" class="theme-grid" role="listbox" aria-label="Countdown visual theme">
-              <button class="theme-card active" type="button" data-theme="sunrise" role="option" aria-selected="true"><span>🌅</span><strong>Day & Night</strong></button>
-              <button class="theme-card" type="button" data-theme="racing" role="option"><span>🏎️</span><strong>Road Racer</strong></button>
-              <button class="theme-card" type="button" data-theme="parachute" role="option"><span>🪂</span><strong>Parachute</strong></button>
-              <button class="theme-card" type="button" data-theme="ramps" role="option"><span>🟠</span><strong>Ramp Ball</strong></button>
-              <button class="theme-card" type="button" data-theme="rocket" role="option"><span>🚀</span><strong>Rocket</strong></button>
-              <button class="theme-card" type="button" data-theme="hourglass" role="option"><span>⌛</span><strong>Hourglass</strong></button>
-              <button class="theme-card" type="button" data-theme="plant" role="option"><span>🌱</span><strong>Growing Plant</strong></button>
-              <button class="theme-card" type="button" data-theme="popcorn" role="option"><span>🍿</span><strong>Popcorn</strong></button>
-              <button class="theme-card" type="button" data-theme="coaster" role="option"><span>🎢</span><strong>Rollercoaster</strong></button>
-              <button class="theme-card" type="button" data-theme="maze" role="option"><span>🌀</span><strong>Marble Maze</strong></button>
-              <button class="theme-card" type="button" data-theme="candle" role="option"><span>🕯️</span><strong>Candle</strong></button>
-              <button class="theme-card" type="button" data-theme="space" role="option"><span>🪐</span><strong>Space Journey</strong></button>
+              <button class="theme-card active" type="button" data-theme="sunrise" data-category="calm" role="option" aria-selected="true"><span>🌅</span><strong>Day & Night</strong></button>
+              <button class="theme-card" type="button" data-theme="racing" data-category="action" role="option"><span>🏎️</span><strong>Road Racer</strong></button>
+              <button class="theme-card" type="button" data-theme="parachute" data-category="fun" role="option"><span>🪂</span><strong>Parachute</strong></button>
+              <button class="theme-card" type="button" data-theme="ramps" data-category="action" role="option"><span>🟠</span><strong>Ramp Ball</strong></button>
+              <button class="theme-card" type="button" data-theme="rocket" data-category="action" role="option"><span>🚀</span><strong>Rocket</strong></button>
+              <button class="theme-card" type="button" data-theme="hourglass" data-category="minimal calm" role="option"><span>⌛</span><strong>Hourglass</strong></button>
+              <button class="theme-card" type="button" data-theme="plant" data-category="calm" role="option"><span>🌱</span><strong>Growing Plant</strong></button>
+              <button class="theme-card" type="button" data-theme="popcorn" data-category="fun" role="option"><span>🍿</span><strong>Popcorn</strong></button>
+              <button class="theme-card" type="button" data-theme="coaster" data-category="action" role="option"><span>🎢</span><strong>Rollercoaster</strong></button>
+              <button class="theme-card" type="button" data-theme="maze" data-category="fun" role="option"><span>🌀</span><strong>Marble Maze</strong></button>
+              <button class="theme-card" type="button" data-theme="candle" data-category="minimal calm" role="option"><span>🕯️</span><strong>Candle</strong></button>
+              <button class="theme-card" type="button" data-theme="space" data-category="calm" role="option"><span>🪐</span><strong>Space Journey</strong></button>
             </div>
           </div>
 
