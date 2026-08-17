@@ -136,6 +136,19 @@ html[data-theme="dark"] .header-nav-link:hover {
   padding: 0 30px 0 10px !important;
 }
 
+/* Keep native number spinners, but reserve enough room for two-digit values in every browser. */
+#planPanel input[type="number"] {
+  width: 66px !important;
+  min-width: 66px !important;
+  padding: 0 22px 0 10px !important;
+  text-align: left !important;
+  font-variant-numeric: tabular-nums;
+}
+
+#planPanel .inline-number {
+  grid-template-columns: auto 66px !important;
+}
+
 /* Row 1: arrangement */
 #planPanel .arrange-group {
   display: grid !important;
@@ -144,14 +157,15 @@ html[data-theme="dark"] .header-nav-link:hover {
 
 #planPanel .arrange-group .inline-number {
   display: grid !important;
-  grid-template-columns: auto 44px !important;
+  grid-template-columns: auto 66px !important;
   align-items: center !important;
   gap: 5px !important;
   white-space: nowrap !important;
 }
 
 #planPanel .arrange-group .inline-number input {
-  width: 44px !important;
+  width: 66px !important;
+  min-width: 66px !important;
 }
 
 #planPanel .arrange-group .primary-button {
@@ -168,14 +182,15 @@ html[data-theme="dark"] .header-nav-link:hover {
 
 #planPanel .grid-size-group .inline-number {
   display: grid !important;
-  grid-template-columns: auto 48px !important;
+  grid-template-columns: auto 66px !important;
   align-items: center !important;
   gap: 5px !important;
   white-space: nowrap !important;
 }
 
 #planPanel .grid-size-group .inline-number input {
-  width: 48px !important;
+  width: 66px !important;
+  min-width: 66px !important;
 }
 
 #planPanel .grid-size-group .times-mark {
