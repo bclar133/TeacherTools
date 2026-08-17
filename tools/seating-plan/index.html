@@ -31,10 +31,11 @@
     }
     .window-size-controls { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
 
-    /* Keep wall-item labels readable when placed on the left or right wall. */
+    /* Side-wall labels: use vertical writing mode so they stay inside narrow rail cells. */
     .perimeter-rail.vertical .window-fixture-card,
     .perimeter-rail.vertical .door-fixture-card {
-      overflow: visible;
+      overflow: hidden;
+      padding: 5px 3px;
     }
     .perimeter-rail.vertical .window-fixture-card .fixture-icon,
     .perimeter-rail.vertical .door-fixture-card .fixture-icon {
@@ -42,16 +43,20 @@
     }
     .perimeter-rail.vertical .window-fixture-card .fixture-label,
     .perimeter-rail.vertical .door-fixture-card .fixture-label {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: max-content;
-      max-width: none;
+      position: static;
+      display: block;
+      width: auto;
+      max-width: 100%;
+      min-width: 0;
+      max-height: calc(100% - 4px);
       overflow: visible;
       text-overflow: clip;
       white-space: nowrap;
-      transform: translate(-50%, -50%) rotate(-90deg);
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
       transform-origin: center;
+      line-height: 1;
     }
   </style>
 </head>
