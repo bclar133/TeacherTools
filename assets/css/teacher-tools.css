@@ -59,6 +59,177 @@ html[data-theme="dark"] .header-nav-link:hover {
   color: #ffffff;
 }
 
+/* Seating Plan: one compact, consistent Step 2 toolbar. Scoped to this tool only. */
+#planPanel .toolbars {
+  display: grid !important;
+  grid-template-columns: minmax(340px, 1.08fr) minmax(275px, .86fr) minmax(320px, 1fr) !important;
+  gap: 0 !important;
+  padding: 6px 8px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+  background: var(--panel-soft) !important;
+}
+
+#planPanel .toolbar-group {
+  min-width: 0 !important;
+  min-height: 64px !important;
+  padding: 4px 12px !important;
+  gap: 6px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  align-content: center !important;
+}
+
+#planPanel .toolbar-group + .toolbar-group {
+  border-left: 1px solid var(--line) !important;
+}
+
+#planPanel .toolbar-group .toolbar-label,
+#planPanel .toolbar-group .inline-number,
+#planPanel .toolbar-group .times-mark {
+  font-family: "Nunito", ui-sans-serif, system-ui, sans-serif !important;
+  font-size: .74rem !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  color: var(--muted) !important;
+}
+
+#planPanel .toolbar-group .toolbar-label {
+  margin: 0 0 1px !important;
+}
+
+#planPanel .toolbar-group select,
+#planPanel .toolbar-group input[type="number"],
+#planPanel .toolbar-group .soft-button,
+#planPanel .toolbar-group .primary-button {
+  min-height: 36px !important;
+  height: 36px !important;
+  font-family: "Nunito", ui-sans-serif, system-ui, sans-serif !important;
+  font-size: .82rem !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  border-radius: 10px !important;
+}
+
+#planPanel .toolbar-group select {
+  padding: 0 30px 0 10px !important;
+}
+
+#planPanel .arrange-group {
+  grid-template-columns: minmax(130px, 1fr) auto auto !important;
+}
+
+#planPanel .arrange-group .inline-number {
+  display: grid !important;
+  grid-template-columns: auto 44px !important;
+  gap: 5px !important;
+  align-items: center !important;
+}
+
+#planPanel .arrange-group .inline-number input {
+  width: 44px !important;
+}
+
+#planPanel .arrange-group .primary-button {
+  padding: 0 13px !important;
+  white-space: nowrap !important;
+}
+
+#planPanel .grid-size-group {
+  grid-template-columns: auto auto auto auto !important;
+}
+
+#planPanel .grid-size-group .inline-number {
+  display: grid !important;
+  grid-template-columns: auto 44px !important;
+  gap: 5px !important;
+  align-items: center !important;
+}
+
+#planPanel .grid-size-group .inline-number input {
+  width: 44px !important;
+}
+
+#planPanel .grid-size-group .times-mark {
+  padding: 0 1px !important;
+  align-self: center !important;
+}
+
+#planPanel .grid-size-group .soft-button {
+  padding: 0 11px !important;
+  white-space: nowrap !important;
+}
+
+#planPanel .colour-group {
+  grid-template-columns: minmax(155px, 1fr) 36px auto !important;
+}
+
+#planPanel .colour-group .colour-input {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 9px !important;
+}
+
+#planPanel .colour-group .soft-button {
+  padding: 0 12px !important;
+}
+
+/* Keep the room-items strip visually subordinate to the main controls. */
+#planPanel .room-tools {
+  margin-top: 8px !important;
+  padding: 7px 9px !important;
+}
+
+#planPanel .room-tool-copy strong,
+#planPanel .room-tool-copy span,
+#planPanel .room-tool-buttons button {
+  font-family: "Nunito", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+#planPanel .room-tool-copy strong {
+  font-size: .82rem !important;
+  font-weight: 900 !important;
+}
+
+#planPanel .room-tool-copy span {
+  font-size: .72rem !important;
+}
+
+#planPanel .room-tool-buttons button {
+  min-height: 34px !important;
+  font-size: .74rem !important;
+}
+
+@media (max-width: 1220px) {
+  #planPanel .toolbars {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    padding: 6px !important;
+  }
+  #planPanel .toolbar-group {
+    min-height: 62px !important;
+    padding: 7px 9px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 11px !important;
+  }
+  #planPanel .toolbar-group + .toolbar-group {
+    border-left: 1px solid var(--line) !important;
+  }
+  #planPanel .colour-group {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  #planPanel .toolbars {
+    grid-template-columns: 1fr !important;
+  }
+  #planPanel .colour-group {
+    grid-column: auto !important;
+  }
+}
+
 @media (max-width: 700px) {
   .header-nav-link {
     min-height: 38px;
@@ -74,5 +245,18 @@ html[data-theme="dark"] .header-nav-link:hover {
   }
   .header-nav-link {
     order: 2;
+  }
+  #planPanel .arrange-group {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+  #planPanel .arrange-group .inline-number {
+    grid-column: 1 / -1 !important;
+    justify-self: start !important;
+  }
+  #planPanel .grid-size-group {
+    grid-template-columns: 1fr auto 1fr !important;
+  }
+  #planPanel .grid-size-group .soft-button {
+    grid-column: 1 / -1 !important;
   }
 }
