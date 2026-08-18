@@ -6,7 +6,7 @@
   if (!sceneLayer || !stage) return;
 
   const style = document.createElement('style');
-  style.id = 'rampBallPhysicsV2';
+  style.id = 'rampBallPhysicsV3';
   style.textContent = `
     .ramp-scene.physics-ramp-active {
       background:
@@ -106,6 +106,7 @@
 
     .physics-bucket {
       position:absolute;
+      z-index:5;
       width:92px;
       height:82px;
       transform:translate(-50%,-12px);
@@ -130,9 +131,37 @@
       clip-path:polygon(3% 0,97% 0,82% 100%,18% 100%);
       box-shadow:inset 0 5px 7px rgba(255,255,255,.12);
     }
-    .physics-bucket-label {
-      position:absolute; z-index:8; left:50%; top:39px; transform:translateX(-50%);
-      color:#34414a; font-size:9px; font-weight:1000; letter-spacing:.08em;
+
+    /* Separate foreground wall sits above the ball so it is naturally hidden as it drops in. */
+    .physics-bucket-front-mask {
+      position:absolute;
+      z-index:8;
+      width:92px;
+      height:82px;
+      transform:translate(-50%,-12px);
+      pointer-events:none;
+    }
+    .physics-bucket-front-mask::before {
+      content:'';
+      position:absolute;
+      left:10px;
+      right:10px;
+      top:13px;
+      height:58px;
+      border-radius:6px 6px 22px 22px;
+      background:linear-gradient(90deg,#65727c,#d8dee3 48%,#6d7a84);
+      clip-path:polygon(3% 0,97% 0,82% 100%,18% 100%);
+      box-shadow:inset 0 5px 7px rgba(255,255,255,.12);
+    }
+    .physics-bucket-front-mask::after {
+      content:'';
+      position:absolute;
+      left:10px;
+      top:8px;
+      width:72px;
+      height:13px;
+      border-bottom:5px solid #edf1f4;
+      border-radius:0 0 50% 50%;
     }
 
     .physics-drop-guide {
@@ -145,7 +174,8 @@
 
     @media (max-width:760px) {
       .physics-ball { width:34px;height:34px;margin:-17px 0 0 -17px; }
-      .physics-bucket { transform:translate(-50%,-8px) scale(.84); transform-origin:50% 0; }
+      .physics-bucket,
+      .physics-bucket-front-mask { transform:translate(-50%,-8px) scale(.84); transform-origin:50% 0; }
     }
   `;
   document.head.appendChild(style);
@@ -209,8 +239,14 @@
     bucketEl.className='physics-bucket';
     bucketEl.style.left=`${bucket.x}%`;
     bucketEl.style.top=`${bucket.y}%`;
-    bucketEl.innerHTML='<div class="physics-bucket-back"></div><div class="physics-bucket-opening"></div><div class="physics-bucket-front"></div><div class="physics-bucket-label">BUCKET</div>';
+    bucketEl.innerHTML='<div class="physics-bucket-back"></div><div class="physics-bucket-opening"></div><div class="physics-bucket-front"></div>';
     machine.appendChild(bucketEl);
+
+    const bucketMask=document.createElement('div');
+    bucketMask.className='physics-bucket-front-mask';
+    bucketMask.style.left=`${bucket.x}%`;
+    bucketMask.style.top=`${bucket.y}%`;
+    machine.appendChild(bucketMask);
 
     scene.appendChild(machine);
     return {machine,ball};
@@ -306,11 +342,12 @@
     } else {
       const start=pointOnRamp(ramps[phase.from],1,rect,radius);
       const targetX=bucket.x/100*rect.width;
-      const targetY=Math.min(rect.height-4,bucket.y/100*rect.height+42);
+      const targetY=Math.min(rect.height-4,bucket.y/100*rect.height+46);
       x=start.x+(targetX-start.x)*u;
       y=start.y+(targetY-start.y)*u*u;
-      instance.ball.style.opacity=u>.91?String(Math.max(0,(1-u)/.09)):'1';
-      instance.ball.style.zIndex=u>.64?'6':'6';
+      // Stay fully opaque: the foreground bucket wall physically hides the ball as it falls inside.
+      instance.ball.style.opacity='1';
+      instance.ball.style.zIndex='6';
     }
 
     instance.ball.style.left=`${x}px`;
