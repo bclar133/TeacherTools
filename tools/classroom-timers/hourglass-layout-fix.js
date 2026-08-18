@@ -5,7 +5,7 @@
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'hourglassLayoutFixV1';
+  style.id = 'hourglassLayoutFixV2';
   style.textContent = `
     /* Force the Hourglass artwork to fill the entire timer stage. */
     .hourglass-scene.hourglass-upgraded {
@@ -16,7 +16,7 @@
       height:100% !important;
       min-height:100% !important;
       overflow:hidden !important;
-      background:#050508 !important;
+      background:#100d16 !important;
     }
 
     .hourglass-scene.hourglass-upgraded .hourglass-illustrated-bg,
@@ -30,32 +30,32 @@
       pointer-events:none !important;
     }
 
-    /* The wizard fills the complete stage. Top alignment keeps his face below the timer overlay. */
+    /* Keep the atmospheric overlays full-size, but show slightly more of the wizard artwork. */
     .hourglass-scene.hourglass-upgraded .hourglass-illustrated-bg {
       z-index:1 !important;
-      background-size:cover !important;
-      background-repeat:no-repeat !important;
-      background-position:66% 0% !important;
+      background-size:100% 100%, 100% 100%, auto 94% !important;
+      background-repeat:no-repeat, no-repeat, no-repeat !important;
+      background-position:center, center, 68% 52% !important;
       opacity:1 !important;
-      filter:brightness(.72) contrast(1.08) saturate(.9) !important;
+      filter:brightness(.84) contrast(1.04) saturate(.94) !important;
       transform:none !important;
       transform-origin:center !important;
     }
 
-    /* Keep the edges atmospheric, but no longer bury the wizard's face in black. */
+    /* Softer vignette so the wizard remains clearly visible. */
     .hourglass-scene.hourglass-upgraded .hourglass-shadow-vignette {
       z-index:2 !important;
       background:
-        radial-gradient(circle at 76% 34%, transparent 0 18%, rgba(5,4,8,.08) 34%, rgba(5,4,8,.28) 64%, rgba(4,3,7,.55) 100%),
-        linear-gradient(90deg, rgba(4,3,7,.42) 0%, rgba(5,4,8,.12) 35%, rgba(5,4,8,.06) 70%, rgba(4,3,7,.22) 100%) !important;
+        radial-gradient(circle at 76% 34%, transparent 0 22%, rgba(5,4,8,.04) 38%, rgba(5,4,8,.18) 67%, rgba(4,3,7,.36) 100%),
+        linear-gradient(90deg, rgba(4,3,7,.28) 0%, rgba(5,4,8,.07) 35%, rgba(5,4,8,.03) 72%, rgba(4,3,7,.14) 100%) !important;
     }
 
     .hourglass-scene.hourglass-upgraded .hourglass-magic-haze {
       z-index:3 !important;
-      opacity:.62 !important;
+      opacity:.48 !important;
     }
 
-    /* Centre the hourglass in the full-height scene rather than the old upper section. */
+    /* Centre the hourglass in the full-height scene. */
     .hourglass-scene.hourglass-upgraded .hourglass {
       position:absolute !important;
       z-index:6 !important;
@@ -75,8 +75,9 @@
 
     @media (max-width:760px) {
       .hourglass-scene.hourglass-upgraded .hourglass-illustrated-bg {
-        background-position:64% 0% !important;
-        filter:brightness(.66) contrast(1.08) saturate(.88) !important;
+        background-size:100% 100%, 100% 100%, auto 90% !important;
+        background-position:center, center, 67% 52% !important;
+        filter:brightness(.78) contrast(1.04) saturate(.92) !important;
       }
       .hourglass-scene.hourglass-upgraded .hourglass {
         left:43% !important;
@@ -91,10 +92,8 @@
     const scene = sceneLayer.querySelector('.hourglass-scene');
     if (!scene) return;
 
-    /* Remove the old CSS-drawn wizard if an older cached upgrade inserted it. */
     scene.querySelectorAll('.hourglass-wizard').forEach(el => el.remove());
 
-    /* Defensive inline sizing in case stale cached CSS wins the cascade. */
     scene.style.position = 'absolute';
     scene.style.inset = '0';
     scene.style.width = '100%';
