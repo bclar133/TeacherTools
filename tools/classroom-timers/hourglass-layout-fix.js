@@ -5,7 +5,7 @@
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'hourglassLayoutFixV2';
+  style.id = 'hourglassLayoutFixV3';
   style.textContent = `
     /* Force the Hourglass artwork to fill the entire timer stage. */
     .hourglass-scene.hourglass-upgraded {
@@ -66,11 +66,78 @@
       filter:drop-shadow(0 14px 22px rgba(0,0,0,.55)) !important;
     }
 
+    /* Extend both glass chambers so they meet exactly at the bottleneck. */
+    .hourglass-scene.hourglass-upgraded .hg-top,
+    .hourglass-scene.hourglass-upgraded .hg-bottom {
+      height:130px !important;
+    }
+
+    .hourglass-scene.hourglass-upgraded .hg-top {
+      top:35px !important;
+    }
+
+    .hourglass-scene.hourglass-upgraded .hg-bottom {
+      bottom:35px !important;
+    }
+
+    /* Sand begins just below the neck: nothing is drawn through the upper chamber. */
     .hourglass-scene.hourglass-upgraded .hg-stream {
       z-index:8 !important;
+      left:113px !important;
+      top:166px !important;
       width:3px !important;
-      height:50px !important;
+      height:43px !important;
       opacity:var(--stream,1) !important;
+      background:transparent !important;
+      border-radius:999px !important;
+      box-shadow:0 0 6px rgba(246,199,84,.25) !important;
+      overflow:hidden !important;
+      transform:translateX(-50%) !important;
+      animation:none !important;
+    }
+
+    /* Moving bright/dark grains make the stream read as sand falling downward. */
+    .hourglass-scene.hourglass-upgraded .hg-stream::before {
+      content:'' !important;
+      position:absolute !important;
+      inset:-12px 0 0 !important;
+      width:100% !important;
+      height:calc(100% + 12px) !important;
+      border-radius:999px !important;
+      background:repeating-linear-gradient(
+        180deg,
+        rgba(255,247,201,.98) 0 4px,
+        rgba(245,204,96,.96) 4px 8px,
+        rgba(211,143,37,.84) 8px 12px
+      ) !important;
+      background-size:100% 12px !important;
+      animation:hourglassFallingSand .30s linear infinite !important;
+    }
+
+    /* Small impact shimmer where the stream reaches the lower pile. */
+    .hourglass-scene.hourglass-upgraded .hg-stream::after {
+      content:'' !important;
+      position:absolute !important;
+      left:50% !important;
+      bottom:-2px !important;
+      width:9px !important;
+      height:5px !important;
+      transform:translateX(-50%) !important;
+      border-radius:50% !important;
+      background:rgba(247,201,91,.82) !important;
+      filter:blur(.5px) !important;
+      opacity:.75 !important;
+      animation:hourglassSandImpact .36s ease-in-out infinite alternate !important;
+    }
+
+    @keyframes hourglassFallingSand {
+      from { transform:translateY(0); }
+      to { transform:translateY(12px); }
+    }
+
+    @keyframes hourglassSandImpact {
+      from { width:7px; opacity:.55; }
+      to { width:12px; opacity:.9; }
     }
 
     @media (max-width:760px) {
