@@ -6,7 +6,7 @@
   if (!sceneLayer || !stage) return;
 
   const style = document.createElement('style');
-  style.id = 'rocketMoonFlightV3';
+  style.id = 'rocketMoonFlightV4';
   style.textContent = `
     .rocket-scene.rocket-flight-active {
       background:
@@ -20,7 +20,6 @@
       display:none !important;
     }
 
-    /* The old tiled star pattern is hidden; each scene now gets genuinely scattered stars. */
     .rocket-scene.rocket-flight-active .rocket-stars {
       display:none !important;
     }
@@ -48,39 +47,41 @@
       to { opacity:var(--star-opacity,.8); transform:scale(1.18); }
     }
 
+    /* Background planets should add depth without competing with the rocket or moon. */
     .rocket-mini-planet {
       position:absolute;
       z-index:2;
       border-radius:50%;
       pointer-events:none;
-      filter:drop-shadow(0 0 16px rgba(144,180,235,.16));
+      opacity:.38;
+      filter:saturate(.72) brightness(.82) drop-shadow(0 0 10px rgba(144,180,235,.08));
     }
     .rocket-mini-planet.planet-a {
       left:24%;
       top:25%;
-      width:54px;
-      height:54px;
+      width:42px;
+      height:42px;
       background:
-        radial-gradient(circle at 34% 29%,rgba(255,255,255,.35) 0 5%,transparent 6%),
-        repeating-linear-gradient(14deg,#bd7252 0 8px,#8e4c46 9px 15px,#d99a6e 16px 23px);
-      box-shadow:inset -9px -8px 13px rgba(44,23,41,.28),0 0 18px rgba(213,128,91,.18);
+        radial-gradient(circle at 34% 29%,rgba(255,255,255,.28) 0 5%,transparent 6%),
+        repeating-linear-gradient(14deg,#bd7252 0 7px,#8e4c46 8px 12px,#d99a6e 13px 18px);
+      box-shadow:inset -7px -6px 10px rgba(44,23,41,.24),0 0 10px rgba(213,128,91,.09);
     }
     .rocket-mini-planet.planet-b {
       left:57%;
       top:70%;
-      width:42px;
-      height:42px;
+      width:32px;
+      height:32px;
       background:radial-gradient(circle at 32% 28%,#9de1d5,#4f9ea2 45%,#376789 76%,#243e69 100%);
-      box-shadow:inset -7px -7px 11px rgba(10,31,68,.35),0 0 18px rgba(99,194,210,.17);
+      box-shadow:inset -5px -5px 8px rgba(10,31,68,.32),0 0 10px rgba(99,194,210,.08);
     }
     .rocket-mini-planet.planet-b::after {
       content:'';
       position:absolute;
-      left:-13px;
-      top:15px;
-      width:68px;
-      height:12px;
-      border:3px solid rgba(193,213,193,.72);
+      left:-10px;
+      top:11px;
+      width:52px;
+      height:9px;
+      border:2px solid rgba(193,213,193,.48);
       border-left-color:transparent;
       border-right-color:transparent;
       border-radius:50%;
@@ -96,24 +97,24 @@
     }
     .rocket-smoke-puff {
       position:absolute;
-      width:var(--smoke-size,18px);
-      height:var(--smoke-size,18px);
-      margin-left:calc(var(--smoke-size,18px) / -2);
-      margin-top:calc(var(--smoke-size,18px) / -2);
+      width:var(--smoke-size,28px);
+      height:var(--smoke-size,28px);
+      margin-left:calc(var(--smoke-size,28px) / -2);
+      margin-top:calc(var(--smoke-size,28px) / -2);
       border-radius:50%;
-      background:radial-gradient(circle at 38% 34%,rgba(240,246,251,.72),rgba(174,190,205,.48) 44%,rgba(103,121,143,.14) 72%,transparent 76%);
-      filter:blur(.4px);
-      opacity:.68;
-      animation:rocketSmokeFade 4.2s ease-out forwards;
+      background:radial-gradient(circle at 38% 34%,rgba(250,253,255,.94) 0 18%,rgba(205,216,226,.78) 40%,rgba(132,150,170,.36) 66%,rgba(88,106,128,.09) 78%,transparent 82%);
+      filter:blur(.7px);
+      opacity:.9;
+      animation:rocketSmokeFade 5.3s ease-out forwards;
       will-change:transform,opacity;
     }
     @keyframes rocketSmokeFade {
-      0% { opacity:.68; transform:translate(0,0) scale(.62); }
-      35% { opacity:.43; }
-      100% { opacity:0; transform:translate(var(--smoke-drift-x,5px),var(--smoke-drift-y,-9px)) scale(2.45); }
+      0% { opacity:.9; transform:translate(0,0) scale(.7); }
+      28% { opacity:.76; }
+      58% { opacity:.48; }
+      100% { opacity:0; transform:translate(var(--smoke-drift-x,6px),var(--smoke-drift-y,-12px)) scale(3.05); }
     }
 
-    /* Keep the Rocket flight clear: timer + percentage sit together in the bottom-right. */
     .timer-stage.theme-rocket .time-display-wrap {
       top:auto !important;
       left:auto !important;
@@ -192,9 +193,9 @@
 
     @media (max-width:760px) {
       .rocket-moon { width:92px;height:92px; }
-      .rocket-mini-planet.planet-a { width:42px;height:42px; }
-      .rocket-mini-planet.planet-b { width:34px;height:34px; }
-      .rocket-mini-planet.planet-b::after { left:-10px;top:12px;width:54px;height:10px; }
+      .rocket-mini-planet.planet-a { width:32px;height:32px; }
+      .rocket-mini-planet.planet-b { width:25px;height:25px; }
+      .rocket-mini-planet.planet-b::after { left:-8px;top:8px;width:41px;height:8px; }
       .rocket-scene.rocket-flight-active .rocket {
         transform:translate(-50%,-50%) rotate(var(--rocket-angle,-55deg)) scale(.55) !important;
       }
@@ -237,9 +238,6 @@
     const control={x:rect.width*.39,y:rect.height*.22};
     const moonCenter={x:rect.width*.86,y:rect.height*.18};
 
-    // The visible rocket is the original 185px-tall rocket scaled to 68%.
-    // Its nose sits about 75px in front of its centre. Find the end point
-    // iteratively so the nose, not the centre, is what first touches the moon.
     const noseOffset=rect.width<=760 ? 61 : 75;
     let end={...moonCenter};
     for(let i=0;i<4;i++){
@@ -295,30 +293,34 @@
     return smoke;
   }
 
-  function spawnSmoke(instance,x,y,dx,dy) {
-    const now=performance.now();
-    if(instance.progress<=0 || instance.progress>=.9995 || now-instance.lastSmokeAt<145) return;
-    instance.lastSmokeAt=now;
-
-    const mag=Math.hypot(dx,dy)||1;
-    const ux=dx/mag,uy=dy/mag;
+  function makeSmokePuff(instance,x,y,ux,uy,spread=1) {
     const rocketScale=instance.scene.getBoundingClientRect().width<=760 ? .55 : .68;
-    const tailOffset=67*rocketScale;
-    const jitter=5;
-
+    const tailOffset=70*rocketScale;
+    const jitter=7*spread;
     const puff=document.createElement('span');
     puff.className='rocket-smoke-puff';
     const px=x-ux*tailOffset+(Math.random()-.5)*jitter;
     const py=y-uy*tailOffset+(Math.random()-.5)*jitter;
-    const size=13+Math.random()*11;
+    const size=22+Math.random()*16;
     puff.style.left=`${px}px`;
     puff.style.top=`${py}px`;
     puff.style.setProperty('--smoke-size',`${size.toFixed(1)}px`);
-    puff.style.setProperty('--smoke-drift-x',`${((Math.random()-.5)*14).toFixed(1)}px`);
-    puff.style.setProperty('--smoke-drift-y',`${(-5-Math.random()*12).toFixed(1)}px`);
+    puff.style.setProperty('--smoke-drift-x',`${((Math.random()-.5)*18).toFixed(1)}px`);
+    puff.style.setProperty('--smoke-drift-y',`${(-7-Math.random()*15).toFixed(1)}px`);
     instance.smokeLayer.appendChild(puff);
     puff.addEventListener('animationend',()=>puff.remove(),{once:true});
-    setTimeout(()=>puff.remove(),4700);
+    setTimeout(()=>puff.remove(),5700);
+  }
+
+  function spawnSmoke(instance,x,y,dx,dy) {
+    const now=performance.now();
+    if(instance.progress<=0 || instance.progress>=.9995 || now-instance.lastSmokeAt<72) return;
+    instance.lastSmokeAt=now;
+
+    const mag=Math.hypot(dx,dy)||1;
+    const ux=dx/mag,uy=dy/mag;
+    makeSmokePuff(instance,x,y,ux,uy,1);
+    if(Math.random()>.48) makeSmokePuff(instance,x-ux*6,y-uy*6,ux,uy,.75);
   }
 
   function render(instance,progress) {
@@ -333,12 +335,10 @@
     const x=quadratic(start.x,control.x,end.x,t);
     const y=quadratic(start.y,control.y,end.y,t);
 
-    // Quadratic Bezier tangent derivative.
     const dx=2*(1-t)*(control.x-start.x)+2*t*(end.x-control.x);
     const dy=2*(1-t)*(control.y-start.y)+2*t*(end.y-control.y);
     const tangentAngle=Math.atan2(dy,dx)*180/Math.PI;
 
-    // The rocket artwork points straight up by default, hence +90deg.
     instance.rocket.style.setProperty('--rocket-x',`${x/rect.width*100}%`);
     instance.rocket.style.setProperty('--rocket-y',`${y/rect.height*100}%`);
     instance.rocket.style.setProperty('--rocket-angle',`${tangentAngle+90}deg`);
@@ -347,7 +347,6 @@
     if(progress<instance.lastProgress-.001) instance.smokeLayer.replaceChildren();
     instance.lastProgress=progress;
 
-    // app-core's old end-of-timer launch animation is no longer wanted.
     instance.rocket.getAnimations().forEach(animation=>animation.cancel());
 
     const arrived=progress>=.9999;
