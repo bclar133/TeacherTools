@@ -205,8 +205,26 @@
 (() => {
   const current = document.currentScript;
   if (!current) return;
+
+  const loadRopeFix = () => {
+    if (document.getElementById('parachuteRopeFixScript')) return;
+    const ropeFix = document.createElement('script');
+    ropeFix.id = 'parachuteRopeFixScript';
+    ropeFix.src = new URL('parachute-rope-fix.js', current.src).href;
+    ropeFix.async = false;
+    document.body.appendChild(ropeFix);
+  };
+
+  const existingUpgrade = document.getElementById('parachuteUpgradeScript');
+  if (existingUpgrade || document.getElementById('parachuteCharacterUpgrade')) {
+    loadRopeFix();
+    return;
+  }
+
   const parachuteUpgrade = document.createElement('script');
+  parachuteUpgrade.id = 'parachuteUpgradeScript';
   parachuteUpgrade.src = new URL('parachute-upgrade.js', current.src).href;
   parachuteUpgrade.async = false;
+  parachuteUpgrade.addEventListener('load', loadRopeFix, { once: true });
   document.body.appendChild(parachuteUpgrade);
 })();
