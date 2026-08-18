@@ -6,7 +6,7 @@
   if (!sceneLayer || !stage) return;
 
   const style = document.createElement('style');
-  style.id = 'rampBallPhysicsV1';
+  style.id = 'rampBallPhysicsV2';
   style.textContent = `
     .ramp-scene.physics-ramp-active {
       background:
@@ -17,15 +17,11 @@
 
     .ramp-scene.physics-ramp-active > .ramp-svg,
     .ramp-scene.physics-ramp-active > .rube-arrow,
-    .ramp-scene.physics-ramp-active > .rube-bucket {
-      opacity:0 !important;
-      visibility:hidden !important;
-      pointer-events:none !important;
-    }
-
+    .ramp-scene.physics-ramp-active > .rube-bucket,
     .ramp-scene.physics-ramp-active > .ramp-ball {
       opacity:0 !important;
       visibility:hidden !important;
+      pointer-events:none !important;
     }
 
     .physics-ramp-machine {
@@ -45,42 +41,12 @@
       filter:drop-shadow(0 8px 7px rgba(0,0,0,.28));
     }
 
-    .physics-ramp-shadow {
-      stroke:#6c4826;
-      stroke-width:22;
-      stroke-linecap:round;
-      opacity:.88;
-    }
-
-    .physics-ramp-top {
-      stroke:#e9b85a;
-      stroke-width:14;
-      stroke-linecap:round;
-    }
-
-    .physics-ramp-highlight {
-      stroke:rgba(255,231,165,.78);
-      stroke-width:3;
-      stroke-linecap:round;
-    }
-
-    .physics-ramp-support {
-      stroke:#788592;
-      stroke-width:6;
-      stroke-linecap:round;
-      opacity:.72;
-    }
-
-    .physics-ramp-foot {
-      fill:#59636e;
-      opacity:.82;
-    }
-
-    .physics-ramp-bolt {
-      fill:#f7d47a;
-      stroke:#654522;
-      stroke-width:4;
-    }
+    .physics-ramp-shadow { stroke:#6c4826; stroke-width:22; stroke-linecap:round; opacity:.88; }
+    .physics-ramp-top { stroke:#e9b85a; stroke-width:14; stroke-linecap:round; }
+    .physics-ramp-highlight { stroke:rgba(255,231,165,.78); stroke-width:3; stroke-linecap:round; }
+    .physics-ramp-support { stroke:#788592; stroke-width:6; stroke-linecap:round; opacity:.72; }
+    .physics-ramp-foot { fill:#59636e; opacity:.82; }
+    .physics-ramp-bolt { fill:#f7d47a; stroke:#654522; stroke-width:4; }
 
     .physics-ball {
       position:absolute;
@@ -89,16 +55,45 @@
       height:40px;
       margin:-20px 0 0 -20px;
       border-radius:50%;
-      background:
-        radial-gradient(circle at 31% 24%,#fff5c5 0 10%,#ffb443 27%,#ee7a2e 58%,#b83c27 100%);
-      box-shadow:
-        inset -5px -7px 8px rgba(115,34,16,.22),
-        0 8px 11px rgba(0,0,0,.34);
-      will-change:left,top,transform;
+      background:radial-gradient(circle at 31% 24%,#fff5c5 0 10%,#ffb443 27%,#ee7a2e 58%,#b83c27 100%);
+      box-shadow:inset -5px -7px 8px rgba(115,34,16,.22),0 8px 11px rgba(0,0,0,.34);
+      overflow:hidden;
+      will-change:left,top;
     }
 
-    .physics-ball::after {
+    /* Only this texture rotates. The ball's centre itself stays perfectly smooth on the ramp. */
+    .physics-ball-spin {
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      transform:rotate(var(--ball-spin,0deg));
+      will-change:transform;
+    }
+    .physics-ball-spin::before {
       content:'';
+      position:absolute;
+      left:17px;
+      top:-4px;
+      width:7px;
+      height:48px;
+      border-radius:50%;
+      border-left:3px solid rgba(128,45,21,.5);
+      border-right:2px solid rgba(255,219,126,.3);
+      transform:rotate(22deg);
+    }
+    .physics-ball-spin::after {
+      content:'';
+      position:absolute;
+      left:7px;
+      top:8px;
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:rgba(126,46,22,.48);
+      box-shadow:20px 17px 0 -1px rgba(126,46,22,.34);
+    }
+
+    .physics-ball-shine {
       position:absolute;
       left:8px;
       top:6px;
@@ -106,6 +101,7 @@
       height:8px;
       border-radius:50%;
       background:rgba(255,255,255,.62);
+      pointer-events:none;
     }
 
     .physics-bucket {
@@ -115,61 +111,33 @@
       transform:translate(-50%,-12px);
       pointer-events:none;
     }
-
     .physics-bucket-back {
-      position:absolute;
-      z-index:5;
-      left:10px;
-      right:10px;
-      top:6px;
-      height:62px;
+      position:absolute; z-index:5; left:10px; right:10px; top:6px; height:62px;
       border-radius:9px 9px 23px 23px;
       background:linear-gradient(90deg,#64717b,#cbd3d9 48%,#697782);
       clip-path:polygon(3% 0,97% 0,82% 100%,18% 100%);
       box-shadow:0 10px 16px rgba(0,0,0,.32);
     }
-
     .physics-bucket-opening {
-      position:absolute;
-      z-index:5;
-      left:10px;
-      top:0;
-      width:72px;
-      height:22px;
-      border:5px solid #edf1f4;
-      border-radius:50%;
-      background:#17202a;
+      position:absolute; z-index:5; left:10px; top:0; width:72px; height:22px;
+      border:5px solid #edf1f4; border-radius:50%; background:#17202a;
       box-shadow:inset 0 5px 8px rgba(0,0,0,.75);
     }
-
     .physics-bucket-front {
-      position:absolute;
-      z-index:7;
-      left:10px;
-      right:10px;
-      top:13px;
-      height:58px;
+      position:absolute; z-index:7; left:10px; right:10px; top:13px; height:58px;
       border-radius:6px 6px 22px 22px;
       background:linear-gradient(90deg,#65727c,#d8dee3 48%,#6d7a84);
       clip-path:polygon(3% 0,97% 0,82% 100%,18% 100%);
       box-shadow:inset 0 5px 7px rgba(255,255,255,.12);
     }
-
     .physics-bucket-label {
-      position:absolute;
-      z-index:8;
-      left:50%;
-      top:39px;
-      transform:translateX(-50%);
-      color:#34414a;
-      font-size:9px;
-      font-weight:1000;
-      letter-spacing:.08em;
+      position:absolute; z-index:8; left:50%; top:39px; transform:translateX(-50%);
+      color:#34414a; font-size:9px; font-weight:1000; letter-spacing:.08em;
     }
 
     .physics-drop-guide {
       fill:none;
-      stroke:rgba(185,213,229,.14);
+      stroke:rgba(185,213,229,.12);
       stroke-width:2;
       stroke-dasharray:5 11;
       pointer-events:none;
@@ -201,172 +169,164 @@
   let active = null;
 
   function svgEl(name, attrs={}) {
-    const el = document.createElementNS('http://www.w3.org/2000/svg', name);
-    Object.entries(attrs).forEach(([key,value]) => el.setAttribute(key, value));
+    const el=document.createElementNS('http://www.w3.org/2000/svg',name);
+    Object.entries(attrs).forEach(([key,value])=>el.setAttribute(key,value));
     return el;
   }
 
   function machineMarkup(scene) {
-    const machine = document.createElement('div');
-    machine.className = 'physics-ramp-machine';
+    const machine=document.createElement('div');
+    machine.className='physics-ramp-machine';
+    const svg=svgEl('svg',{class:'physics-ramp-svg',viewBox:'0 0 1000 600',preserveAspectRatio:'none'});
 
-    const svg = svgEl('svg', { class:'physics-ramp-svg', viewBox:'0 0 1000 600', preserveAspectRatio:'none' });
-
-    ramps.forEach((ramp, index) => {
-      const x1=ramp.x1*10, y1=ramp.y1*6, x2=ramp.x2*10, y2=ramp.y2*6;
-
-      svg.appendChild(svgEl('line', { class:'physics-ramp-support', x1:x1+18, y1:y1+15, x2:x1+18, y2:Math.min(585,y1+78) }));
-      svg.appendChild(svgEl('rect', { class:'physics-ramp-foot', x:x1-3, y:Math.min(575,y1+72), width:42, height:9, rx:4 }));
-
-      const supportX = x2 + (index % 2 === 0 ? -18 : 18);
-      svg.appendChild(svgEl('line', { class:'physics-ramp-support', x1:supportX, y1:y2+13, x2:supportX, y2:Math.min(585,y2+73) }));
-      svg.appendChild(svgEl('rect', { class:'physics-ramp-foot', x:supportX-20, y:Math.min(575,y2+68), width:42, height:9, rx:4 }));
-
-      svg.appendChild(svgEl('line', { class:'physics-ramp-shadow', x1, y1, x2, y2 }));
-      svg.appendChild(svgEl('line', { class:'physics-ramp-top', x1, y1, x2, y2 }));
-      svg.appendChild(svgEl('line', { class:'physics-ramp-highlight', x1, y1:y1-4, x2, y2:y2-4 }));
-
-      svg.appendChild(svgEl('circle', { class:'physics-ramp-bolt', cx:x1, cy:y1, r:8 }));
-      svg.appendChild(svgEl('circle', { class:'physics-ramp-bolt', cx:x2, cy:y2, r:8 }));
+    ramps.forEach((ramp,index)=>{
+      const x1=ramp.x1*10,y1=ramp.y1*6,x2=ramp.x2*10,y2=ramp.y2*6;
+      svg.appendChild(svgEl('line',{class:'physics-ramp-support',x1:x1+18,y1:y1+15,x2:x1+18,y2:Math.min(585,y1+78)}));
+      svg.appendChild(svgEl('rect',{class:'physics-ramp-foot',x:x1-3,y:Math.min(575,y1+72),width:42,height:9,rx:4}));
+      const supportX=x2+(index%2===0?-18:18);
+      svg.appendChild(svgEl('line',{class:'physics-ramp-support',x1:supportX,y1:y2+13,x2:supportX,y2:Math.min(585,y2+73)}));
+      svg.appendChild(svgEl('rect',{class:'physics-ramp-foot',x:supportX-20,y:Math.min(575,y2+68),width:42,height:9,rx:4}));
+      svg.appendChild(svgEl('line',{class:'physics-ramp-shadow',x1,y1,x2,y2}));
+      svg.appendChild(svgEl('line',{class:'physics-ramp-top',x1,y1,x2,y2}));
+      svg.appendChild(svgEl('line',{class:'physics-ramp-highlight',x1,y1:y1-4,x2,y2:y2-4}));
+      svg.appendChild(svgEl('circle',{class:'physics-ramp-bolt',cx:x1,cy:y1,r:8}));
+      svg.appendChild(svgEl('circle',{class:'physics-ramp-bolt',cx:x2,cy:y2,r:8}));
     });
 
-    // Subtle guides make the intended free-fall gaps visually readable without becoming rails.
-    const drop1 = svgEl('path', { class:'physics-drop-guide', d:'M 720 150 Q 795 177 840 252' });
-    const drop2 = svgEl('path', { class:'physics-drop-guide', d:'M 220 306 Q 150 332 100 408' });
-    const drop3 = svgEl('path', { class:'physics-drop-guide', d:'M 720 462 Q 790 493 840 546' });
-    svg.append(drop1, drop2, drop3);
-
+    svg.append(
+      svgEl('path',{class:'physics-drop-guide',d:'M 720 150 Q 795 177 840 252'}),
+      svgEl('path',{class:'physics-drop-guide',d:'M 220 306 Q 150 332 100 408'}),
+      svgEl('path',{class:'physics-drop-guide',d:'M 720 462 Q 790 493 840 546'})
+    );
     machine.appendChild(svg);
 
-    const ball = document.createElement('div');
-    ball.className = 'physics-ball';
+    const ball=document.createElement('div');
+    ball.className='physics-ball';
+    ball.innerHTML='<div class="physics-ball-spin"></div><div class="physics-ball-shine"></div>';
     machine.appendChild(ball);
 
-    const bucketEl = document.createElement('div');
-    bucketEl.className = 'physics-bucket';
-    bucketEl.style.left = `${bucket.x}%`;
-    bucketEl.style.top = `${bucket.y}%`;
-    bucketEl.innerHTML = '<div class="physics-bucket-back"></div><div class="physics-bucket-opening"></div><div class="physics-bucket-front"></div><div class="physics-bucket-label">BUCKET</div>';
+    const bucketEl=document.createElement('div');
+    bucketEl.className='physics-bucket';
+    bucketEl.style.left=`${bucket.x}%`;
+    bucketEl.style.top=`${bucket.y}%`;
+    bucketEl.innerHTML='<div class="physics-bucket-back"></div><div class="physics-bucket-opening"></div><div class="physics-bucket-front"></div><div class="physics-bucket-label">BUCKET</div>';
     machine.appendChild(bucketEl);
 
     scene.appendChild(machine);
-    return { machine, ball };
+    return {machine,ball};
   }
 
-  function pointOnRamp(ramp, u, rect, radius) {
-    const x1=ramp.x1/100*rect.width, y1=ramp.y1/100*rect.height;
-    const x2=ramp.x2/100*rect.width, y2=ramp.y2/100*rect.height;
-    const dx=x2-x1, dy=y2-y1;
-    const len=Math.hypot(dx,dy)||1;
-
-    let nx=dy/len, ny=-dx/len;
-    if (ny > 0) { nx=-nx; ny=-ny; }
-
-    const offset = radius + 7;
-    return {
-      x:x1+dx*u+nx*offset,
-      y:y1+dy*u+ny*offset,
-      dx,dy,len,
-      angle:Math.atan2(dy,dx)
-    };
+  function pointOnRamp(ramp,u,rect,radius) {
+    const x1=ramp.x1/100*rect.width,y1=ramp.y1/100*rect.height;
+    const x2=ramp.x2/100*rect.width,y2=ramp.y2/100*rect.height;
+    const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1;
+    let nx=dy/len,ny=-dx/len;
+    if(ny>0){nx=-nx;ny=-ny;}
+    const offset=radius+7;
+    return {x:x1+dx*u+nx*offset,y:y1+dy*u+ny*offset,dx,dy,len,nx,ny,angle:Math.atan2(dy,dx)};
   }
 
   function smoothRoll(u) {
-    // Gravity along a slope: starts gently then gathers speed without looking exaggerated.
-    return .22*u + .78*u*u;
+    return .24*u+.76*u*u;
+  }
+
+  function landingBounce(u,rampIndex,radius) {
+    if(rampIndex===0) return 0;
+    const window=.12;
+    if(u<=0||u>=window) return 0;
+    const t=u/window;
+    // One damped rebound immediately after impact, then the centre settles on the ramp.
+    return Math.sin(Math.PI*t)*(1-t)*Math.min(10,radius*.42);
   }
 
   function phaseAt(progress) {
     let start=0;
-    for (let i=0;i<phases.length;i++) {
-      const phase=phases[i];
-      const end=start+phase.duration;
-      if (progress <= end || i===phases.length-1) {
-        return { phase, u:Math.max(0,Math.min(1,(progress-start)/phase.duration)), index:i };
+    for(let i=0;i<phases.length;i++){
+      const phase=phases[i],end=start+phase.duration;
+      if(progress<=end||i===phases.length-1){
+        return {phase,u:Math.max(0,Math.min(1,(progress-start)/phase.duration)),index:i};
       }
       start=end;
     }
-    return { phase:phases[phases.length-1], u:1, index:phases.length-1 };
+    return {phase:phases[phases.length-1],u:1,index:phases.length-1};
   }
 
-  function accumulatedRotation(index, localU, rect, radius) {
-    let distance=0;
-    for (let i=0;i<index;i++) {
+  function travelRotation(index,localU,rect,radius) {
+    let signedDistance=0;
+    for(let i=0;i<index;i++){
       const phase=phases[i];
-      if (phase.type==='roll') {
-        const r=ramps[phase.ramp];
-        const a=pointOnRamp(r,0,rect,radius), b=pointOnRamp(r,1,rect,radius);
-        distance += Math.sign(b.x-a.x) * Math.hypot(b.x-a.x,b.y-a.y);
+      if(phase.type==='roll'){
+        const a=pointOnRamp(ramps[phase.ramp],0,rect,radius),b=pointOnRamp(ramps[phase.ramp],1,rect,radius);
+        signedDistance+=Math.sign(b.x-a.x)*Math.hypot(b.x-a.x,b.y-a.y);
+      } else if(phase.type==='drop'){
+        const a=pointOnRamp(ramps[phase.from],1,rect,radius),b=pointOnRamp(ramps[phase.to],0,rect,radius);
+        signedDistance+=Math.sign(b.x-a.x)*Math.hypot(b.x-a.x,b.y-a.y)*.45;
       }
     }
 
     const current=phases[index];
-    if (current.type==='roll') {
-      const r=ramps[current.ramp];
-      const a=pointOnRamp(r,0,rect,radius), b=pointOnRamp(r,1,rect,radius);
-      distance += Math.sign(b.x-a.x) * Math.hypot(b.x-a.x,b.y-a.y) * smoothRoll(localU);
+    if(current.type==='roll'){
+      const a=pointOnRamp(ramps[current.ramp],0,rect,radius),b=pointOnRamp(ramps[current.ramp],1,rect,radius);
+      signedDistance+=Math.sign(b.x-a.x)*Math.hypot(b.x-a.x,b.y-a.y)*smoothRoll(localU);
+    } else if(current.type==='drop'){
+      const a=pointOnRamp(ramps[current.from],1,rect,radius),b=pointOnRamp(ramps[current.to],0,rect,radius);
+      signedDistance+=Math.sign(b.x-a.x)*Math.hypot(b.x-a.x,b.y-a.y)*.45*localU;
     }
-
-    return distance/radius*180/Math.PI;
+    return signedDistance/radius*180/Math.PI;
   }
 
-  function render(instance, progress) {
-    if (!instance?.scene?.isConnected) return;
+  function render(instance,progress) {
+    if(!instance?.scene?.isConnected) return;
     progress=Math.max(0,Math.min(1,progress));
     instance.progress=progress;
 
     const rect=instance.scene.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-
+    if(!rect.width||!rect.height) return;
     const ballRect=instance.ball.getBoundingClientRect();
     const radius=Math.max(14,(ballRect.width||40)/2);
     const {phase,u,index}=phaseAt(progress);
     let x=0,y=0;
-    let rotation=accumulatedRotation(index,u,rect,radius);
+    const rotation=travelRotation(index,u,rect,radius);
 
-    if (phase.type==='roll') {
-      const r=ramps[phase.ramp];
-      const p=pointOnRamp(r,smoothRoll(u),rect,radius);
-      x=p.x; y=p.y;
-      instance.ball.style.zIndex='6';
+    if(phase.type==='roll'){
+      const p=pointOnRamp(ramps[phase.ramp],smoothRoll(u),rect,radius);
+      const bounce=landingBounce(u,phase.ramp,radius);
+      x=p.x+p.nx*bounce;
+      y=p.y+p.ny*bounce;
       instance.ball.style.opacity='1';
-    } else if (phase.type==='drop') {
+      instance.ball.style.zIndex='6';
+    } else if(phase.type==='drop'){
       const start=pointOnRamp(ramps[phase.from],1,rect,radius);
       const end=pointOnRamp(ramps[phase.to],0,rect,radius);
-      // Projectile-style free fall: horizontal velocity stays steady while vertical speed accelerates under gravity.
+      // True free-fall feel: steady horizontal travel, vertical acceleration under gravity.
       x=start.x+(end.x-start.x)*u;
       y=start.y+(end.y-start.y)*u*u;
-      const sign=Math.sign(end.x-start.x)||1;
-      const airborneDistance=Math.abs(end.x-start.x)*u;
-      rotation += sign*airborneDistance/radius*180/Math.PI;
-      instance.ball.style.zIndex='6';
       instance.ball.style.opacity='1';
+      instance.ball.style.zIndex='6';
     } else {
       const start=pointOnRamp(ramps[phase.from],1,rect,radius);
       const targetX=bucket.x/100*rect.width;
       const targetY=Math.min(rect.height-4,bucket.y/100*rect.height+42);
       x=start.x+(targetX-start.x)*u;
       y=start.y+(targetY-start.y)*u*u;
-      rotation += Math.sign(targetX-start.x||1)*Math.abs(targetX-start.x)*u/radius*180/Math.PI;
-      instance.ball.style.zIndex=u>.54?'6':'6';
       instance.ball.style.opacity=u>.91?String(Math.max(0,(1-u)/.09)):'1';
+      instance.ball.style.zIndex=u>.64?'6':'6';
     }
 
     instance.ball.style.left=`${x}px`;
     instance.ball.style.top=`${y}px`;
-    instance.ball.style.transform=`rotate(${rotation.toFixed(2)}deg)`;
+    instance.ball.style.setProperty('--ball-spin',`${rotation.toFixed(2)}deg`);
   }
 
-  function progressFromSensor(sensor) {
+  function progressFromSensor(sensor){
     const rotation=parseFloat(sensor.style.rotate);
-    if (Number.isFinite(rotation)) return Math.max(0,Math.min(1,rotation/1400));
-    return 0;
+    return Number.isFinite(rotation)?Math.max(0,Math.min(1,rotation/1400)):0;
   }
 
-  function install(scene) {
-    if (!scene || scene.dataset.physicsRamp==='true') return;
+  function install(scene){
+    if(!scene||scene.dataset.physicsRamp==='true') return;
     const sensor=scene.querySelector(':scope > .ramp-ball');
-    if (!sensor) return;
+    if(!sensor) return;
 
     scene.dataset.physicsRamp='true';
     scene.classList.add('physics-ramp-active');
@@ -374,34 +334,27 @@
     const instance={scene,sensor,ball:created.ball,machine:created.machine,progress:progressFromSensor(sensor),observer:null};
 
     let queued=false;
-    instance.observer=new MutationObserver(() => {
-      if (queued) return;
+    instance.observer=new MutationObserver(()=>{
+      if(queued) return;
       queued=true;
-      requestAnimationFrame(() => {
+      requestAnimationFrame(()=>{
         queued=false;
         render(instance,progressFromSensor(sensor));
       });
     });
     instance.observer.observe(sensor,{attributes:true,attributeFilter:['style']});
-
     active=instance;
-    requestAnimationFrame(() => render(instance,instance.progress));
+    requestAnimationFrame(()=>render(instance,instance.progress));
   }
 
-  function scan() {
+  function scan(){
     const scene=sceneLayer.querySelector('.ramp-scene');
-    if (scene) install(scene);
-    else if (active && !active.scene.isConnected) {
-      active.observer?.disconnect();
-      active=null;
-    }
+    if(scene) install(scene);
+    else if(active&&!active.scene.isConnected){active.observer?.disconnect();active=null;}
   }
 
   const observer=new MutationObserver(scan);
   observer.observe(sceneLayer,{childList:true,subtree:true});
-  window.addEventListener('resize',() => {
-    if (active) requestAnimationFrame(() => render(active,active.progress));
-  });
-
+  window.addEventListener('resize',()=>{if(active) requestAnimationFrame(()=>render(active,active.progress));});
   scan();
 })();
