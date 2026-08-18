@@ -6,7 +6,7 @@
   if (!sceneLayer || !stage) return;
 
   const style = document.createElement('style');
-  style.id = 'rocketMoonFlightV1';
+  style.id = 'rocketMoonFlightV2';
   style.textContent = `
     .rocket-scene.rocket-flight-active {
       background:
@@ -27,6 +27,26 @@
         radial-gradient(circle,#a9d7ff 0 1px,transparent 1.5px);
       background-size:54px 54px,83px 83px;
       background-position:0 0,27px 19px;
+    }
+
+    /* Keep the Rocket flight clear: timer + percentage sit together in the bottom-right. */
+    .timer-stage.theme-rocket .time-display-wrap {
+      top:auto !important;
+      left:auto !important;
+      right:22px !important;
+      bottom:22px !important;
+      transform:none !important;
+      justify-items:end !important;
+      text-align:right;
+    }
+
+    .timer-stage.theme-rocket .time-display {
+      font-size:clamp(2.6rem,6vw,5.2rem);
+    }
+
+    .timer-stage.theme-rocket .timer-message {
+      display:block !important;
+      margin-top:6px;
     }
 
     .rocket-scene.rocket-flight-active .rocket {
@@ -90,6 +110,17 @@
       .rocket-moon { width:92px;height:92px; }
       .rocket-scene.rocket-flight-active .rocket {
         transform:translate(-50%,-50%) rotate(var(--rocket-angle,-55deg)) scale(.55) !important;
+      }
+      .timer-stage.theme-rocket .time-display-wrap {
+        right:12px !important;
+        bottom:12px !important;
+      }
+      .timer-stage.theme-rocket .time-display {
+        font-size:clamp(2.35rem,12vw,4.4rem);
+      }
+      .timer-stage.theme-rocket .timer-message {
+        display:block !important;
+        font-size:.68rem;
       }
     }
   `;
