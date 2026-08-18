@@ -228,3 +228,14 @@
   parachuteUpgrade.addEventListener('load', loadRopeFix, { once: true });
   document.body.appendChild(parachuteUpgrade);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('rocketShootingStarsScript')) return;
+
+  const shootingStars = document.createElement('script');
+  shootingStars.id = 'rocketShootingStarsScript';
+  shootingStars.src = new URL('rocket-shooting-stars.js', current.src).href;
+  shootingStars.async = false;
+  document.body.appendChild(shootingStars);
+})();
