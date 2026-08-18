@@ -1,0 +1,203 @@
+(() => {
+  'use strict';
+
+  const sceneLayer = document.getElementById('sceneLayer');
+  const stage = document.getElementById('countdownStage');
+  const muteBtn = document.getElementById('muteBtn');
+  const presentationMuteBtn = document.getElementById('presentationMuteBtn');
+  if (!sceneLayer || !stage) return;
+
+  let audioCtx = null;
+  let masterGain = null;
+  let lowOsc = null;
+  let upperOsc = null;
+  let moving = false;
+  let silenceTimer = null;
+  let trackedCar = null;
+  let carObserver = null;
+  let lastX = null;
+  let lastY = null;
+  let lastTime = null;
+
+  function muted() {
+    try {
+      const stored = localStorage.getItem('ttTimers.muted');
+      if (stored !== null) return JSON.parse(stored) === true;
+    } catch {}
+    return muteBtn?.getAttribute('aria-pressed') === 'true';
+  }
+
+  function ensureAudio() {
+    if (audioCtx) return audioCtx;
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return null;
+
+    audioCtx = new AudioContextCtor();
+
+    const lowGain = audioCtx.createGain();
+    const upperGain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+    masterGain = audioCtx.createGain();
+
+    lowOsc = audioCtx.createOscillator();
+    upperOsc = audioCtx.createOscillator();
+    const wobble = audioCtx.createOscillator();
+    const wobbleLow = audioCtx.createGain();
+    const wobbleUpper = audioCtx.createGain();
+
+    lowOsc.type = 'sawtooth';
+    upperOsc.type = 'triangle';
+    lowOsc.frequency.value = 54;
+    upperOsc.frequency.value = 108;
+
+    lowGain.gain.value = 0.62;
+    upperGain.gain.value = 0.28;
+
+    filter.type = 'lowpass';
+    filter.frequency.value = 235;
+    filter.Q.value = 1.1;
+    masterGain.gain.value = 0;
+
+    wobble.type = 'sine';
+    wobble.frequency.value = 4.2;
+    wobbleLow.gain.value = 1.7;
+    wobbleUpper.gain.value = 3.2;
+
+    wobble.connect(wobbleLow);
+    wobble.connect(wobbleUpper);
+    wobbleLow.connect(lowOsc.frequency);
+    wobbleUpper.connect(upperOsc.frequency);
+
+    lowOsc.connect(lowGain).connect(filter);
+    upperOsc.connect(upperGain).connect(filter);
+    filter.connect(masterGain).connect(audioCtx.destination);
+
+    lowOsc.start();
+    upperOsc.start();
+    wobble.start();
+
+    return audioCtx;
+  }
+
+  function unlockAudio() {
+    const ctx = ensureAudio();
+    if (ctx?.state === 'suspended') ctx.resume().catch(() => {});
+  }
+
+  function setHum(on, speed = 0) {
+    const ctx = audioCtx;
+    if (!ctx || !masterGain) return;
+
+    const audible = Boolean(on) && !muted() && sceneLayer.querySelector('.race-car') && !stage.classList.contains('finished');
+    const now = ctx.currentTime;
+    const targetGain = audible ? 0.018 : 0;
+
+    masterGain.gain.cancelScheduledValues(now);
+    masterGain.gain.setTargetAtTime(targetGain, now, audible ? 0.055 : 0.035);
+
+    if (audible && lowOsc && upperOsc) {
+      const speedBoost = Math.max(0, Math.min(14, speed * 0.9));
+      lowOsc.frequency.setTargetAtTime(54 + speedBoost, now, 0.09);
+      upperOsc.frequency.setTargetAtTime(108 + speedBoost * 2, now, 0.09);
+    }
+  }
+
+  function stopSoon(delay = 120) {
+    clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => {
+      moving = false;
+      setHum(false);
+    }, delay);
+  }
+
+  function syncCarMotion() {
+    const car = trackedCar;
+    if (!car || !car.isConnected) {
+      moving = false;
+      setHum(false);
+      return;
+    }
+
+    const rect = sceneLayer.getBoundingClientRect();
+    const left = parseFloat(car.style.left);
+    const top = parseFloat(car.style.top);
+    if (!rect.width || !rect.height || !Number.isFinite(left) || !Number.isFinite(top)) return;
+
+    const x = left / 100 * rect.width;
+    const y = top / 100 * rect.height;
+    const now = performance.now();
+
+    if (lastX !== null && lastY !== null && lastTime !== null) {
+      const distance = Math.hypot(x - lastX, y - lastY);
+      const elapsed = Math.max(1, now - lastTime);
+
+      if (distance > 0.08 && !stage.classList.contains('finished')) {
+        moving = true;
+        unlockAudio();
+        const pxPerFrame = distance * (16.667 / elapsed);
+        setHum(true, pxPerFrame);
+        stopSoon(135);
+      }
+    }
+
+    lastX = x;
+    lastY = y;
+    lastTime = now;
+  }
+
+  function attachToCar(car) {
+    if (car === trackedCar) return;
+
+    carObserver?.disconnect();
+    trackedCar = car;
+    lastX = lastY = lastTime = null;
+    moving = false;
+    setHum(false);
+
+    if (!car) return;
+
+    let queued = false;
+    carObserver = new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        syncCarMotion();
+      });
+    });
+    carObserver.observe(car, { attributes: true, attributeFilter: ['style'] });
+    requestAnimationFrame(syncCarMotion);
+  }
+
+  function syncScene() {
+    attachToCar(sceneLayer.querySelector('.race-car'));
+    if (!sceneLayer.querySelector('.race-car') || stage.classList.contains('finished')) {
+      moving = false;
+      setHum(false);
+    }
+  }
+
+  const sceneObserver = new MutationObserver(syncScene);
+  sceneObserver.observe(sceneLayer, { childList: true, subtree: true });
+
+  const stageObserver = new MutationObserver(() => {
+    if (stage.classList.contains('finished')) {
+      moving = false;
+      clearTimeout(silenceTimer);
+      setHum(false);
+    }
+  });
+  stageObserver.observe(stage, { attributes: true, attributeFilter: ['class'] });
+
+  const refreshMute = () => setTimeout(() => setHum(moving), 0);
+  muteBtn?.addEventListener('click', refreshMute);
+  presentationMuteBtn?.addEventListener('click', refreshMute);
+
+  document.addEventListener('pointerdown', unlockAudio, { capture: true, passive: true });
+  document.addEventListener('keydown', unlockAudio, { capture: true });
+  window.addEventListener('storage', event => {
+    if (event.key === 'ttTimers.muted') setHum(moving);
+  });
+
+  syncScene();
+})();
