@@ -2,10 +2,11 @@
   'use strict';
 
   const sceneLayer = document.getElementById('sceneLayer');
+  const stageStatus = document.getElementById('stageStatus');
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'hourglassLayoutFixV3';
+  style.id = 'hourglassLayoutFixV4';
   style.textContent = `
     /* Force the Hourglass artwork to fill the entire timer stage. */
     .hourglass-scene.hourglass-upgraded {
@@ -70,6 +71,9 @@
     .hourglass-scene.hourglass-upgraded .hg-top,
     .hourglass-scene.hourglass-upgraded .hg-bottom {
       height:130px !important;
+      border:0 !important;
+      background:rgba(225,242,247,.10) !important;
+      box-shadow:inset 0 0 0 2px rgba(228,239,247,.10) !important;
     }
 
     .hourglass-scene.hourglass-upgraded .hg-top {
@@ -80,20 +84,26 @@
       bottom:35px !important;
     }
 
-    /* Sand begins just below the neck: nothing is drawn through the upper chamber. */
+    /* Hide the falling stream until the countdown is actually running. */
     .hourglass-scene.hourglass-upgraded .hg-stream {
       z-index:8 !important;
       left:113px !important;
       top:166px !important;
       width:3px !important;
       height:43px !important;
-      opacity:var(--stream,1) !important;
+      opacity:0 !important;
+      visibility:hidden !important;
       background:transparent !important;
       border-radius:999px !important;
       box-shadow:0 0 6px rgba(246,199,84,.25) !important;
       overflow:hidden !important;
       transform:translateX(-50%) !important;
       animation:none !important;
+    }
+
+    .hourglass-scene.hourglass-upgraded.hourglass-running .hg-stream {
+      opacity:var(--stream,1) !important;
+      visibility:visible !important;
     }
 
     /* Moving bright/dark grains make the stream read as sand falling downward. */
@@ -155,6 +165,12 @@
   `;
   document.head.appendChild(style);
 
+  function syncHourglassState(scene) {
+    if (!scene) return;
+    const running = stageStatus?.textContent.trim() === 'Running';
+    scene.classList.toggle('hourglass-running', Boolean(running));
+  }
+
   function syncHourglassScene() {
     const scene = sceneLayer.querySelector('.hourglass-scene');
     if (!scene) return;
@@ -165,9 +181,16 @@
     scene.style.inset = '0';
     scene.style.width = '100%';
     scene.style.height = '100%';
+    syncHourglassState(scene);
   }
 
   const observer = new MutationObserver(syncHourglassScene);
   observer.observe(sceneLayer, { childList:true, subtree:true });
+
+  const statusObserver = stageStatus ? new MutationObserver(() => {
+    syncHourglassState(sceneLayer.querySelector('.hourglass-scene'));
+  }) : null;
+  statusObserver?.observe(stageStatus, { childList:true, characterData:true, subtree:true });
+
   syncHourglassScene();
 })();
