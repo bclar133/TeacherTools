@@ -239,3 +239,14 @@
   shootingStars.async = false;
   document.body.appendChild(shootingStars);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('hourglassLayoutFixScript')) return;
+
+  const hourglassFix = document.createElement('script');
+  hourglassFix.id = 'hourglassLayoutFixScript';
+  hourglassFix.src = new URL('hourglass-layout-fix.js', current.src).href;
+  hourglassFix.async = false;
+  document.body.appendChild(hourglassFix);
+})();
