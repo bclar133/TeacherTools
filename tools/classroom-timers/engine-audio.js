@@ -201,3 +201,12 @@
 
   syncScene();
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current) return;
+  const parachuteUpgrade = document.createElement('script');
+  parachuteUpgrade.src = new URL('parachute-upgrade.js', current.src).href;
+  parachuteUpgrade.async = false;
+  document.body.appendChild(parachuteUpgrade);
+})();
