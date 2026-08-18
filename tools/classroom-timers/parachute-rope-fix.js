@@ -15,21 +15,11 @@
       animation: none !important;
     }
 
-    /* Small rope grips disappearing underneath each hand make the connection read clearly. */
+    /* Remove the short vertical grip lines at the hands. */
     .parachutist-v2 .fun-hand::before {
-      content: '';
-      position: absolute;
-      z-index: -1;
-      left: 6px;
-      top: -8px;
-      width: 3px;
-      height: 29px;
-      border-radius: 3px;
-      background: #46545d;
-      transform-origin: 50% 50%;
+      display: none !important;
+      content: none !important;
     }
-    .parachutist-v2 .fun-hand.left::before { transform: rotate(18deg); }
-    .parachutist-v2 .fun-hand.right::before { transform: rotate(-18deg); }
   `;
   document.head.appendChild(style);
 
