@@ -6,7 +6,7 @@
   if (!sceneLayer || !stage) return;
 
   const style = document.createElement('style');
-  style.id = 'rocketMoonFlightV4';
+  style.id = 'rocketMoonFlightV5';
   style.textContent = `
     .rocket-scene.rocket-flight-active {
       background:
@@ -183,12 +183,25 @@
     .rocket-moon::after { width:17px;height:12px;right:21px;top:49px;transform:rotate(12deg); }
 
     .rocket-flight-active.rocket-arrived .rocket-moon {
-      animation:moonImpactPulse .45s ease-out 1;
+      animation:
+        moonImpactPulse .55s ease-out 1,
+        moonColourFlicker 2s steps(1,end) 1;
     }
     @keyframes moonImpactPulse {
       0% { box-shadow:inset -15px -12px 20px rgba(75,90,108,.18),0 0 35px rgba(226,239,255,.48),0 0 75px rgba(190,218,255,.18); }
-      45% { box-shadow:inset -15px -12px 20px rgba(75,90,108,.18),0 0 46px rgba(255,246,183,.85),0 0 92px rgba(255,205,95,.34); }
+      45% { box-shadow:inset -15px -12px 20px rgba(75,90,108,.18),0 0 50px rgba(255,246,183,.9),0 0 100px rgba(255,205,95,.42); }
       100% { box-shadow:inset -15px -12px 20px rgba(75,90,108,.18),0 0 35px rgba(226,239,255,.48),0 0 75px rgba(190,218,255,.18); }
+    }
+    @keyframes moonColourFlicker {
+      0%,100% { filter:none; }
+      10% { filter:sepia(.9) saturate(7) hue-rotate(300deg) brightness(1.22); }
+      22% { filter:sepia(.85) saturate(8) hue-rotate(155deg) brightness(1.18); }
+      34% { filter:sepia(.95) saturate(8) hue-rotate(5deg) brightness(1.28); }
+      46% { filter:sepia(.9) saturate(7) hue-rotate(75deg) brightness(1.17); }
+      58% { filter:sepia(.9) saturate(8) hue-rotate(225deg) brightness(1.22); }
+      70% { filter:sepia(.9) saturate(9) hue-rotate(335deg) brightness(1.24); }
+      82% { filter:sepia(.85) saturate(7) hue-rotate(175deg) brightness(1.2); }
+      92% { filter:sepia(.95) saturate(8) hue-rotate(35deg) brightness(1.3); }
     }
 
     @media (max-width:760px) {
