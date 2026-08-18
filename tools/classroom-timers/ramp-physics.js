@@ -6,7 +6,7 @@
   if (!sceneLayer || !stage) return;
 
   const style = document.createElement('style');
-  style.id = 'rampBallPhysicsV3';
+  style.id = 'rampBallPhysicsV4';
   style.textContent = `
     .ramp-scene.physics-ramp-active {
       background:
@@ -61,7 +61,6 @@
       will-change:left,top;
     }
 
-    /* Only this texture rotates. The ball's centre itself stays perfectly smooth on the ramp. */
     .physics-ball-spin {
       position:absolute;
       inset:0;
@@ -132,7 +131,6 @@
       box-shadow:inset 0 5px 7px rgba(255,255,255,.12);
     }
 
-    /* Separate foreground wall sits above the ball so it is naturally hidden as it drops in. */
     .physics-bucket-front-mask {
       position:absolute;
       z-index:8;
@@ -164,14 +162,6 @@
       border-radius:0 0 50% 50%;
     }
 
-    .physics-drop-guide {
-      fill:none;
-      stroke:rgba(185,213,229,.12);
-      stroke-width:2;
-      stroke-dasharray:5 11;
-      pointer-events:none;
-    }
-
     @media (max-width:760px) {
       .physics-ball { width:34px;height:34px;margin:-17px 0 0 -17px; }
       .physics-bucket,
@@ -197,6 +187,62 @@
   ];
 
   let active = null;
+  let bounceAudioCtx = null;
+
+  function soundsMuted() {
+    try {
+      const stored = localStorage.getItem('ttTimers.muted');
+      if (stored !== null) return JSON.parse(stored) === true;
+    } catch {}
+    return document.getElementById('muteBtn')?.getAttribute('aria-pressed') === 'true';
+  }
+
+  function ensureBounceAudio() {
+    if (bounceAudioCtx) return bounceAudioCtx;
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return null;
+    bounceAudioCtx = new AudioContextCtor();
+    return bounceAudioCtx;
+  }
+
+  function unlockBounceAudio() {
+    const ctx = ensureBounceAudio();
+    if (ctx?.state === 'suspended') ctx.resume().catch(() => {});
+  }
+
+  function playBounceSound(strength = 1) {
+    if (soundsMuted()) return;
+    const ctx = ensureBounceAudio();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => playBounceSound(strength)).catch(() => {});
+      return;
+    }
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(165, now);
+    osc.frequency.exponentialRampToValueAtTime(92, now + .085);
+
+    filter.type = 'lowpass';
+    filter.frequency.value = 520;
+    filter.Q.value = .7;
+
+    gain.gain.setValueAtTime(.0001, now);
+    gain.gain.exponentialRampToValueAtTime(.024 * strength, now + .006);
+    gain.gain.exponentialRampToValueAtTime(.0001, now + .095);
+
+    osc.connect(filter).connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + .11);
+  }
+
+  document.addEventListener('pointerdown', unlockBounceAudio, { capture:true, passive:true });
+  document.addEventListener('keydown', unlockBounceAudio, { capture:true });
 
   function svgEl(name, attrs={}) {
     const el=document.createElementNS('http://www.w3.org/2000/svg',name);
@@ -223,11 +269,6 @@
       svg.appendChild(svgEl('circle',{class:'physics-ramp-bolt',cx:x2,cy:y2,r:8}));
     });
 
-    svg.append(
-      svgEl('path',{class:'physics-drop-guide',d:'M 720 150 Q 795 177 840 252'}),
-      svgEl('path',{class:'physics-drop-guide',d:'M 220 306 Q 150 332 100 408'}),
-      svgEl('path',{class:'physics-drop-guide',d:'M 720 462 Q 790 493 840 546'})
-    );
     machine.appendChild(svg);
 
     const ball=document.createElement('div');
@@ -271,7 +312,6 @@
     const window=.12;
     if(u<=0||u>=window) return 0;
     const t=u/window;
-    // One damped rebound immediately after impact, then the centre settles on the ramp.
     return Math.sin(Math.PI*t)*(1-t)*Math.min(10,radius*.42);
   }
 
@@ -314,13 +354,19 @@
   function render(instance,progress) {
     if(!instance?.scene?.isConnected) return;
     progress=Math.max(0,Math.min(1,progress));
-    instance.progress=progress;
 
     const rect=instance.scene.getBoundingClientRect();
     if(!rect.width||!rect.height) return;
     const ballRect=instance.ball.getBoundingClientRect();
     const radius=Math.max(14,(ballRect.width||40)/2);
     const {phase,u,index}=phaseAt(progress);
+
+    if(progress>instance.progress+.00001 && index!==instance.lastPhaseIndex && phase.type==='roll' && phase.ramp>0){
+      playBounceSound(phase.ramp===1?1:.92);
+    }
+    instance.lastPhaseIndex=index;
+    instance.progress=progress;
+
     let x=0,y=0;
     const rotation=travelRotation(index,u,rect,radius);
 
@@ -334,7 +380,6 @@
     } else if(phase.type==='drop'){
       const start=pointOnRamp(ramps[phase.from],1,rect,radius);
       const end=pointOnRamp(ramps[phase.to],0,rect,radius);
-      // True free-fall feel: steady horizontal travel, vertical acceleration under gravity.
       x=start.x+(end.x-start.x)*u;
       y=start.y+(end.y-start.y)*u*u;
       instance.ball.style.opacity='1';
@@ -345,7 +390,6 @@
       const targetY=Math.min(rect.height-4,bucket.y/100*rect.height+46);
       x=start.x+(targetX-start.x)*u;
       y=start.y+(targetY-start.y)*u*u;
-      // Stay fully opaque: the foreground bucket wall physically hides the ball as it falls inside.
       instance.ball.style.opacity='1';
       instance.ball.style.zIndex='6';
     }
@@ -368,7 +412,17 @@
     scene.dataset.physicsRamp='true';
     scene.classList.add('physics-ramp-active');
     const created=machineMarkup(scene);
-    const instance={scene,sensor,ball:created.ball,machine:created.machine,progress:progressFromSensor(sensor),observer:null};
+    const initialProgress=progressFromSensor(sensor);
+    const initialPhase=phaseAt(initialProgress);
+    const instance={
+      scene,
+      sensor,
+      ball:created.ball,
+      machine:created.machine,
+      progress:initialProgress,
+      lastPhaseIndex:initialPhase.index,
+      observer:null
+    };
 
     let queued=false;
     instance.observer=new MutationObserver(()=>{
