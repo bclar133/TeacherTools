@@ -120,6 +120,97 @@
     const sceneLayer = document.getElementById('sceneLayer');
     if (!sceneLayer) return;
 
+    // Add a compact +10 second control beside the existing +1 minute button.
+    const addMinuteButton = document.getElementById('countdownAddBtn');
+    if (addMinuteButton && !document.getElementById('countdownAddTenBtn')) {
+      const addTenButton = document.createElement('button');
+      addTenButton.id = 'countdownAddTenBtn';
+      addTenButton.className = 'control-button secondary';
+      addTenButton.type = 'button';
+      addTenButton.textContent = '+10 sec';
+      addMinuteButton.parentElement?.insertBefore(addTenButton, addMinuteButton);
+
+      addTenButton.addEventListener('click', () => {
+        const minutes = document.getElementById('countdownMinutes');
+        const seconds = document.getElementById('countdownSeconds');
+        const startButton = document.getElementById('countdownStartBtn');
+        const stageStatus = document.getElementById('stageStatus');
+        const display = document.getElementById('countdownDisplay');
+        if (!minutes || !seconds) return;
+
+        const applySeconds = total => {
+          total = Math.max(0, Math.min(180 * 60 + 59, Math.round(total)));
+          minutes.value = String(Math.floor(total / 60));
+          seconds.value = String(total % 60);
+          seconds.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+
+        if (stageStatus?.textContent === 'Running' && startButton && display) {
+          // Pause, extend the currently displayed remaining time, then resume.
+          startButton.click();
+          requestAnimationFrame(() => {
+            const parts = display.textContent.trim().split(':').map(Number);
+            let remaining = 0;
+            if (parts.length === 2) remaining = parts[0] * 60 + parts[1];
+            else if (parts.length === 3) remaining = parts[0] * 3600 + parts[1] * 60 + parts[2];
+            applySeconds(remaining + 10);
+            startButton.click();
+          });
+        } else {
+          applySeconds((Number(minutes.value) || 0) * 60 + (Number(seconds.value) || 0) + 10);
+        }
+      });
+    }
+
+    // Use direct JS colour steps for the moon arrival so the effect remains visible even
+    // when the browser/OS has reduced-motion enabled (which collapses CSS animations).
+    let moonFlickerTimer = null;
+    function runMoonColourFlicker() {
+      const scene = sceneLayer.querySelector('.rocket-scene.rocket-arrived');
+      const moon = scene?.querySelector('.rocket-moon');
+      if (!moon || moon.dataset.jsColourFlicker === 'true') return;
+      moon.dataset.jsColourFlicker = 'true';
+      moon.getAnimations().forEach(animation => animation.cancel());
+
+      const colours = [
+        ['sepia(1) saturate(12) hue-rotate(292deg) brightness(1.35)', '255,70,170'],
+        ['sepia(1) saturate(12) hue-rotate(150deg) brightness(1.28)', '65,190,255'],
+        ['sepia(1) saturate(13) hue-rotate(5deg) brightness(1.4)', '255,220,65'],
+        ['sepia(1) saturate(12) hue-rotate(72deg) brightness(1.3)', '80,255,130'],
+        ['sepia(1) saturate(13) hue-rotate(222deg) brightness(1.32)', '180,95,255'],
+        ['sepia(1) saturate(13) hue-rotate(328deg) brightness(1.38)', '255,105,65']
+      ];
+
+      let step = 0;
+      clearInterval(moonFlickerTimer);
+      const paint = () => {
+        const [filter, glow] = colours[step % colours.length];
+        moon.style.filter = filter;
+        moon.style.boxShadow = `inset -15px -12px 20px rgba(75,90,108,.18), 0 0 50px rgba(${glow},.95), 0 0 100px rgba(${glow},.5)`;
+        step++;
+      };
+      paint();
+      moonFlickerTimer = setInterval(paint, 145);
+      setTimeout(() => {
+        clearInterval(moonFlickerTimer);
+        moonFlickerTimer = null;
+        moon.style.filter = '';
+        moon.style.boxShadow = '';
+      }, 2200);
+    }
+
+    const rocketArrivalObserver = new MutationObserver(() => {
+      const scene = sceneLayer.querySelector('.rocket-scene');
+      if (!scene) return;
+      if (!scene.classList.contains('rocket-arrived')) {
+        const moon = scene.querySelector('.rocket-moon');
+        if (moon) delete moon.dataset.jsColourFlicker;
+        return;
+      }
+      runMoonColourFlicker();
+    });
+    rocketArrivalObserver.observe(sceneLayer, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
     const tracked = new WeakSet();
 
     function attachSteering(car) {
