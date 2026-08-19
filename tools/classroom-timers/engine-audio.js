@@ -261,3 +261,14 @@
   plantUpgrade.async = false;
   document.body.appendChild(plantUpgrade);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('popcornUpgradeScript')) return;
+
+  const popcornUpgrade = document.createElement('script');
+  popcornUpgrade.id = 'popcornUpgradeScript';
+  popcornUpgrade.src = new URL('popcorn-upgrade.js', current.src).href;
+  popcornUpgrade.async = false;
+  document.body.appendChild(popcornUpgrade);
+})();
