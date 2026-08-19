@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('plantUpgradeStyleV4')) return;
+  if (document.getElementById('plantUpgradeStyleV5')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stage = document.getElementById('countdownStage');
@@ -14,7 +14,7 @@
   if (!sceneLayer || !stage) return;
 
   const style = document.createElement('style');
-  style.id = 'plantUpgradeStyleV4';
+  style.id = 'plantUpgradeStyleV5';
   style.textContent = `
     .plant-scene{--plant-x:39%;overflow:hidden}
     #countdownStage.theme-plant .time-display-wrap{position:absolute!important;left:auto!important;right:4%!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;width:min(38%,390px)!important;justify-items:center!important;text-align:center!important;z-index:12!important}
@@ -44,7 +44,7 @@
     .plant-bee .wing{position:absolute;top:1px;width:15px;height:13px;border-radius:50%;background:rgba(255,255,255,.84);animation:plantBeeWing .1s linear infinite alternate}.plant-bee .wing.w1{left:12px;transform-origin:right bottom}.plant-bee .wing.w2{left:21px;transform-origin:left bottom}
     @keyframes plantBeeWing{from{rotate:-22deg}to{rotate:22deg}}
 
-    .plant-snail{position:absolute;left:-100px;bottom:5.5%;width:78px;height:52px;z-index:2;will-change:left;transition:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.16))}
+    .plant-snail{position:absolute;left:-100px;bottom:5.5%;width:78px;height:52px;z-index:2;will-change:left;transition:left .95s linear;filter:drop-shadow(0 2px 3px rgba(0,0,0,.16))}
     .plant-snail .shell{position:absolute;left:0;top:0;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#edc489 0 15%,#c98555 16% 34%,#8b5639 35% 50%,#d79a61 51% 66%,#75452e 67%);box-shadow:inset -4px -5px 5px rgba(75,41,25,.18)}
     .plant-snail .body{position:absolute;left:35px;top:31px;width:34px;height:13px;border-radius:11px 12px 8px 8px;background:#8f9364}
     .plant-snail .head{position:absolute;right:0;top:25px;width:16px;height:15px;border-radius:50%;background:#8f9364}
@@ -171,7 +171,30 @@
     const snailWidth = snail.getBoundingClientRect().width || 78;
     const start = -snailWidth - 6;
     const end = width + 6;
-    snail.style.left = `${(start + (end - start) * progress).toFixed(1)}px`;
+    const target = start + (end - start) * progress;
+    const previous = parseFloat(snail.style.left);
+
+    if (!snail.dataset.positionReady) {
+      snail.style.transition = 'none';
+      snail.style.left = `${target.toFixed(1)}px`;
+      snail.dataset.positionReady = 'true';
+      requestAnimationFrame(() => {
+        if (snail.isConnected) snail.style.transition = 'left .95s linear';
+      });
+      return;
+    }
+
+    if (Number.isFinite(previous) && target < previous - .5) {
+      snail.style.transition = 'none';
+      snail.style.left = `${target.toFixed(1)}px`;
+      requestAnimationFrame(() => {
+        if (snail.isConnected) snail.style.transition = 'left .95s linear';
+      });
+      return;
+    }
+
+    snail.style.transition = 'left .95s linear';
+    snail.style.left = `${target.toFixed(1)}px`;
   }
 
   function syncScene() {
