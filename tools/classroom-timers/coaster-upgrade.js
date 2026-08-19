@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('coasterUpgradeStyleV5')) return;
+  if (document.getElementById('coasterUpgradeStyleV6')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stage = document.getElementById('countdownStage');
@@ -12,16 +12,54 @@
   if (!sceneLayer || !stage || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'coasterUpgradeStyleV5';
+  style.id = 'coasterUpgradeStyleV6';
   style.textContent = `
     .coaster-scene.coaster-upgraded{
       position:absolute;inset:0;overflow:hidden;
-      background:linear-gradient(#73c5ea 0 73.5%,#65ad54 73.5% 100%)!important;
+      background:linear-gradient(#79caee 0 72.5%,#76b95d 72.5% 100%)!important;
     }
     .coaster-scene.coaster-upgraded:after{
-      content:'';position:absolute;left:-4%;right:-4%;bottom:-7%;height:22%;z-index:0;
-      border-radius:50% 50% 0 0;background:#4f9444;opacity:.55;pointer-events:none;
+      content:'';position:absolute;left:-6%;right:-6%;top:67.8%;height:7%;z-index:0;
+      border-radius:50% 50% 0 0;background:#579b49;opacity:.23;pointer-events:none;
     }
+    .coaster-horizon{
+      position:absolute;left:-5%;right:-5%;top:58%;height:15%;z-index:1;pointer-events:none;opacity:.42;
+      background:
+        radial-gradient(ellipse at 7% 100%,#679c66 0 13%,transparent 13.5%),
+        radial-gradient(ellipse at 22% 100%,#5f9660 0 17%,transparent 17.5%),
+        radial-gradient(ellipse at 41% 100%,#6aa06a 0 14%,transparent 14.5%),
+        radial-gradient(ellipse at 61% 100%,#5b925c 0 18%,transparent 18.5%),
+        radial-gradient(ellipse at 80% 100%,#679d67 0 15%,transparent 15.5%),
+        radial-gradient(ellipse at 96% 100%,#5c925e 0 17%,transparent 17.5%);
+      filter:saturate(.76) brightness(.97);
+    }
+    .coaster-birds{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+    .coaster-bird{
+      --bird-scale:1;position:absolute;width:22px;height:10px;opacity:.34;
+      animation:coasterBirdFly var(--bird-duration,20s) linear infinite;
+    }
+    .coaster-bird:before,.coaster-bird:after{
+      content:'';position:absolute;top:3px;width:12px;height:7px;border-top:2px solid rgba(37,54,63,.76);border-radius:50%;
+      animation:coasterBirdWing .75s ease-in-out infinite alternate;
+    }
+    .coaster-bird:before{left:0;transform-origin:right center;transform:rotate(-12deg)}
+    .coaster-bird:after{right:0;transform-origin:left center;transform:rotate(12deg)}
+    .coaster-bird.b1{left:-6%;top:16%;--bird-scale:.64;--bird-duration:23s;animation-delay:-4s}
+    .coaster-bird.b2{left:-10%;top:25%;--bird-scale:.48;--bird-duration:29s;animation-delay:-15s}
+    .coaster-bird.b3{left:-8%;top:34%;--bird-scale:.56;--bird-duration:26s;animation-delay:-9s}
+    .coaster-bird.b4{left:-12%;top:12%;--bird-scale:.42;--bird-duration:32s;animation-delay:-21s}
+    @keyframes coasterBirdFly{
+      0%{transform:translate(-20px,0) scale(var(--bird-scale))}
+      25%{transform:translate(calc(28vw + 20px),-5px) scale(var(--bird-scale))}
+      50%{transform:translate(calc(56vw + 40px),2px) scale(var(--bird-scale))}
+      75%{transform:translate(calc(84vw + 60px),-3px) scale(var(--bird-scale))}
+      100%{transform:translate(calc(112vw + 80px),1px) scale(var(--bird-scale))}
+    }
+    @keyframes coasterBirdWing{
+      from{height:6px;border-top-width:2px}
+      to{height:3px;border-top-width:1.5px}
+    }
+
     .coaster-upgrade-track,.coaster-hitch-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     .coaster-upgrade-track{z-index:2}.coaster-hitch-layer{z-index:5;overflow:visible}
     .coaster-rail-shadow{fill:none;stroke:rgba(38,30,24,.24);stroke-width:22;stroke-linecap:round;stroke-linejoin:round}
@@ -63,6 +101,8 @@
       .coaster-car-upgraded{width:42px;height:24px}.coaster-car-upgraded .car-shell{height:17px}.coaster-car-upgraded .seat{height:10px;width:7px}.coaster-car-upgraded .wheel{width:9px;height:9px}
       #countdownStage.theme-coaster .time-display-wrap{left:3%!important;top:3%!important;width:min(44%,220px)!important}
       #countdownStage.theme-coaster #countdownDisplay,#countdownStage.theme-coaster .time-display{font-size:clamp(2.2rem,7vw,3.3rem)!important;padding:6px 11px 7px!important}
+      .coaster-horizon{top:60%;height:13%;opacity:.36}
+      .coaster-bird{opacity:.28}
     }
   `;
   document.head.appendChild(style);
@@ -112,6 +152,10 @@
     if (!scene || scene.classList.contains('coaster-upgraded')) return;
     scene.classList.add('coaster-upgraded');
     scene.innerHTML = `
+      <div class="coaster-horizon" aria-hidden="true"></div>
+      <div class="coaster-birds" aria-hidden="true">
+        <i class="coaster-bird b1"></i><i class="coaster-bird b2"></i><i class="coaster-bird b3"></i><i class="coaster-bird b4"></i>
+      </div>
       <svg class="coaster-upgrade-track" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
         <path class="coaster-rail-shadow" d="${TRACK_D}"/>
         <path class="coaster-rail" d="${TRACK_D}"/>
