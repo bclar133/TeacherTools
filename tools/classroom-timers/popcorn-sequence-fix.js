@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('popcornSequenceFixStyle')) return;
+  if (document.getElementById('popcornSequenceFixStyleV2')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -13,7 +13,7 @@
   if (!sceneLayer || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'popcornSequenceFixStyle';
+  style.id = 'popcornSequenceFixStyleV2';
   style.textContent = `
     .sequenced-popcorn-piece{position:absolute;width:calc(40px * var(--piece-size,1) * var(--piece-x,1));height:calc(35px * var(--piece-size,1) * var(--piece-y,1));border-radius:var(--piece-radius,55% 45% 52% 48%);background:radial-gradient(circle at var(--highlight-x,30%) var(--highlight-y,28%),var(--p1,#fffef7) 0 17%,var(--p2,#fff3c9) 18% 53%,var(--p3,#ead18f) 54% 76%,var(--p4,#d9bb74) 77%);box-shadow:inset calc(-4px * var(--piece-size,1)) calc(-4px * var(--piece-size,1)) 0 rgba(211,187,119,.42),0 calc(2px + var(--depth,0) * 2px) calc(4px + var(--depth,0) * 4px) rgba(0,0,0,var(--shadow-alpha,.16));opacity:var(--piece-opacity,1);filter:brightness(var(--piece-brightness,1)) saturate(var(--piece-saturation,1));transform-origin:center;will-change:transform,translate;z-index:var(--piece-z,10)}
     .sequenced-popcorn-piece:before,.sequenced-popcorn-piece:after{content:'';position:absolute;border-radius:50%;background:radial-gradient(circle,var(--p1,#fffefa) 0 39%,var(--p2,#f5e8bc) 40% 100%)}
@@ -31,11 +31,11 @@
   let audioCtx = null;
   let trackedScene = null;
   let pieces = [];
+  let raw = [];
   let poppedCount = 0;
-  let nextPopAt = null;
-  let lastStatus = '';
   let displayedRemaining = null;
   let displayChangedAt = performance.now();
+  let lastStatus = '';
   let raf = 0;
 
   function isMuted() {
@@ -93,17 +93,21 @@
     return Math.max(1, (Number(minutesInput?.value) || 0) * 60 + (Number(secondsInput?.value) || 0));
   }
 
-  function rawKernels(scene = trackedScene) {
-    return scene ? [...scene.querySelectorAll('.raw-kernel')] : [];
-  }
+  function continuousProgress(now, running) {
+    const current = parseRemainingSeconds();
+    if (current === null) return 0;
 
-  function updateRawKernels() {
-    const raw = rawKernels();
-    if (!raw.length || !pieces.length) return;
-    const visibleCount = poppedCount >= pieces.length ? 0 : Math.max(0, Math.ceil(raw.length * (1 - poppedCount / pieces.length)));
-    raw.forEach((kernel, i) => {
-      kernel.style.opacity = i < visibleCount ? (kernel.dataset.baseOpacity || '1') : '0';
-    });
+    if (displayedRemaining === null || current !== displayedRemaining) {
+      displayedRemaining = current;
+      displayChangedAt = now;
+    }
+
+    let estimatedRemaining = current;
+    if (running && current > 0) {
+      estimatedRemaining = Math.max(0, current - (now - displayChangedAt) / 1000);
+    }
+
+    return Math.max(0, Math.min(1, 1 - estimatedRemaining / totalSeconds()));
   }
 
   function setPieceVisible(piece, visible) {
@@ -111,13 +115,35 @@
     piece.style.transform = `rotate(${rotation}deg) scale(${visible ? 1 : 0})`;
   }
 
-  function initialProgress() {
-    const remaining = parseRemainingSeconds();
-    if (remaining === null) return 0;
-    return Math.max(0, Math.min(1, 1 - remaining / totalSeconds()));
+  function rebuildRawKernels(scene, count) {
+    const bed = scene.querySelector('.raw-kernel-bed');
+    if (!bed) return [];
+    bed.innerHTML = '';
+
+    const kernels = [];
+    for (let i = 0; i < count; i++) {
+      const kernel = document.createElement('i');
+      kernel.className = 'raw-kernel';
+      const scale = .74 + Math.random() * .43;
+      kernel.style.left = `${1 + Math.random() * 96}%`;
+      kernel.style.bottom = `${2 + Math.random() * 73}%`;
+      kernel.style.transform = `rotate(${-45 + Math.random() * 90}deg) scale(${scale.toFixed(2)})`;
+      kernel.dataset.baseOpacity = String(.74 + Math.random() * .26);
+      kernel.style.opacity = kernel.dataset.baseOpacity;
+      bed.appendChild(kernel);
+      kernels.push(kernel);
+    }
+    return kernels;
   }
 
-  function hijackScene(scene) {
+  function updateRawKernels() {
+    raw.forEach((kernel, i) => {
+      kernel.style.opacity = i < poppedCount ? '0' : (kernel.dataset.baseOpacity || '1');
+    });
+    if (poppedCount >= pieces.length) raw.forEach(kernel => { kernel.style.opacity = '0'; });
+  }
+
+  function hijackScene(scene, now) {
     if (!scene) return false;
     const original = [...scene.querySelectorAll('.cinema-popcorn-piece')];
     if (!original.length) return false;
@@ -129,31 +155,18 @@
 
     trackedScene = scene;
     pieces = [...scene.querySelectorAll('.sequenced-popcorn-piece')];
-    poppedCount = Math.min(pieces.length, Math.floor(initialProgress() * pieces.length));
+    raw = rebuildRawKernels(scene, pieces.length);
+
+    const status = stageStatus?.textContent.trim() || '';
+    displayedRemaining = parseRemainingSeconds();
+    displayChangedAt = now;
+    const progress = continuousProgress(now, status === 'Running');
+    poppedCount = Math.min(pieces.length, Math.floor(progress * pieces.length));
+
     pieces.forEach((piece, i) => setPieceVisible(piece, i < poppedCount));
     updateRawKernels();
-    nextPopAt = null;
-    displayedRemaining = parseRemainingSeconds();
-    displayChangedAt = performance.now();
-    lastStatus = stageStatus?.textContent.trim() || '';
+    lastStatus = status;
     return true;
-  }
-
-  function remainingEstimate(now, running) {
-    const current = parseRemainingSeconds();
-    if (current === null) return 0;
-    if (displayedRemaining === null || current !== displayedRemaining) {
-      displayedRemaining = current;
-      displayChangedAt = now;
-    }
-    if (!running) return current;
-    return Math.max(0, current - (now - displayChangedAt) / 1000);
-  }
-
-  function intervalToNextPop(now) {
-    const remainingPieces = Math.max(1, pieces.length - poppedCount);
-    const estimate = remainingEstimate(now, true);
-    return Math.max(35, (estimate * 1000 / remainingPieces) * .997);
   }
 
   function popOne() {
@@ -176,15 +189,16 @@
     if (!scene) {
       trackedScene = null;
       pieces = [];
+      raw = [];
       poppedCount = 0;
-      nextPopAt = null;
+      displayedRemaining = null;
       lastStatus = '';
       raf = requestAnimationFrame(loop);
       return;
     }
 
     if (scene !== trackedScene || !scene.querySelector('.sequenced-popcorn-piece')) {
-      if (!hijackScene(scene)) {
+      if (!hijackScene(scene, now)) {
         raf = requestAnimationFrame(loop);
         return;
       }
@@ -197,24 +211,22 @@
       lastStatus = status;
       displayedRemaining = parseRemainingSeconds();
       displayChangedAt = now;
-      nextPopAt = running && poppedCount < pieces.length ? now + intervalToNextPop(now) : null;
     }
 
-    remainingEstimate(now, running);
+    const progress = continuousProgress(now, running);
 
-    if (running && poppedCount < pieces.length) {
-      if (nextPopAt === null) nextPopAt = now + intervalToNextPop(now);
-      if (now >= nextPopAt) {
-        popOne();
-        nextPopAt = poppedCount < pieces.length ? now + intervalToNextPop(now) : null;
-      }
-    } else if (!running) {
-      nextPopAt = null;
+    const desiredCount = progress >= 1
+      ? pieces.length
+      : Math.min(pieces.length, Math.floor(progress * pieces.length + .5));
+
+    if (running && poppedCount < desiredCount) {
+      popOne();
     }
 
     const remaining = parseRemainingSeconds();
-    if (remaining === 0 && poppedCount >= pieces.length) {
-      rawKernels().forEach(kernel => { kernel.style.opacity = '0'; });
+    if (remaining === 0) {
+      raw.forEach(kernel => { kernel.style.opacity = '0'; });
+      if (poppedCount < pieces.length) popOne();
     }
 
     raf = requestAnimationFrame(loop);
