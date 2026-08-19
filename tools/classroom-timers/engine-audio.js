@@ -272,3 +272,29 @@
   popcornUpgrade.async = false;
   document.body.appendChild(popcornUpgrade);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('popcornSequenceFixScript')) return;
+
+  const loadSequenceFix = () => {
+    if (document.getElementById('popcornSequenceFixScript')) return;
+    const fix = document.createElement('script');
+    fix.id = 'popcornSequenceFixScript';
+    fix.src = new URL('popcorn-sequence-fix.js', current.src).href;
+    fix.async = false;
+    document.body.appendChild(fix);
+  };
+
+  const upgrade = document.getElementById('popcornUpgradeScript');
+  if (!upgrade) {
+    loadSequenceFix();
+    return;
+  }
+
+  if (document.getElementById('popcornCinemaUpgradeStyleV3')) {
+    loadSequenceFix();
+  } else {
+    upgrade.addEventListener('load', loadSequenceFix, { once: true });
+  }
+})();
