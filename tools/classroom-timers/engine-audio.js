@@ -309,3 +309,24 @@
   coasterUpgrade.async = false;
   document.body.appendChild(coasterUpgrade);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('coasterFairgroundScript')) return;
+
+  const loadFairground = () => {
+    if (document.getElementById('coasterFairgroundScript')) return;
+    const fairground = document.createElement('script');
+    fairground.id = 'coasterFairgroundScript';
+    fairground.src = new URL('coaster-fairground.js', current.src).href;
+    fairground.async = false;
+    document.body.appendChild(fairground);
+  };
+
+  const coaster = document.getElementById('coasterUpgradeScript');
+  if (coaster) {
+    coaster.addEventListener('load', loadFairground, { once: true });
+  } else {
+    loadFairground();
+  }
+})();
