@@ -250,3 +250,14 @@
   hourglassFix.async = false;
   document.body.appendChild(hourglassFix);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('plantUpgradeScript')) return;
+
+  const plantUpgrade = document.createElement('script');
+  plantUpgrade.id = 'plantUpgradeScript';
+  plantUpgrade.src = new URL('plant-upgrade.js', current.src).href;
+  plantUpgrade.async = false;
+  document.body.appendChild(plantUpgrade);
+})();
