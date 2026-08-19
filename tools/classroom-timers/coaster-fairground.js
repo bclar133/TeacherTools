@@ -1,13 +1,13 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('coasterFairgroundStyleV2')) return;
+  if (document.getElementById('coasterFairgroundStyleV3')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'coasterFairgroundStyleV2';
+  style.id = 'coasterFairgroundStyleV3';
   style.textContent = `
     .coaster-fairground{
       position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;
@@ -94,16 +94,59 @@
     .coaster-swing-ride .chain.c1{left:24px}.coaster-swing-ride .chain.c2{right:24px;animation-delay:-1.1s}
     @keyframes coasterSwing{from{transform:rotate(-13deg)}to{transform:rotate(13deg)}}
 
-    .coaster-fireworks{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+    .coaster-birds{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+    .coaster-bird{
+      position:absolute;left:-8%;width:26px;height:14px;opacity:.52;
+      animation:coasterBirdCross var(--bird-duration,18s) linear infinite;
+      animation-delay:var(--bird-delay,0s);
+      transform:scale(var(--bird-scale,1));
+    }
+    .coaster-bird:before,.coaster-bird:after{
+      content:'';position:absolute;top:6px;width:14px;height:7px;
+      border-top:2px solid rgba(55,67,79,.88);border-radius:50%;
+    }
+    .coaster-bird:before{left:0;transform-origin:right center;animation:coasterWingLeft .72s ease-in-out infinite alternate}
+    .coaster-bird:after{right:0;transform-origin:left center;animation:coasterWingRight .72s ease-in-out infinite alternate}
+    .coaster-bird.b1{top:15%;--bird-duration:19s;--bird-delay:-4s;--bird-scale:.82}
+    .coaster-bird.b2{top:22%;--bird-duration:23s;--bird-delay:-14s;--bird-scale:.65}
+    .coaster-bird.b3{top:10%;--bird-duration:27s;--bird-delay:-9s;--bird-scale:.55}
+    .coaster-bird.b4{top:28%;--bird-duration:21s;--bird-delay:-17s;--bird-scale:.72}
+    .coaster-bird.b5{top:18%;--bird-duration:25s;--bird-delay:-21s;--bird-scale:.48}
+    @keyframes coasterBirdCross{
+      0%{left:-8%;transform:translateY(0) scale(var(--bird-scale,1));opacity:0}
+      6%{opacity:.52}
+      48%{transform:translateY(-9px) scale(var(--bird-scale,1))}
+      94%{opacity:.52}
+      100%{left:108%;transform:translateY(3px) scale(var(--bird-scale,1));opacity:0}
+    }
+    @keyframes coasterWingLeft{from{transform:rotate(-12deg)}to{transform:rotate(-34deg)}}
+    @keyframes coasterWingRight{from{transform:rotate(12deg)}to{transform:rotate(34deg)}}
+
+    .coaster-fireworks{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
     .coaster-firework{position:absolute;width:8px;height:8px;transform:translate(-50%,-50%);opacity:1}
-    .coaster-firework .core{position:absolute;left:50%;top:50%;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);background:var(--fw-core,#fff4a8);box-shadow:0 0 18px 8px var(--fw-glow,rgba(255,215,90,.7));animation:coasterFireCore 1.45s ease-out forwards}
-    .coaster-firework .spark{position:absolute;left:50%;top:50%;width:5px;height:48px;border-radius:999px;background:linear-gradient(180deg,var(--fw-a,#fff),var(--fw-b,#ffbf3e),transparent);transform-origin:50% 0;animation:coasterSparkBurst 1.45s cubic-bezier(.12,.7,.24,1) forwards}
-    @keyframes coasterFireCore{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.2)}}
+    .coaster-firework .core{
+      position:absolute;left:50%;top:50%;width:13px;height:13px;border-radius:50%;transform:translate(-50%,-50%);
+      background:var(--fw-core,#fff4a8);box-shadow:0 0 20px 9px var(--fw-glow,rgba(255,215,90,.7));
+      animation:coasterFireCore 2.8s ease-out forwards;
+    }
+    .coaster-firework .spark{
+      position:absolute;left:50%;top:50%;width:5px;height:56px;border-radius:999px;
+      background:linear-gradient(180deg,var(--fw-a,#fff),var(--fw-b,#ffbf3e),transparent);
+      transform-origin:50% 0;animation:coasterSparkBurst 2.8s cubic-bezier(.12,.7,.24,1) forwards;
+    }
+    @keyframes coasterFireCore{
+      0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+      8%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}
+      68%{opacity:1;transform:translate(-50%,-50%) scale(.95)}
+      84%{opacity:.72;transform:translate(-50%,-50%) scale(.7)}
+      100%{opacity:0;transform:translate(-50%,-50%) scale(.25)}
+    }
     @keyframes coasterSparkBurst{
       0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--deg)) scaleY(.2)}
-      12%{opacity:1}
-      70%{opacity:.95;transform:translate(-50%,-50%) rotate(var(--deg)) translateY(-62px) scaleY(1)}
-      100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--deg)) translateY(-82px) scaleY(.65)}
+      8%{opacity:1}
+      62%{opacity:1;transform:translate(-50%,-50%) rotate(var(--deg)) translateY(-70px) scaleY(1)}
+      84%{opacity:.68;transform:translate(-50%,-50%) rotate(var(--deg)) translateY(-88px) scaleY(.9)}
+      100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--deg)) translateY(-102px) scaleY(.62)}
     }
 
     @media(max-width:760px){
@@ -112,13 +155,15 @@
       .coaster-ferris{right:4%;bottom:14%;width:112px;height:112px}
       .coaster-carousel{right:24%;bottom:13%;width:76px;height:70px}.coaster-carousel .horse{font-size:17px}
       .coaster-swing-ride{left:28%;bottom:14%;transform:scale(.78);transform-origin:bottom left}
+      .coaster-bird{width:22px;height:12px;opacity:.48}
+      .coaster-bird:before,.coaster-bird:after{width:12px;height:6px}
     }
   `;
   document.head.appendChild(style);
 
   let currentScene = null;
   let fireworksLayer = null;
-  let nextBurstAt = performance.now() + 2600;
+  let nextBurstAt = performance.now() + 2200;
   let raf = 0;
 
   function fairgroundMarkup() {
@@ -130,6 +175,9 @@
         <div class="coaster-swing-ride"><div class="mast"></div><div class="canopy"></div><i class="chain c1"></i><i class="chain c2"></i></div>
         <div class="coaster-carousel"><div class="roof"></div><div class="topbar"></div><div class="pole"></div><span class="horse h1">🎠</span><span class="horse h2">🎠</span><div class="deck"></div></div>
         <div class="coaster-ferris"><div class="wheel"></div><div class="diag d1"></div><div class="diag d2"></div><div class="hub"></div><div class="stand"></div></div>
+        <div class="coaster-birds">
+          <i class="coaster-bird b1"></i><i class="coaster-bird b2"></i><i class="coaster-bird b3"></i><i class="coaster-bird b4"></i><i class="coaster-bird b5"></i>
+        </div>
         <div class="coaster-fireworks"></div>
       </div>`;
   }
@@ -139,7 +187,7 @@
     scene.insertAdjacentHTML('afterbegin', fairgroundMarkup());
     currentScene = scene;
     fireworksLayer = scene.querySelector('.coaster-fireworks');
-    nextBurstAt = performance.now() + 2400 + Math.random() * 2600;
+    nextBurstAt = performance.now() + 2000 + Math.random() * 2200;
   }
 
   function spawnFirework(now, left, top, scale = 1) {
@@ -161,33 +209,33 @@
     firework.style.setProperty('--fw-glow', glow);
     firework.style.transform = `translate(-50%,-50%) scale(${scale.toFixed(2)})`;
 
-    const count = 18;
+    const count = 20;
     let sparks = '<i class="core"></i>';
     for (let i = 0; i < count; i++) {
-      const deg = (360 / count) * i + Math.random() * 4 - 2;
-      sparks += `<i class="spark" style="--deg:${deg.toFixed(1)}deg;--fw-a:${a};--fw-b:${b};animation-delay:${(Math.random() * .06).toFixed(2)}s"></i>`;
+      const deg = (360 / count) * i + Math.random() * 5 - 2.5;
+      sparks += `<i class="spark" style="--deg:${deg.toFixed(1)}deg;--fw-a:${a};--fw-b:${b};animation-delay:${(Math.random() * .10).toFixed(2)}s"></i>`;
     }
     firework.innerHTML = sparks;
     fireworksLayer.appendChild(firework);
-    setTimeout(() => firework.remove(), 1700);
+    setTimeout(() => firework.remove(), 3400);
   }
 
   function spawnBurst(now) {
     if (!fireworksLayer?.isConnected) return;
     const firstLeft = 34 + Math.random() * 48;
-    const firstTop = 13 + Math.random() * 24;
+    const firstTop = 12 + Math.random() * 24;
     spawnFirework(now, firstLeft, firstTop, 1.05 + Math.random() * .3);
 
-    if (Math.random() < .58) {
+    if (Math.random() < .68) {
       setTimeout(() => {
         if (!fireworksLayer?.isConnected) return;
         const secondLeft = Math.max(20, Math.min(86, firstLeft + (Math.random() < .5 ? -1 : 1) * (12 + Math.random() * 18)));
-        const secondTop = 12 + Math.random() * 26;
+        const secondTop = 11 + Math.random() * 25;
         spawnFirework(performance.now(), secondLeft, secondTop, .92 + Math.random() * .24);
-      }, 260 + Math.random() * 420);
+      }, 520 + Math.random() * 480);
     }
 
-    nextBurstAt = now + 5200 + Math.random() * 5200;
+    nextBurstAt = now + 6000 + Math.random() * 4500;
   }
 
   function loop(now) {
