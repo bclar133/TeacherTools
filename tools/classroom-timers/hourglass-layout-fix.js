@@ -6,7 +6,7 @@
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'hourglassLayoutFixV6';
+  style.id = 'hourglassLayoutFixV7';
   style.textContent = `
     .hourglass-scene.hourglass-upgraded {
       display:block !important;
@@ -19,42 +19,35 @@
       background:#17131f !important;
     }
 
-    .hourglass-scene.hourglass-upgraded .hourglass-illustrated-bg,
-    .hourglass-scene.hourglass-upgraded .hourglass-shadow-vignette,
-    .hourglass-scene.hourglass-upgraded .hourglass-magic-haze {
+    /* Show the original wizard image with no darkening, tinting or contrast filters. */
+    .hourglass-scene.hourglass-upgraded .hourglass-bg-image,
+    .hourglass-scene.hourglass-upgraded .hourglass-illustrated-bg {
       position:absolute !important;
       inset:0 !important;
       width:100% !important;
       height:100% !important;
-      min-height:100% !important;
+      z-index:1 !important;
+      background-image:var(--wizard-bg) !important;
+      background-size:cover !important;
+      background-repeat:no-repeat !important;
+      background-position:68% center !important;
+      filter:none !important;
+      opacity:1 !important;
+      transform:none !important;
       pointer-events:none !important;
     }
 
-    /* Make the wizard clearly visible instead of disappearing into the shadows. */
-    .hourglass-scene.hourglass-upgraded .hourglass-illustrated-bg {
-      z-index:1 !important;
-      background-size:100% 100%, 100% 100%, auto 98% !important;
-      background-repeat:no-repeat, no-repeat, no-repeat !important;
-      background-position:center, center, 69% 51% !important;
-      opacity:1 !important;
-      filter:brightness(1.48) contrast(1.03) saturate(1.04) !important;
-      transform:none !important;
-      transform-origin:center !important;
-    }
-
-    .hourglass-scene.hourglass-upgraded .hourglass-shadow-vignette {
-      z-index:2 !important;
-      background:
-        radial-gradient(circle at 76% 34%, transparent 0 30%, rgba(5,4,8,.015) 46%, rgba(5,4,8,.05) 74%, rgba(4,3,7,.11) 100%),
-        linear-gradient(90deg, rgba(4,3,7,.07) 0%, rgba(5,4,8,.015) 38%, rgba(5,4,8,.008) 74%, rgba(4,3,7,.035) 100%) !important;
-    }
-
+    /* Remove all darkening/atmospheric overlays from the wizard artwork. */
+    .hourglass-scene.hourglass-upgraded .hourglass-bg-vignette,
+    .hourglass-scene.hourglass-upgraded .hourglass-bg-haze,
+    .hourglass-scene.hourglass-upgraded .hourglass-shadow-vignette,
     .hourglass-scene.hourglass-upgraded .hourglass-magic-haze {
-      z-index:3 !important;
-      opacity:.14 !important;
+      display:none !important;
+      opacity:0 !important;
+      background:none !important;
     }
 
-    /* Smaller timer, kept on the middle-left and clear of the hourglass. */
+    /* Slightly larger timer, still on the middle-left and clear of the hourglass. */
     #countdownStage.theme-hourglass .time-display-wrap {
       position:absolute !important;
       left:4.5% !important;
@@ -62,27 +55,27 @@
       right:auto !important;
       bottom:auto !important;
       transform:translateY(-50%) !important;
-      width:min(21%, 190px) !important;
+      width:min(23%, 220px) !important;
       z-index:12 !important;
       justify-items:start !important;
       align-items:start !important;
       text-align:left !important;
-      gap:.2rem !important;
+      gap:.22rem !important;
     }
 
     #countdownStage.theme-hourglass #countdownDisplay,
     #countdownStage.theme-hourglass .time-display {
-      font-size:clamp(2rem,3.25vw,2.9rem) !important;
-      padding:3px 11px 4px !important;
-      border-radius:12px !important;
+      font-size:clamp(2.35rem,3.75vw,3.45rem) !important;
+      padding:4px 13px 5px !important;
+      border-radius:13px !important;
       text-align:left !important;
     }
 
     #countdownStage.theme-hourglass #countdownMessage,
     #countdownStage.theme-hourglass .timer-message {
       margin-top:4px !important;
-      padding:3px 8px !important;
-      font-size:clamp(.68rem,.8vw,.78rem) !important;
+      padding:4px 9px !important;
+      font-size:clamp(.72rem,.9vw,.84rem) !important;
       text-align:left !important;
     }
 
@@ -109,8 +102,6 @@
       z-index:8 !important;
     }
 
-    /* The lower glass sits in front of the stream. Its opaque sand therefore hides the
-       stream exactly where the falling grains meet the pile. */
     .hourglass-scene.hourglass-upgraded .hg-bottom {
       bottom:35px !important;
       z-index:8 !important;
@@ -126,8 +117,7 @@
       z-index:2 !important;
     }
 
-    /* Stream starts at the neck and its height is updated continuously to end just
-       inside the current top surface of the lower sand pile. */
+    /* Stream begins at the bottleneck and ends just inside the top of the lower sand pile. */
     .hourglass-scene.hourglass-upgraded .hg-stream {
       z-index:7 !important;
       left:115px !important;
@@ -173,22 +163,21 @@
     }
 
     @media (max-width:760px) {
+      .hourglass-scene.hourglass-upgraded .hourglass-bg-image,
       .hourglass-scene.hourglass-upgraded .hourglass-illustrated-bg {
-        background-size:100% 100%, 100% 100%, auto 95% !important;
-        background-position:center, center, 68% 52% !important;
-        filter:brightness(1.34) contrast(1.03) saturate(1.02) !important;
+        background-position:67% center !important;
       }
 
       #countdownStage.theme-hourglass .time-display-wrap {
         left:4% !important;
         top:18% !important;
         transform:none !important;
-        width:min(42%, 165px) !important;
+        width:min(44%, 180px) !important;
       }
 
       #countdownStage.theme-hourglass #countdownDisplay,
       #countdownStage.theme-hourglass .time-display {
-        font-size:clamp(1.65rem,5vw,2.25rem) !important;
+        font-size:clamp(1.9rem,5.5vw,2.55rem) !important;
       }
 
       .hourglass-scene.hourglass-upgraded .hourglass {
@@ -214,9 +203,6 @@
 
     const raw = sand.style.getPropertyValue('--bottomSand') || '0%';
     const percent = Math.max(0, Math.min(100, parseFloat(raw) || 0));
-
-    /* Lower chamber is 130px tall. The stream begins at its top edge and extends
-       2px into the pile; because the sand is layered above it, that overlap is hidden. */
     const streamHeight = Math.max(0, 132 - (1.30 * percent));
     stream.style.setProperty('--streamHeight', `${streamHeight.toFixed(2)}px`);
   }
