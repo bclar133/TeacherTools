@@ -44,7 +44,7 @@
     .plant-bee .wing{position:absolute;top:1px;width:15px;height:13px;border-radius:50%;background:rgba(255,255,255,.84);animation:plantBeeWing .1s linear infinite alternate}.plant-bee .wing.w1{left:12px;transform-origin:right bottom}.plant-bee .wing.w2{left:21px;transform-origin:left bottom}
     @keyframes plantBeeWing{from{rotate:-22deg}to{rotate:22deg}}
 
-    .plant-snail{position:absolute;left:-100px;bottom:5.5%;width:78px;height:52px;z-index:2;will-change:left;transition:left .95s linear;filter:drop-shadow(0 2px 3px rgba(0,0,0,.16))}
+    .plant-snail{position:absolute;left:-100px;bottom:5.5%;width:78px;height:52px;z-index:2;will-change:left;transition:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.16))}
     .plant-snail .shell{position:absolute;left:0;top:0;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#edc489 0 15%,#c98555 16% 34%,#8b5639 35% 50%,#d79a61 51% 66%,#75452e 67%);box-shadow:inset -4px -5px 5px rgba(75,41,25,.18)}
     .plant-snail .body{position:absolute;left:35px;top:31px;width:34px;height:13px;border-radius:11px 12px 8px 8px;background:#8f9364}
     .plant-snail .head{position:absolute;right:0;top:25px;width:16px;height:15px;border-radius:50%;background:#8f9364}
@@ -131,7 +131,7 @@
       const step = Math.min(dist, state.speed * dt);
       state.x += dx / dist * step;
       state.y += dy / dist * step;
-      const face = dx >= 0 ? -1 : 1; // artwork's head is on the left, so flip when flying right
+      const face = dx >= 0 ? -1 : 1;
       const tilt = Math.max(-12, Math.min(12, dy / Math.max(1, Math.abs(dx)) * 9));
       bee.style.left = `${state.x.toFixed(1)}px`;
       bee.style.top = `${state.y.toFixed(1)}px`;
