@@ -298,3 +298,14 @@
     upgrade.addEventListener('load', loadSequenceFix, { once: true });
   }
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('coasterUpgradeScript')) return;
+
+  const coasterUpgrade = document.createElement('script');
+  coasterUpgrade.id = 'coasterUpgradeScript';
+  coasterUpgrade.src = new URL('coaster-upgrade.js', current.src).href;
+  coasterUpgrade.async = false;
+  document.body.appendChild(coasterUpgrade);
+})();
