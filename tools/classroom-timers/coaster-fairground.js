@@ -1,13 +1,13 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('coasterFairgroundStyleV4')) return;
+  if (document.getElementById('coasterFairgroundStyleV5')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'coasterFairgroundStyleV4';
+  style.id = 'coasterFairgroundStyleV5';
   style.textContent = `
     .coaster-fairground{
       position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;
@@ -98,7 +98,7 @@
     @keyframes coasterSwing{from{transform:rotate(-13deg)}to{transform:rotate(13deg)}}
 
     .coaster-effects-canvas{
-      position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;
+      position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;
     }
 
     @media(max-width:760px){
@@ -151,11 +151,8 @@
   function seedBirds() {
     birds.length = 0;
     const seeds = [
-      [0.12,0.14,.048,.82,0.1],
-      [0.32,0.21,.039,.68,1.8],
-      [0.52,0.10,.033,.58,3.1],
-      [0.70,0.27,.044,.74,4.4],
-      [0.87,0.17,.036,.62,5.8]
+      [0.22,0.14,.042,.78,0.6],
+      [0.69,0.22,.035,.62,3.8]
     ];
     seeds.forEach(([x,y,speed,scale,phase]) => birds.push({ x,y,speed,scale,phase }));
   }
