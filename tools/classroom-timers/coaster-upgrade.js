@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('coasterUpgradeStyleV1')) return;
+  if (document.getElementById('coasterUpgradeStyleV2')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stage = document.getElementById('countdownStage');
@@ -12,11 +12,11 @@
   if (!sceneLayer || !stage || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'coasterUpgradeStyleV1';
+  style.id = 'coasterUpgradeStyleV2';
   style.textContent = `
     .coaster-scene.coaster-upgraded{
       position:absolute;inset:0;overflow:hidden;
-      background:linear-gradient(#73c5ea 0 74%,#65ad54 74% 100%)!important;
+      background:linear-gradient(#73c5ea 0 73.5%,#65ad54 73.5% 100%)!important;
     }
     .coaster-scene.coaster-upgraded:after{
       content:'';position:absolute;left:-4%;right:-4%;bottom:-7%;height:22%;z-index:0;
@@ -24,28 +24,28 @@
     }
     .coaster-upgrade-track,.coaster-hitch-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     .coaster-upgrade-track{z-index:2}.coaster-hitch-layer{z-index:5;overflow:visible}
-    .coaster-rail-shadow{fill:none;stroke:rgba(38,30,24,.28);stroke-width:24;stroke-linecap:round;stroke-linejoin:round}
-    .coaster-rail{fill:none;stroke:#594936;stroke-width:16;stroke-linecap:round;stroke-linejoin:round}
-    .coaster-sleepers{fill:none;stroke:#e0bd79;stroke-width:4;stroke-dasharray:5 11;stroke-linecap:butt}
-    .coaster-hitch{stroke:#282b31;stroke-width:7;stroke-linecap:round;filter:drop-shadow(0 2px 1px rgba(0,0,0,.25))}
+    .coaster-rail-shadow{fill:none;stroke:rgba(38,30,24,.24);stroke-width:22;stroke-linecap:round;stroke-linejoin:round}
+    .coaster-rail{fill:none;stroke:#594936;stroke-width:15;stroke-linecap:round;stroke-linejoin:round}
+    .coaster-sleepers{fill:none;stroke:#e0bd79;stroke-width:4;stroke-dasharray:5 12;stroke-linecap:butt}
+    .coaster-hitch{stroke:#282b31;stroke-width:6;stroke-linecap:round;filter:drop-shadow(0 2px 1px rgba(0,0,0,.25))}
 
     .coaster-car-upgraded{
-      position:absolute;z-index:7;width:70px;height:38px;transform-origin:50% 50%;
-      filter:drop-shadow(0 6px 5px rgba(0,0,0,.26));pointer-events:none;
+      position:absolute;z-index:7;width:58px;height:32px;transform-origin:50% 50%;
+      filter:drop-shadow(0 5px 4px rgba(0,0,0,.24));pointer-events:none;
     }
     .coaster-car-upgraded .car-shell{
-      position:absolute;left:2px;right:2px;top:3px;height:28px;border-radius:8px 13px 9px 9px;
+      position:absolute;left:2px;right:2px;top:3px;height:23px;border-radius:8px 12px 9px 9px;
       background:linear-gradient(180deg,#ff6658 0 52%,#e6423b 53% 100%);
       border:2px solid rgba(133,34,31,.55);box-shadow:inset 0 3px 0 rgba(255,255,255,.18);
     }
     .coaster-car-upgraded .car-shell:before{
-      content:'';position:absolute;left:11px;right:11px;top:-7px;height:11px;border-radius:6px 6px 2px 2px;
+      content:'';position:absolute;left:9px;right:9px;top:-6px;height:10px;border-radius:6px 6px 2px 2px;
       background:#c82f31;border:2px solid rgba(111,26,29,.5);
     }
-    .coaster-car-upgraded .seat{position:absolute;top:4px;width:12px;height:17px;border-radius:7px 7px 4px 4px;background:#242a31}
-    .coaster-car-upgraded .seat.s1{left:16px}.coaster-car-upgraded .seat.s2{left:39px}
-    .coaster-car-upgraded .wheel{position:absolute;bottom:-2px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#8f9ba6 0 29%,#22272d 31% 100%);border:1px solid #12161a}
-    .coaster-car-upgraded .wheel.w1{left:11px}.coaster-car-upgraded .wheel.w2{right:11px}
+    .coaster-car-upgraded .seat{position:absolute;top:4px;width:10px;height:14px;border-radius:7px 7px 4px 4px;background:#242a31}
+    .coaster-car-upgraded .seat.s1{left:13px}.coaster-car-upgraded .seat.s2{left:33px}
+    .coaster-car-upgraded .wheel{position:absolute;bottom:-2px;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#8f9ba6 0 29%,#22272d 31% 100%);border:1px solid #12161a}
+    .coaster-car-upgraded .wheel.w1{left:9px}.coaster-car-upgraded .wheel.w2{right:9px}
     .coaster-car-upgraded.rear .car-shell{background:linear-gradient(180deg,#ff7868 0 52%,#e94a42 53% 100%)}
 
     #countdownStage.theme-coaster .time-display-wrap{
@@ -60,14 +60,15 @@
       margin-top:6px!important;padding:5px 10px!important;font-size:clamp(.78rem,.95vw,.94rem)!important;text-align:left!important;
     }
     @media(max-width:760px){
-      .coaster-car-upgraded{width:58px;height:33px}.coaster-car-upgraded .car-shell{height:24px}.coaster-car-upgraded .seat{height:14px}.coaster-car-upgraded .wheel{width:12px;height:12px}
+      .coaster-car-upgraded{width:48px;height:28px}.coaster-car-upgraded .car-shell{height:20px}.coaster-car-upgraded .seat{height:12px;width:9px}.coaster-car-upgraded .wheel{width:10px;height:10px}
       #countdownStage.theme-coaster .time-display-wrap{left:3%!important;top:3%!important;width:min(44%,220px)!important}
       #countdownStage.theme-coaster #countdownDisplay,#countdownStage.theme-coaster .time-display{font-size:clamp(2.2rem,7vw,3.3rem)!important;padding:6px 11px 7px!important}
     }
   `;
   document.head.appendChild(style);
 
-  const TRACK_D = 'M 35 500 C 90 500 120 445 165 440 C 230 430 235 255 295 245 C 355 235 370 455 445 450 C 505 446 525 400 590 400 C 620 400 645 400 675 400 C 714 400 745 362 745 315 C 745 268 714 230 675 230 C 636 230 605 268 605 315 C 605 362 636 400 675 400 C 730 400 760 295 820 300 C 875 306 885 438 930 435 C 960 433 978 390 995 385';
+  // Smoother layout with a larger, more central loop-the-loop.
+  const TRACK_D = 'M 35 505 C 92 505 118 446 165 440 C 220 432 242 248 298 242 C 355 236 382 456 450 450 C 497 446 523 406 560 396 C 585 389 606 382 628 372 C 658 358 680 330 680 300 C 680 245 635 200 580 200 C 525 200 480 245 480 300 C 480 355 525 400 580 400 C 625 400 663 370 680 328 C 698 282 716 252 744 245 C 795 231 815 435 870 432 C 920 429 944 364 995 360';
 
   let trackedScene = null;
   let path = null;
@@ -149,10 +150,9 @@
     const mag = Math.hypot(dx, dy) || 1;
     const angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
-    // Normal points to the visual 'top' side of the track. This places the wheels on the rail rather than the carriage centre.
     const nx = dy / mag;
     const ny = -dx / mag;
-    const lift = rect.width < 700 ? 14 : 18;
+    const lift = rect.width < 700 ? 12 : 15;
     const cxPx = p.x * sx + nx * lift;
     const cyPx = p.y * sy + ny * lift;
     const cx = cxPx / sx;
@@ -169,7 +169,7 @@
     const length = path.getTotalLength();
     if (!length) return;
 
-    const spacing = 83;
+    const spacing = 66;
     const frontDistance = spacing + progress * Math.max(0, length - spacing);
     const rearDistance = Math.max(0, frontDistance - spacing);
     const front = placeCar(frontCar, frontDistance, length);
