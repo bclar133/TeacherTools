@@ -1,13 +1,13 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('coasterFairgroundStyleV1')) return;
+  if (document.getElementById('coasterFairgroundStyleV2')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'coasterFairgroundStyleV1';
+  style.id = 'coasterFairgroundStyleV2';
   style.textContent = `
     .coaster-fairground{
       position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;
@@ -19,30 +19,31 @@
     }
 
     .coaster-circus-tent{
-      position:absolute;left:6.5%;bottom:13%;width:168px;height:126px;
-      opacity:.9;filter:drop-shadow(0 5px 4px rgba(0,0,0,.16));
+      position:absolute;left:7.2%;bottom:25.5%;width:168px;height:126px;
+      transform:scale(.58);transform-origin:left bottom;
+      opacity:.46;filter:brightness(.72) saturate(.62) contrast(.94) drop-shadow(0 2px 2px rgba(0,0,0,.10));
     }
     .coaster-circus-tent .tent-base{
       position:absolute;left:12px;right:12px;bottom:0;height:62px;
-      background:repeating-linear-gradient(90deg,#fff1d7 0 18px,#d63d44 18px 36px);
+      background:repeating-linear-gradient(90deg,#ded2bd 0 18px,#9f5555 18px 36px);
       clip-path:polygon(5% 100%,14% 0,86% 0,95% 100%);
       border-radius:0 0 8px 8px;
     }
     .coaster-circus-tent .tent-roof{
       position:absolute;left:4px;right:4px;bottom:54px;height:58px;
-      background:repeating-linear-gradient(90deg,#ffe7a8 0 18px,#cc3040 18px 36px);
+      background:repeating-linear-gradient(90deg,#d8c59a 0 18px,#934b52 18px 36px);
       clip-path:polygon(50% 0,100% 100%,0 100%);
     }
     .coaster-circus-tent .tent-door{
       position:absolute;left:50%;bottom:0;width:38px;height:42px;transform:translateX(-50%);
-      background:#47202b;border-radius:50% 50% 0 0;
+      background:#49383a;border-radius:50% 50% 0 0;
     }
     .coaster-circus-tent .tent-pole{
-      position:absolute;left:50%;bottom:106px;width:4px;height:23px;transform:translateX(-50%);background:#6e4e2a;
+      position:absolute;left:50%;bottom:106px;width:4px;height:23px;transform:translateX(-50%);background:#665740;
     }
     .coaster-circus-tent .tent-flag{
       position:absolute;left:50%;bottom:119px;width:27px;height:14px;transform:translateX(2px);
-      background:#ffd24f;clip-path:polygon(0 0,100% 50%,0 100%);
+      background:#aa9c62;clip-path:polygon(0 0,100% 50%,0 100%);
     }
 
     .coaster-ferris{
@@ -106,7 +107,7 @@
     }
 
     @media(max-width:760px){
-      .coaster-circus-tent{left:4%;bottom:13%;width:122px;height:94px}
+      .coaster-circus-tent{left:4%;bottom:24.5%;width:122px;height:94px;transform:scale(.64);transform-origin:left bottom}
       .coaster-circus-tent .tent-base{height:47px}.coaster-circus-tent .tent-roof{bottom:40px;height:44px}.coaster-circus-tent .tent-pole{bottom:78px}.coaster-circus-tent .tent-flag{bottom:91px}
       .coaster-ferris{right:4%;bottom:14%;width:112px;height:112px}
       .coaster-carousel{right:24%;bottom:13%;width:76px;height:70px}.coaster-carousel .horse{font-size:17px}
