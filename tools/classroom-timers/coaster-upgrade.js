@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('coasterUpgradeStyleV3')) return;
+  if (document.getElementById('coasterUpgradeStyleV4')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stage = document.getElementById('countdownStage');
@@ -12,7 +12,7 @@
   if (!sceneLayer || !stage || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'coasterUpgradeStyleV3';
+  style.id = 'coasterUpgradeStyleV4';
   style.textContent = `
     .coaster-scene.coaster-upgraded{
       position:absolute;inset:0;overflow:hidden;
@@ -67,8 +67,8 @@
   `;
   document.head.appendChild(style);
 
-  // Smoother layout with a larger central loop and a clearly separated entry and exit.
-  const TRACK_D = 'M 35 505 C 90 505 125 460 175 450 C 235 438 250 300 305 285 C 360 270 390 448 455 442 C 472 440 488 428 500 410 C 455 374 446 302 460 245 C 478 174 526 145 585 150 C 654 155 707 213 708 285 C 710 352 683 403 635 425 C 671 422 700 397 721 361 C 748 316 772 270 814 266 C 873 260 889 428 936 425 C 965 423 982 390 995 380';
+  // Large central loop with a single clean crossover. The two passes diverge immediately after the crossing.
+  const TRACK_D = 'M 35 505 C 92 505 126 462 176 450 C 236 436 255 304 308 286 C 362 268 394 446 456 441 C 500 438 523 408 550 382 C 582 351 610 324 620 286 C 637 221 611 165 556 146 C 497 126 442 158 423 217 C 401 285 425 343 474 370 C 501 385 526 390 550 382 C 575 374 595 390 618 414 C 650 447 693 443 724 403 C 757 361 778 282 820 270 C 875 255 892 427 938 424 C 968 422 985 390 995 380';
 
   let trackedScene = null;
   let path = null;
