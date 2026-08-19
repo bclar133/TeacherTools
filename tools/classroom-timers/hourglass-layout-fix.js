@@ -6,7 +6,7 @@
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'hourglassLayoutFixV7';
+  style.id = 'hourglassLayoutFixV8';
   style.textContent = `
     .hourglass-scene.hourglass-upgraded {
       display:block !important;
@@ -47,35 +47,36 @@
       background:none !important;
     }
 
-    /* Slightly larger timer, still on the middle-left and clear of the hourglass. */
+    /* Fill most of the left-hand space, while leaving a clear gap before the hourglass. */
     #countdownStage.theme-hourglass .time-display-wrap {
       position:absolute !important;
-      left:4.5% !important;
+      left:5% !important;
       top:50% !important;
       right:auto !important;
       bottom:auto !important;
       transform:translateY(-50%) !important;
-      width:min(23%, 220px) !important;
+      width:min(31%, 300px) !important;
       z-index:12 !important;
       justify-items:start !important;
       align-items:start !important;
       text-align:left !important;
-      gap:.22rem !important;
+      gap:.28rem !important;
     }
 
     #countdownStage.theme-hourglass #countdownDisplay,
     #countdownStage.theme-hourglass .time-display {
-      font-size:clamp(2.35rem,3.75vw,3.45rem) !important;
-      padding:4px 13px 5px !important;
-      border-radius:13px !important;
+      font-size:clamp(3.2rem,5.3vw,5rem) !important;
+      padding:6px 17px 7px !important;
+      border-radius:15px !important;
       text-align:left !important;
+      line-height:.98 !important;
     }
 
     #countdownStage.theme-hourglass #countdownMessage,
     #countdownStage.theme-hourglass .timer-message {
-      margin-top:4px !important;
-      padding:4px 9px !important;
-      font-size:clamp(.72rem,.9vw,.84rem) !important;
+      margin-top:5px !important;
+      padding:5px 11px !important;
+      font-size:clamp(.82rem,1vw,.96rem) !important;
       text-align:left !important;
     }
 
@@ -172,12 +173,12 @@
         left:4% !important;
         top:18% !important;
         transform:none !important;
-        width:min(44%, 180px) !important;
+        width:min(48%, 205px) !important;
       }
 
       #countdownStage.theme-hourglass #countdownDisplay,
       #countdownStage.theme-hourglass .time-display {
-        font-size:clamp(1.9rem,5.5vw,2.55rem) !important;
+        font-size:clamp(2.15rem,6.2vw,2.95rem) !important;
       }
 
       .hourglass-scene.hourglass-upgraded .hourglass {
