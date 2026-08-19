@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('coasterUpgradeStyleV2')) return;
+  if (document.getElementById('coasterUpgradeStyleV3')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stage = document.getElementById('countdownStage');
@@ -12,7 +12,7 @@
   if (!sceneLayer || !stage || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'coasterUpgradeStyleV2';
+  style.id = 'coasterUpgradeStyleV3';
   style.textContent = `
     .coaster-scene.coaster-upgraded{
       position:absolute;inset:0;overflow:hidden;
@@ -67,8 +67,8 @@
   `;
   document.head.appendChild(style);
 
-  // Smoother layout with a larger, more central loop-the-loop.
-  const TRACK_D = 'M 35 505 C 92 505 118 446 165 440 C 220 432 242 248 298 242 C 355 236 382 456 450 450 C 497 446 523 406 560 396 C 585 389 606 382 628 372 C 658 358 680 330 680 300 C 680 245 635 200 580 200 C 525 200 480 245 480 300 C 480 355 525 400 580 400 C 625 400 663 370 680 328 C 698 282 716 252 744 245 C 795 231 815 435 870 432 C 920 429 944 364 995 360';
+  // Smoother layout with a larger central loop and a clearly separated entry and exit.
+  const TRACK_D = 'M 35 505 C 90 505 125 460 175 450 C 235 438 250 300 305 285 C 360 270 390 448 455 442 C 472 440 488 428 500 410 C 455 374 446 302 460 245 C 478 174 526 145 585 150 C 654 155 707 213 708 285 C 710 352 683 403 635 425 C 671 422 700 397 721 361 C 748 316 772 270 814 266 C 873 260 889 428 936 425 C 965 423 982 390 995 380';
 
   let trackedScene = null;
   let path = null;
