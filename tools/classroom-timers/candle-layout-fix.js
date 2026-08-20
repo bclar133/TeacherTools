@@ -144,3 +144,14 @@
   snowman.async = false;
   document.body.appendChild(snowman);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('snowmanStraightStartScript')) return;
+
+  const snowmanStraight = document.createElement('script');
+  snowmanStraight.id = 'snowmanStraightStartScript';
+  snowmanStraight.src = new URL('snowman-straight-start.js', current.src).href;
+  snowmanStraight.async = false;
+  document.body.appendChild(snowmanStraight);
+})();
