@@ -56,3 +56,14 @@
 
   document.head.appendChild(style);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('candleEffectsScript')) return;
+
+  const effects = document.createElement('script');
+  effects.id = 'candleEffectsScript';
+  effects.src = new URL('candle-effects.js', current.src).href;
+  effects.async = false;
+  document.body.appendChild(effects);
+})();
