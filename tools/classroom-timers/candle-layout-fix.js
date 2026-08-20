@@ -67,3 +67,14 @@
   effects.async = false;
   document.body.appendChild(effects);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('candleNightlifeScript')) return;
+
+  const nightlife = document.createElement('script');
+  nightlife.id = 'candleNightlifeScript';
+  nightlife.src = new URL('candle-nightlife.js', current.src).href;
+  nightlife.async = false;
+  document.body.appendChild(nightlife);
+})();
