@@ -51,3 +51,14 @@
   cancelAnimationFrame(raf);
   raf = requestAnimationFrame(loop);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('snowmanDropPhysicsFixScript')) return;
+
+  const physics = document.createElement('script');
+  physics.id = 'snowmanDropPhysicsFixScript';
+  physics.src = new URL('snowman-drop-physics-fix.js', current.src).href;
+  physics.async = false;
+  document.body.appendChild(physics);
+})();
