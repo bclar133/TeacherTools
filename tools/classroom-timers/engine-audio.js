@@ -362,3 +362,14 @@
     loadMazeMotionFix();
   }
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('candleLayoutFixScript')) return;
+
+  const candleFix = document.createElement('script');
+  candleFix.id = 'candleLayoutFixScript';
+  candleFix.src = new URL('candle-layout-fix.js', current.src).href;
+  candleFix.async = false;
+  document.body.appendChild(candleFix);
+})();
