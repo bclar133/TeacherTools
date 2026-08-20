@@ -330,3 +330,14 @@
     loadFairground();
   }
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('mazeUpgradeScript')) return;
+
+  const mazeUpgrade = document.createElement('script');
+  mazeUpgrade.id = 'mazeUpgradeScript';
+  mazeUpgrade.src = new URL('maze-upgrade.js', current.src).href;
+  mazeUpgrade.async = false;
+  document.body.appendChild(mazeUpgrade);
+})();
