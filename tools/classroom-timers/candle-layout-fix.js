@@ -100,3 +100,14 @@
   fix.async = false;
   document.body.appendChild(fix);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('bombFuseFixScript')) return;
+
+  const bombFix = document.createElement('script');
+  bombFix.id = 'bombFuseFixScript';
+  bombFix.src = new URL('bomb-fuse-fix.js', current.src).href;
+  bombFix.async = false;
+  document.body.appendChild(bombFix);
+})();
