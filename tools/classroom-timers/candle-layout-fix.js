@@ -89,3 +89,14 @@
   expanded.async = false;
   document.body.appendChild(expanded);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('expandedThemesHostFixScript')) return;
+
+  const fix = document.createElement('script');
+  fix.id = 'expandedThemesHostFixScript';
+  fix.src = new URL('expanded-themes-host-fix.js', current.src).href;
+  fix.async = false;
+  document.body.appendChild(fix);
+})();
