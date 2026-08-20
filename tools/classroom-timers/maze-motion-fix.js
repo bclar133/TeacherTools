@@ -1,13 +1,13 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('mazeMotionFixStyleV1')) return;
+  if (document.getElementById('mazeMotionFixStyleV2')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   if (!sceneLayer) return;
 
   const style = document.createElement('style');
-  style.id = 'mazeMotionFixStyleV1';
+  style.id = 'mazeMotionFixStyleV2';
   style.textContent = `
     .maze-proper-marble{
       transform:translate(-50%,-50%) rotate(var(--maze-roll-corrected,0deg))!important;
@@ -16,6 +16,42 @@
       stroke:url(#mazeRainbowTrail)!important;
       opacity:.96!important;
       filter:drop-shadow(0 1px 1px rgba(20,28,38,.28));
+    }
+
+    /* Keep the progress/status pill in the unused space to the left of the timer. */
+    #countdownStage.theme-maze .time-display-wrap,
+    #countdownStage.theme-maze.finished .time-display-wrap{
+      display:flex!important;
+      flex-direction:row-reverse!important;
+      align-items:center!important;
+      justify-content:flex-start!important;
+      gap:14px!important;
+      width:auto!important;
+      max-width:92%!important;
+      right:3.8%!important;
+      left:auto!important;
+      top:2.5%!important;
+      transform:none!important;
+      text-align:right!important;
+    }
+    #countdownStage.theme-maze #countdownMessage,
+    #countdownStage.theme-maze .timer-message,
+    #countdownStage.theme-maze.finished #countdownMessage,
+    #countdownStage.theme-maze.finished .timer-message{
+      margin:0!important;
+      flex:0 0 auto!important;
+      white-space:nowrap!important;
+      align-self:center!important;
+    }
+
+    @media(max-width:760px){
+      #countdownStage.theme-maze .time-display-wrap,
+      #countdownStage.theme-maze.finished .time-display-wrap{
+        right:3%!important;
+        top:2%!important;
+        gap:8px!important;
+        max-width:94%!important;
+      }
     }
   `;
   document.head.appendChild(style);
