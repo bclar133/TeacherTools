@@ -111,3 +111,14 @@
   bombFix.async = false;
   document.body.appendChild(bombFix);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('bombFuseV3Script')) return;
+
+  const bombV3 = document.createElement('script');
+  bombV3.id = 'bombFuseV3Script';
+  bombV3.src = new URL('bomb-fuse-v3.js', current.src).href;
+  bombV3.async = false;
+  document.body.appendChild(bombV3);
+})();
