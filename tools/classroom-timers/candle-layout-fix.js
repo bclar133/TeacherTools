@@ -166,3 +166,14 @@
   snowmanDetail.async = false;
   document.body.appendChild(snowmanDetail);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('snowmanBirdDirectionFixScript')) return;
+
+  const snowmanBirdDirection = document.createElement('script');
+  snowmanBirdDirection.id = 'snowmanBirdDirectionFixScript';
+  snowmanBirdDirection.src = new URL('snowman-bird-direction-fix.js', current.src).href;
+  snowmanBirdDirection.async = false;
+  document.body.appendChild(snowmanBirdDirection);
+})();
