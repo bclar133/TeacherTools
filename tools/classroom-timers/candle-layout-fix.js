@@ -155,3 +155,14 @@
   snowmanStraight.async = false;
   document.body.appendChild(snowmanStraight);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('snowmanDetailFixScript')) return;
+
+  const snowmanDetail = document.createElement('script');
+  snowmanDetail.id = 'snowmanDetailFixScript';
+  snowmanDetail.src = new URL('snowman-detail-fix.js', current.src).href;
+  snowmanDetail.async = false;
+  document.body.appendChild(snowmanDetail);
+})();
