@@ -341,3 +341,24 @@
   mazeUpgrade.async = false;
   document.body.appendChild(mazeUpgrade);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('mazeMotionFixScript')) return;
+
+  const loadMazeMotionFix = () => {
+    if (document.getElementById('mazeMotionFixScript')) return;
+    const fix = document.createElement('script');
+    fix.id = 'mazeMotionFixScript';
+    fix.src = new URL('maze-motion-fix.js', current.src).href;
+    fix.async = false;
+    document.body.appendChild(fix);
+  };
+
+  const mazeUpgrade = document.getElementById('mazeUpgradeScript');
+  if (mazeUpgrade) {
+    mazeUpgrade.addEventListener('load', loadMazeMotionFix, { once:true });
+  } else {
+    loadMazeMotionFix();
+  }
+})();
