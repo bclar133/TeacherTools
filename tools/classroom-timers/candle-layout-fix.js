@@ -122,3 +122,14 @@
   bombV3.async = false;
   document.body.appendChild(bombV3);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('removeVolcanoScript')) return;
+
+  const removeVolcano = document.createElement('script');
+  removeVolcano.id = 'removeVolcanoScript';
+  removeVolcano.src = new URL('remove-volcano.js', current.src).href;
+  removeVolcano.async = false;
+  document.body.appendChild(removeVolcano);
+})();
