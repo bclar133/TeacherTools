@@ -66,6 +66,13 @@
     el.style.transform = `translate(-50%,-50%) rotate(${angle}deg) scale(${scale})`;
   }
 
+  function positionNose(el,x,y,angle=-8){
+    if(!el) return;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.style.transform = `translate(0,-50%) rotate(${angle}deg)`;
+  }
+
   function makeState(){
     return {
       eye1Origin:null,
@@ -104,7 +111,9 @@
       dropState.noseOrigin = noseAttached;
       position(eye1,eye1Attached.x,eye1Attached.y,0);
       position(eye2,eye2Attached.x,eye2Attached.y,0);
-      position(nose,noseAttached.x,noseAttached.y,0);
+      // Keep the carrot's base anchored to the face, as in the original snowman,
+      // with a slight downward tilt rather than centring the whole carrot on the anchor.
+      positionNose(nose,noseAttached.x,noseAttached.y,-8);
     }
 
     if (p < .88) {
@@ -136,17 +145,16 @@
       }
     }
 
-    // Carrot: drops a fraction later, tips nose-first and settles on the ground.
+    // Carrot: starts in the original face position with a slight downward angle,
+    // then drops a fraction later, tips nose-first and settles on the ground.
     if (p >= .84) {
       const origin = dropState.noseOrigin || noseAttached;
       const fall = clamp((p-.84)/.11,0,1);
       const g = fall*fall;
       const x = lerp(origin.x,origin.x+48,smooth(fall));
       const y = lerp(origin.y,423,g);
-      const angle = lerp(0,112,smooth(fall));
-      nose.style.left = `${x}px`;
-      nose.style.top = `${y}px`;
-      nose.style.transform = `translate(0,-50%) rotate(${angle}deg)`;
+      const angle = lerp(-8,112,smooth(fall));
+      positionNose(nose,x,y,angle);
     }
 
     // Hat: remains visually attached until its own drop starts, then falls continuously
