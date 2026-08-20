@@ -78,3 +78,14 @@
   nightlife.async = false;
   document.body.appendChild(nightlife);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('expandedThemesScript')) return;
+
+  const expanded = document.createElement('script');
+  expanded.id = 'expandedThemesScript';
+  expanded.src = new URL('expanded-themes.js', current.src).href;
+  expanded.async = false;
+  document.body.appendChild(expanded);
+})();
