@@ -133,3 +133,14 @@
   removeVolcano.async = false;
   document.body.appendChild(removeVolcano);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('snowmanUpgradeScript')) return;
+
+  const snowman = document.createElement('script');
+  snowman.id = 'snowmanUpgradeScript';
+  snowman.src = new URL('snowman-upgrade.js', current.src).href;
+  snowman.async = false;
+  document.body.appendChild(snowman);
+})();
