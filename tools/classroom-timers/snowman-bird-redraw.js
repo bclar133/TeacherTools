@@ -68,8 +68,8 @@
         <circle cx="28.7" cy="32.7" r="1.15" fill="#ffffff" opacity="0.72"/>
 
         <g class="snow2-bird-beak-svg">
-          <path d="M20 39 L0 32 L0 46 Z" fill="#f0ae32"/>
-          <path d="M20 39 L0 39 L0 46 Z" fill="#df9220" opacity="0.48"/>
+          <path d="M0 39 L20 32 L20 46 Z" fill="#f0ae32"/>
+          <path d="M0 39 L20 39 L20 46 Z" fill="#df9220" opacity="0.48"/>
         </g>
       </g>
     </svg>
