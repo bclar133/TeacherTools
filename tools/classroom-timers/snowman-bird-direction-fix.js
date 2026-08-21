@@ -73,3 +73,14 @@
   frontFix.async = false;
   document.body.appendChild(frontFix);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('snowmanBirdRedrawScript')) return;
+
+  const redraw = document.createElement('script');
+  redraw.id = 'snowmanBirdRedrawScript';
+  redraw.src = new URL('snowman-bird-redraw.js', current.src).href;
+  redraw.async = false;
+  document.body.appendChild(redraw);
+})();
