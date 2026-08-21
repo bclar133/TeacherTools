@@ -1,31 +1,33 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('snowmanBirdFrontFixStyleV2')) return;
+  if (document.getElementById('snowmanBirdFrontFixStyleV3')) return;
 
   const style = document.createElement('style');
-  style.id = 'snowmanBirdFrontFixStyleV2';
+  style.id = 'snowmanBirdFrontFixStyleV3';
   style.textContent = `
     .xt-snowman .snow2-bird {
       z-index: 999 !important;
     }
 
+    /* The whole bird is mirrored when it enters from the left, so increasing
+       local left moves the crest visually toward the back of its head. */
     .xt-snowman .snow2-bird-crest {
-      left: 15px !important;
-      top: 2px !important;
-      transform: rotate(-6deg) !important;
+      left: 25px !important;
+      top: 5px !important;
+      transform: rotate(-8deg) !important;
     }
 
     .xt-snowman .snow2-bird-crest::before {
-      left: 5px !important;
+      left: 4px !important;
       top: 0 !important;
-      transform: rotate(12deg) !important;
+      transform: rotate(14deg) !important;
     }
 
     .xt-snowman .snow2-bird-crest::after {
-      left: 10px !important;
+      left: 8px !important;
       top: 2px !important;
-      transform: rotate(26deg) !important;
+      transform: rotate(28deg) !important;
     }
   `;
 
