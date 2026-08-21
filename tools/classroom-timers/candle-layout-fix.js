@@ -177,3 +177,14 @@
   snowmanBirdDirection.async = false;
   document.body.appendChild(snowmanBirdDirection);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('moonPhasesSmoothScript')) return;
+
+  const moonSmooth = document.createElement('script');
+  moonSmooth.id = 'moonPhasesSmoothScript';
+  moonSmooth.src = new URL('moon-phases-smooth.js', current.src).href;
+  moonSmooth.async = false;
+  document.body.appendChild(moonSmooth);
+})();
