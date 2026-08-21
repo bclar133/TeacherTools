@@ -62,3 +62,14 @@
   physics.async = false;
   document.body.appendChild(physics);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('snowmanBirdFrontFixScript')) return;
+
+  const frontFix = document.createElement('script');
+  frontFix.id = 'snowmanBirdFrontFixScript';
+  frontFix.src = new URL('snowman-bird-front-fix.js', current.src).href;
+  frontFix.async = false;
+  document.body.appendChild(frontFix);
+})();
