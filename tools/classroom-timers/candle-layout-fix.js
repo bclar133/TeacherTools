@@ -188,3 +188,14 @@
   moonSmooth.async = false;
   document.body.appendChild(moonSmooth);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('moonUfoScript')) return;
+
+  const moonUfo = document.createElement('script');
+  moonUfo.id = 'moonUfoScript';
+  moonUfo.src = new URL('moon-ufo.js', current.src).href;
+  moonUfo.async = false;
+  document.body.appendChild(moonUfo);
+})();
