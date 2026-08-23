@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('moonPhasesSmoothStyleV1')) return;
+  if (document.getElementById('moonPhasesSmoothStyleV2')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -11,7 +11,7 @@
   if (!sceneLayer || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'moonPhasesSmoothStyleV1';
+  style.id = 'moonPhasesSmoothStyleV2';
   style.textContent = `
     .xt-moon .xt-moon-orbit,
     .xt-moon .xt-moon-glyph,
@@ -21,7 +21,7 @@
 
     .xt-moon.moon-smooth-upgraded {
       background:
-        radial-gradient(circle at 73% 43%, rgba(67,91,143,.30), transparent 27%),
+        radial-gradient(circle at 73% 43%, rgba(67,91,143,.24), transparent 28%),
         radial-gradient(circle at 46% 18%, #1d3158 0, #101c35 43%, #070d1d 78%, #040813 100%) !important;
     }
 
@@ -50,7 +50,7 @@
       aspect-ratio:1;
       transform:translateY(-50%);
       z-index:4;
-      filter:drop-shadow(0 0 var(--moon-glow,18px) rgba(211,226,255,.52));
+      filter:drop-shadow(0 0 var(--moon-glow,8px) rgba(211,226,255,.52));
     }
 
     .smooth-moon-svg {
@@ -58,6 +58,7 @@
       width:100%;
       height:100%;
       overflow:visible;
+      shape-rendering:geometricPrecision;
     }
 
     .smooth-moon-phase-label {
@@ -78,7 +79,7 @@
     .smooth-moon-phase-dots {
       display:flex;
       justify-content:center;
-      gap:7px;
+      gap:8px;
       margin-top:9px;
     }
 
@@ -110,19 +111,14 @@
   document.head.appendChild(style);
 
   const PHASES = [
-    {name:'Waxing Crescent', light:.12, side:'right'},
-    {name:'First Quarter', light:.50, side:'right'},
-    {name:'Waxing Gibbous', light:.78, side:'right'},
-    {name:'Full Moon', light:1.00, side:'right'},
-    {name:'Waning Gibbous', light:.78, side:'left'},
-    {name:'Third Quarter', light:.50, side:'left'},
-    {name:'Waning Crescent', light:.12, side:'left'},
-    {name:'New Moon', light:.015, side:'left'}
+    {name:'New Moon', at:0},
+    {name:'Waxing Crescent', at:.24},
+    {name:'First Quarter', at:.50},
+    {name:'Waxing Gibbous', at:.76},
+    {name:'Full Moon', at:1}
   ];
 
   const clamp = (v,min,max) => Math.max(min,Math.min(max,v));
-  const lerp = (a,b,t) => a + (b-a)*t;
-  const smooth = t => t*t*(3-2*t);
 
   let displayedRemaining = null;
   let displayChangedAt = performance.now();
@@ -179,39 +175,39 @@
       <div class="smooth-moon-wrap">
         <svg class="smooth-moon-svg" viewBox="0 0 400 400" aria-hidden="true" focusable="false">
           <defs>
-            <clipPath id="smoothMoonDiskClip">
+            <clipPath id="smoothMoonDiskClipV2">
               <circle cx="200" cy="200" r="154"></circle>
             </clipPath>
-            <clipPath id="smoothMoonLightClip">
-              <rect class="smooth-moon-light-rect" x="200" y="46" width="0" height="308"></rect>
+            <clipPath id="smoothMoonLightClipV2">
+              <path class="smooth-moon-light-path"></path>
             </clipPath>
-            <radialGradient id="smoothMoonDarkGradient" cx="34%" cy="28%" r="78%">
-              <stop offset="0" stop-color="#243551"></stop>
-              <stop offset=".68" stop-color="#14233a"></stop>
-              <stop offset="1" stop-color="#0a1427"></stop>
+            <radialGradient id="smoothMoonDarkGradientV2" cx="34%" cy="28%" r="78%">
+              <stop offset="0" stop-color="#182640"></stop>
+              <stop offset=".68" stop-color="#0e1a2d"></stop>
+              <stop offset="1" stop-color="#060d19"></stop>
             </radialGradient>
-            <radialGradient id="smoothMoonLitGradient" cx="38%" cy="30%" r="78%">
-              <stop offset="0" stop-color="#fafafa"></stop>
-              <stop offset=".55" stop-color="#d9d9d6"></stop>
-              <stop offset="1" stop-color="#aaaeb0"></stop>
+            <radialGradient id="smoothMoonLitGradientV2" cx="38%" cy="30%" r="78%">
+              <stop offset="0" stop-color="#fffdf3"></stop>
+              <stop offset=".55" stop-color="#deddd5"></stop>
+              <stop offset="1" stop-color="#a8adb0"></stop>
             </radialGradient>
           </defs>
 
-          <g clip-path="url(#smoothMoonDiskClip)">
-            <circle cx="200" cy="200" r="154" fill="url(#smoothMoonDarkGradient)"></circle>
+          <g clip-path="url(#smoothMoonDiskClipV2)">
+            <circle cx="200" cy="200" r="154" fill="url(#smoothMoonDarkGradientV2)"></circle>
 
-            <g opacity=".34">
-              <circle cx="132" cy="155" r="40" fill="#071122"></circle>
-              <circle cx="245" cy="125" r="26" fill="#30415c"></circle>
-              <circle cx="226" cy="246" r="31" fill="#0a1528"></circle>
-              <circle cx="300" cy="277" r="38" fill="#34425a"></circle>
-              <circle cx="108" cy="292" r="34" fill="#050b18"></circle>
-              <circle cx="184" cy="92" r="18" fill="#34445e"></circle>
+            <g opacity=".38">
+              <circle cx="132" cy="155" r="40" fill="#030914"></circle>
+              <circle cx="245" cy="125" r="26" fill="#26354c"></circle>
+              <circle cx="226" cy="246" r="31" fill="#06101f"></circle>
+              <circle cx="300" cy="277" r="38" fill="#2d394d"></circle>
+              <circle cx="108" cy="292" r="34" fill="#020711"></circle>
+              <circle cx="184" cy="92" r="18" fill="#2c3a51"></circle>
             </g>
 
-            <g clip-path="url(#smoothMoonLightClip)">
-              <circle cx="200" cy="200" r="154" fill="url(#smoothMoonLitGradient)"></circle>
-              <g opacity=".28">
+            <g class="smooth-moon-lit-layer" clip-path="url(#smoothMoonLightClipV2)">
+              <circle cx="200" cy="200" r="154" fill="url(#smoothMoonLitGradientV2)"></circle>
+              <g opacity=".30">
                 <circle cx="132" cy="155" r="40" fill="#85888b"></circle>
                 <circle cx="245" cy="125" r="26" fill="#f2f1e9"></circle>
                 <circle cx="226" cy="246" r="31" fill="#96999b"></circle>
@@ -219,7 +215,7 @@
                 <circle cx="108" cy="292" r="34" fill="#777b80"></circle>
                 <circle cx="184" cy="92" r="18" fill="#efeee8"></circle>
               </g>
-              <g fill="none" stroke="rgba(255,255,255,.22)" stroke-width="2">
+              <g fill="none" stroke="rgba(255,255,255,.20)" stroke-width="2">
                 <circle cx="132" cy="155" r="40"></circle>
                 <circle cx="245" cy="125" r="26"></circle>
                 <circle cx="226" cy="246" r="31"></circle>
@@ -229,7 +225,7 @@
           </g>
         </svg>
         <div class="smooth-moon-phase-label">
-          <span class="smooth-moon-phase-name">Waxing Crescent</span>
+          <span class="smooth-moon-phase-name">New Moon</span>
           <span class="smooth-moon-phase-dots">${dots}</span>
         </div>
       </div>
@@ -237,41 +233,61 @@
   }
 
   function upgrade(scene){
-    if(!scene || scene.dataset.smoothMoon === '1') return;
+    if(!scene || scene.dataset.smoothMoon === '2') return;
     scene.innerHTML = moonMarkup();
-    scene.dataset.smoothMoon = '1';
+    scene.dataset.smoothMoon = '2';
     scene.classList.add('moon-smooth-upgraded');
   }
 
-  function render(scene,p){
-    const phasePos = clamp(p,0,1) * (PHASES.length-1);
-    const fromIndex = Math.floor(phasePos);
-    const toIndex = Math.min(PHASES.length-1,fromIndex+1);
-    const local = smooth(phasePos-fromIndex);
-    const from = PHASES[fromIndex];
-    const to = PHASES[toIndex];
-    const light = lerp(from.light,to.light,local);
+  function buildLightPath(progress){
+    const p = clamp(progress,0,1);
+    const cx = 200;
+    const cy = 200;
+    const r = 154;
+    const samples = 96;
+    const bulge = r * (1 - 2*p);
+    const pts = [];
 
-    // At full moon the illumination is 100%, so swapping from right-anchored
-    // waxing to left-anchored waning is invisible and keeps the motion continuous.
-    const side = phasePos <= 3 ? 'right' : 'left';
-    const diameter = 308;
-    const width = clamp(diameter*light,0,diameter);
-    const x = side === 'right' ? 354-width : 46;
-
-    const rect = scene.querySelector('.smooth-moon-light-rect');
-    if(rect){
-      rect.setAttribute('x',x.toFixed(2));
-      rect.setAttribute('width',width.toFixed(2));
+    // Fixed illuminated outer edge: the right half of the Moon.
+    for(let i=0;i<=samples;i++){
+      const angle = -Math.PI/2 + Math.PI*(i/samples);
+      pts.push([cx + r*Math.cos(angle), cy + r*Math.sin(angle)]);
     }
 
-    const nearest = Math.min(PHASES.length-1,Math.round(phasePos));
+    // Curved terminator: starts on the right rim at New Moon, becomes a
+    // vertical line at First Quarter, then bows left until Full Moon.
+    for(let i=0;i<=samples;i++){
+      const y = cy + r - (2*r)*(i/samples);
+      const yn = clamp((y-cy)/r,-1,1);
+      const x = cx + bulge*Math.sqrt(Math.max(0,1-yn*yn));
+      pts.push([x,y]);
+    }
+
+    return pts.map((pt,i)=>`${i===0?'M':'L'}${pt[0].toFixed(3)},${pt[1].toFixed(3)}`).join(' ') + ' Z';
+  }
+
+  function phaseIndexFor(p){
+    if(p < .12) return 0;
+    if(p < .38) return 1;
+    if(p < .63) return 2;
+    if(p < .88) return 3;
+    return 4;
+  }
+
+  function render(scene,p){
+    const progress = clamp(p,0,1);
+    const path = scene.querySelector('.smooth-moon-light-path');
+    const litLayer = scene.querySelector('.smooth-moon-lit-layer');
+    if(path) path.setAttribute('d',buildLightPath(progress));
+    if(litLayer) litLayer.style.opacity = progress <= .0005 ? '0' : '1';
+
+    const phaseIndex = phaseIndexFor(progress);
     const label = scene.querySelector('.smooth-moon-phase-name');
-    if(label) label.textContent = PHASES[nearest].name;
-    scene.querySelectorAll('[data-phase-dot]').forEach((dot,i)=>dot.classList.toggle('active',i===nearest));
+    if(label) label.textContent = PHASES[phaseIndex].name;
+    scene.querySelectorAll('[data-phase-dot]').forEach((dot,i)=>dot.classList.toggle('active',i===phaseIndex));
 
     const wrap = scene.querySelector('.smooth-moon-wrap');
-    if(wrap) wrap.style.setProperty('--moon-glow',`${10 + light*28}px`);
+    if(wrap) wrap.style.setProperty('--moon-glow',`${5 + progress*34}px`);
   }
 
   function loop(now){
