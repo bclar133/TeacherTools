@@ -199,3 +199,14 @@
   moonUfo.async = false;
   document.body.appendChild(moonUfo);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('dinosaurEggUpgradeScript')) return;
+
+  const dinoEgg = document.createElement('script');
+  dinoEgg.id = 'dinosaurEggUpgradeScript';
+  dinoEgg.src = new URL('dinosaur-egg-upgrade.js', current.src).href;
+  dinoEgg.async = false;
+  document.body.appendChild(dinoEgg);
+})();
