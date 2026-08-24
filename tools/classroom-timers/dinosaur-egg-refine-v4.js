@@ -177,3 +177,14 @@
   dinoRefineV7.async = false;
   document.body.appendChild(dinoRefineV7);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('dominoesUpgradeScript')) return;
+
+  const dominoesUpgrade = document.createElement('script');
+  dominoesUpgrade.id = 'dominoesUpgradeScript';
+  dominoesUpgrade.src = new URL('dominoes-upgrade.js', current.src).href;
+  dominoesUpgrade.async = false;
+  document.body.appendChild(dominoesUpgrade);
+})();
