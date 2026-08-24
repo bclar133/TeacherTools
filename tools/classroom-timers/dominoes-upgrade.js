@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  if (document.getElementById('dominoesUpgradeStyleV1')) return;
+  if (document.getElementById('dominoesUpgradeStyleV2')) return;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -11,12 +11,13 @@
   if (!sceneLayer || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'dominoesUpgradeStyleV1';
+  style.id = 'dominoesUpgradeStyleV2';
   style.textContent = `
     .xt-dominoes.domino2-upgraded {
       background:
-        radial-gradient(ellipse at 50% 8%, rgba(255,255,255,.78), transparent 38%),
-        linear-gradient(180deg,#eee8df 0%,#e4dbcf 100%) !important;
+        radial-gradient(circle at 14% 16%,rgba(255,240,161,.42),transparent 24%),
+        radial-gradient(circle at 88% 14%,rgba(255,151,208,.28),transparent 26%),
+        linear-gradient(135deg,#29c8c2 0%,#4d9fe6 48%,#8f6fd9 100%) !important;
       overflow:hidden;
     }
 
@@ -24,7 +25,9 @@
       content:'';
       position:absolute;
       inset:0;
-      background:linear-gradient(110deg,rgba(255,255,255,.18),transparent 35%,rgba(113,91,70,.05));
+      background:
+        linear-gradient(110deg,rgba(255,255,255,.14),transparent 36%,rgba(60,42,112,.08)),
+        radial-gradient(circle at 50% 100%,rgba(255,255,255,.18),transparent 45%);
       pointer-events:none;
     }
 
@@ -36,12 +39,12 @@
       bottom:4%;
       border-radius:22px;
       background:
-        linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,.04)),
-        #e7dfd4;
+        linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.05)),
+        linear-gradient(135deg,#ffe38b,#f7c96b 58%,#efb95f);
       box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.7),
-        inset 0 -1px 0 rgba(86,64,45,.08),
-        0 18px 34px rgba(73,53,38,.10);
+        inset 0 1px 0 rgba(255,255,255,.72),
+        inset 0 -2px 0 rgba(122,75,28,.10),
+        0 18px 34px rgba(35,46,91,.20);
       overflow:hidden;
       perspective:850px;
     }
@@ -62,11 +65,11 @@
       transform-origin:50% 100%;
       transform:translate(-50%,-100%) rotate(0deg);
       background:
-        linear-gradient(90deg,rgba(255,255,255,.28),transparent 26%,rgba(65,50,40,.08) 100%),
+        linear-gradient(90deg,rgba(255,255,255,.30),transparent 26%,rgba(65,50,40,.08) 100%),
         var(--c);
       border:1px solid rgba(74,58,45,.10);
       box-shadow:
-        inset 1px 0 0 rgba(255,255,255,.35),
+        inset 1px 0 0 rgba(255,255,255,.38),
         inset -2px -2px 3px rgba(73,54,42,.08),
         3px 6px 7px rgba(74,54,39,.18);
       z-index:var(--z,3);
@@ -82,7 +85,7 @@
       top:1px;
       height:3px;
       border-radius:2px;
-      background:rgba(255,255,255,.24);
+      background:rgba(255,255,255,.26);
       pointer-events:none;
     }
 
@@ -121,6 +124,7 @@
   let lastScene = null;
   let raf = 0;
   let state = null;
+  let audioCtx = null;
 
   function parseRemaining(){
     const parts = display.textContent.trim().split(':').map(Number);
@@ -147,6 +151,72 @@
     let estimated=current;
     if(running && current>0) estimated=Math.max(0,current-(now-displayChangedAt)/1000);
     return clamp(1-estimated/totalSeconds(),0,1);
+  }
+
+  function isMuted(){
+    try{
+      const keys=['ttTimers.muted','ttTimers.mute','ttTimers.audioMuted'];
+      return keys.some(k=>{
+        const v=localStorage.getItem(k);
+        return v==='true' || v==='1' || v==='"true"';
+      });
+    }catch{return false;}
+  }
+
+  function primeAudio(){
+    if(isMuted()) return null;
+    try{
+      audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+      if(audioCtx.state==='suspended') audioCtx.resume();
+      return audioCtx;
+    }catch{return null;}
+  }
+
+  window.addEventListener('pointerdown',primeAudio,{passive:true});
+  window.addEventListener('keydown',primeAudio,{passive:true});
+
+  function playWoodHit(index){
+    if(isMuted()) return;
+    const ctx=primeAudio();
+    if(!ctx || ctx.state!=='running') return;
+
+    const now=ctx.currentTime;
+    const pitchJitter=(index%7)*4;
+
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    const filter=ctx.createBiquadFilter();
+    osc.type='triangle';
+    osc.frequency.setValueAtTime(245+pitchJitter,now);
+    osc.frequency.exponentialRampToValueAtTime(115+pitchJitter*.25,now+.075);
+    filter.type='lowpass';
+    filter.frequency.value=1250;
+    gain.gain.setValueAtTime(.0001,now);
+    gain.gain.exponentialRampToValueAtTime(.055,now+.004);
+    gain.gain.exponentialRampToValueAtTime(.0001,now+.095);
+    osc.connect(filter).connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now+.10);
+
+    const dur=.055;
+    const buffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*dur),ctx.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<data.length;i++){
+      const env=Math.exp(-i/(ctx.sampleRate*.012));
+      data[i]=(Math.random()*2-1)*env;
+    }
+    const noise=ctx.createBufferSource();
+    const noiseFilter=ctx.createBiquadFilter();
+    const noiseGain=ctx.createGain();
+    noise.buffer=buffer;
+    noiseFilter.type='bandpass';
+    noiseFilter.frequency.value=850+pitchJitter*2;
+    noiseFilter.Q.value=.8;
+    noiseGain.gain.setValueAtTime(.028,now);
+    noiseGain.gain.exponentialRampToValueAtTime(.0001,now+.05);
+    noise.connect(noiseFilter).connect(noiseGain).connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now+dur);
   }
 
   function makePoint(x,y,dir){
@@ -203,6 +273,7 @@
 
     const frag=document.createDocumentFragment();
     const pieces=[];
+    const total=points.length;
 
     points.forEach((p,i)=>{
       const next=points[Math.min(points.length-1,i+1)];
@@ -218,21 +289,31 @@
       piece.style.setProperty('--x',`${p.x.toFixed(2)}px`);
       piece.style.setProperty('--y',`${p.y.toFixed(2)}px`);
       piece.style.setProperty('--c',palette[Math.floor(Math.random()*palette.length)]);
-      piece.style.setProperty('--z',String(20+Math.round(p.y)));
+      /* Earlier pieces are always in front of the next pieces in the chain. */
+      piece.style.setProperty('--z',String(10000-i));
       piece.dataset.domino2=String(i);
       frag.appendChild(piece);
       pieces.push({el:piece,fallDir,dx,dy});
     });
 
     field.appendChild(frag);
-    state={scene,field,pieces,width:rect.width,height:rect.height,pieceH};
+    state={
+      scene,
+      field,
+      pieces,
+      width:rect.width,
+      height:rect.height,
+      pieceH,
+      lastHitCount:null,
+      total
+    };
   }
 
   function upgrade(scene){
     if(!scene) return;
-    if(scene.dataset.domino2Upgraded!=='1'){
+    if(scene.dataset.domino2Upgraded!=='2'){
       scene.innerHTML='<div class="domino2-table"><div class="domino2-field"></div></div>';
-      scene.dataset.domino2Upgraded='1';
+      scene.dataset.domino2Upgraded='2';
       scene.classList.add('domino2-upgraded');
       state=null;
       requestAnimationFrame(()=>buildPieces(scene));
@@ -243,6 +324,19 @@
     if(!state?.pieces?.length) return;
     const n=state.pieces.length;
     const wave=progress*n;
+    const hitCount=Math.min(n,Math.floor(wave));
+    const running=(stageStatus?.textContent.trim()||'')==='Running';
+
+    if(state.lastHitCount===null){
+      state.lastHitCount=hitCount;
+    }else if(hitCount>state.lastHitCount){
+      if(running){
+        for(let i=state.lastHitCount;i<hitCount;i++) playWoodHit(i);
+      }
+      state.lastHitCount=hitCount;
+    }else if(hitCount<state.lastHitCount){
+      state.lastHitCount=hitCount;
+    }
 
     state.pieces.forEach((piece,i)=>{
       const local=smooth(clamp((wave-i)/.82,0,1));
