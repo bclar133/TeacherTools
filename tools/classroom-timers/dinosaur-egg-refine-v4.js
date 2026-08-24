@@ -188,3 +188,14 @@
   dominoesUpgrade.async = false;
   document.body.appendChild(dominoesUpgrade);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('dominoesSoundFixScript')) return;
+
+  const dominoesSoundFix = document.createElement('script');
+  dominoesSoundFix.id = 'dominoesSoundFixScript';
+  dominoesSoundFix.src = new URL('dominoes-sound-fix.js', current.src).href;
+  dominoesSoundFix.async = false;
+  document.body.appendChild(dominoesSoundFix);
+})();
