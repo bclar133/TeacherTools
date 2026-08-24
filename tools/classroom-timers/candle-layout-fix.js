@@ -232,3 +232,14 @@
   dinoRefineV2.async = false;
   document.body.appendChild(dinoRefineV2);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('dinosaurEggRefineV3Script')) return;
+
+  const dinoRefineV3 = document.createElement('script');
+  dinoRefineV3.id = 'dinosaurEggRefineV3Script';
+  dinoRefineV3.src = new URL('dinosaur-egg-refine-v3.js', current.src).href;
+  dinoRefineV3.async = false;
+  document.body.appendChild(dinoRefineV3);
+})();
