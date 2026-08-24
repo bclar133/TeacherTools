@@ -1,27 +1,28 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV4) return;
-  window.__pacmanUpgradeV4 = true;
+  if (window.__pacmanUpgradeV5) return;
+  window.__pacmanUpgradeV5 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
   const display = document.getElementById('countdownDisplay');
   const minutesInput = document.getElementById('countdownMinutes');
   const secondsInput = document.getElementById('countdownSeconds');
-  const startBtn = document.getElementById('countdownStartBtn');
   const muteBtn = document.getElementById('muteBtn');
   const presentationMuteBtn = document.getElementById('presentationMuteBtn');
   if (!sceneLayer || !display) return;
 
+  document.getElementById('pacmanUpgradeStyleV4')?.remove();
+
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV4';
+  style.id = 'pacmanUpgradeStyleV5';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap {
       position:absolute!important;
-      left:2.1%!important;
+      left:2.2%!important;
       right:auto!important;
-      top:1.8%!important;
+      top:2%!important;
       bottom:auto!important;
       transform:none!important;
       width:auto!important;
@@ -33,238 +34,245 @@
     #countdownStage.theme-pacman #countdownDisplay,
     #countdownStage.theme-pacman .time-display {
       font-family:"Courier New",Courier,monospace!important;
-      font-size:clamp(2.25rem,5.2vw,4.35rem)!important;
+      font-size:clamp(2.35rem,5.2vw,4.45rem)!important;
       line-height:.92!important;
       font-weight:700!important;
-      letter-spacing:.01em!important;
+      letter-spacing:.015em!important;
       font-variant-numeric:tabular-nums!important;
       width:auto!important;
       min-width:0!important;
       padding:.16em .24em!important;
       white-space:nowrap!important;
     }
-    #countdownStage.theme-pacman .timer-message,
-    #countdownStage.theme-pacman .stage-kicker,
-    #countdownStage.theme-pacman .progress-pill {
+    #countdownStage.theme-pacman .timer-message {
       font-family:"Courier New",Courier,monospace!important;
     }
-    #countdownStage.theme-pacman .progress-pill {
-      font-size:clamp(.58rem,1.15vw,.82rem)!important;
-    }
 
-    .xt-pacman.pac4-upgraded {
+    .xt-pacman.pac5-upgraded {
       background:#000!important;
       overflow:hidden!important;
     }
-    .pac4-scoreboard {
+
+    .pac5-score {
       position:absolute;
-      left:34%;
-      right:4%;
-      top:2.4%;
-      height:8%;
+      right:6%;
+      top:4%;
       display:flex;
-      justify-content:center;
-      gap:14%;
+      gap:3.2rem;
       color:#fff;
-      font:700 clamp(.58rem,1.18vw,.94rem)/1 "Courier New",Courier,monospace;
+      z-index:3;
+      opacity:.86;
+      font:700 clamp(.62rem,1.25vw,.98rem)/1.05 "Courier New",Courier,monospace;
+      letter-spacing:.08em;
       text-align:center;
-      letter-spacing:.06em;
-      opacity:.84;
       pointer-events:none;
+    }
+    .pac5-score strong { display:block;margin-top:.28rem;font-size:1.15em; }
+
+    .pac5-board {
+      position:absolute;
+      left:12%;
+      right:6%;
+      top:23%;
+      bottom:6%;
+      border-radius:15px;
+      background:#000;
+      border:5px solid #214cff;
+      box-shadow:0 0 11px rgba(52,83,255,.44), inset 0 0 0 3px #071846;
+      overflow:hidden;
       z-index:2;
     }
-    .pac4-board {
-      position:absolute;
-      left:3.5%;
-      right:3.5%;
-      top:16.5%;
-      bottom:3.3%;
-      background:#000;
-      overflow:hidden;
-      border-radius:9px;
-    }
-    .pac4-maze,.pac4-pellets,.pac4-actors {
+    .pac5-maze,
+    .pac5-pellets,
+    .pac5-actors {
       position:absolute;
       inset:0;
       width:100%;
       height:100%;
     }
-    .pac4-pellets,.pac4-actors { pointer-events:none; }
+    .pac5-maze { overflow:visible; }
+    .pac5-pellets,.pac5-actors { pointer-events:none; }
 
-    .pac4-pellet {
+    .pac5-route-wall,
+    .pac5-branch-wall {
+      fill:none;
+      stroke:#2352ff;
+      stroke-width:86;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      filter:drop-shadow(0 0 4px rgba(45,82,255,.52));
+    }
+    .pac5-route-floor,
+    .pac5-branch-floor {
+      fill:none;
+      stroke:#000;
+      stroke-width:68;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+    .pac5-route-edge,
+    .pac5-branch-edge {
+      fill:none;
+      stroke:#6c89ff;
+      stroke-width:2.2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      opacity:.88;
+    }
+
+    .pac5-pellet {
+      position:absolute;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:#ffe3a6;
+      box-shadow:0 0 5px rgba(255,226,161,.48);
+      transition:opacity .1s linear;
+    }
+    .pac5-pellet.power {
+      width:17px;
+      height:17px;
+      background:#fff2d0;
+      box-shadow:0 0 9px rgba(255,242,208,.82);
+      animation:pac5PowerBlink .65s steps(2,end) infinite;
+    }
+    @keyframes pac5PowerBlink { 50% { opacity:.28; } }
+
+    .pac5-player {
+      position:absolute;
+      width:58px;
+      height:58px;
+      border-radius:50%;
+      transform:translate(-50%,-50%) rotate(var(--pac-dir,0deg));
+      transform-origin:50% 50%;
+      background:#ffdb18;
+      z-index:9;
+      filter:drop-shadow(0 0 7px rgba(255,219,24,.35));
+      clip-path:polygon(100% 0,100% var(--mouth-top,33%),56% 50%,100% var(--mouth-bottom,67%),100% 100%,0 100%,0 0);
+      will-change:left,top,transform,clip-path;
+    }
+    .pac5-player::after {
+      content:'';
       position:absolute;
       width:5px;
       height:5px;
       border-radius:50%;
-      transform:translate(-50%,-50%);
-      background:#ffd7a0;
-      box-shadow:0 0 4px rgba(255,215,160,.5);
-      opacity:1;
+      background:#171717;
+      right:14px;
+      top:10px;
     }
-    .pac4-pellet.power {
-      width:11px;
-      height:11px;
-      background:#fff0ca;
-      box-shadow:0 0 8px rgba(255,240,202,.82);
-      animation:pac4Blink .62s steps(2,end) infinite;
-    }
-    .pac4-pellet.eaten { opacity:0; }
-    @keyframes pac4Blink { 50% { opacity:.24; } }
 
-    .pac4-player {
+    .pac5-ghost {
       position:absolute;
-      width:18px;
-      height:18px;
-      border-radius:50%;
-      transform:translate(-50%,-50%) rotate(var(--dir,0deg));
-      transform-origin:50% 50%;
-      background:#ffdb1f;
-      z-index:8;
-      filter:drop-shadow(0 0 3px rgba(255,219,31,.22));
-      clip-path:polygon(100% 0,100% var(--mouth-top,35%),58% 50%,100% var(--mouth-bottom,65%),100% 100%,0 100%,0 0);
-      will-change:left,top,transform,clip-path;
-    }
-    .pac4-player::after {
-      content:'';
-      position:absolute;
-      width:2.4px;
-      height:2.4px;
-      border-radius:50%;
-      background:#111;
-      right:4.5px;
-      top:3.8px;
-    }
-    .pac4-ghost {
-      position:absolute;
-      width:18px;
-      height:18px;
+      width:50px;
+      height:50px;
       transform:translate(-50%,-50%);
-      z-index:7;
-      filter:drop-shadow(0 0 3px rgba(255,255,255,.08));
+      z-index:8;
+      filter:drop-shadow(0 3px 3px rgba(0,0,0,.42));
       will-change:left,top;
     }
-    .pac4-ghost svg { display:block;width:100%;height:100%; }
-
-    .pac4-gate {
-      stroke:#ff8fd3;
-      stroke-width:.23;
-      stroke-linecap:round;
-      transform-box:fill-box;
-      transform-origin:center;
-      transition:transform .35s ease,opacity .35s ease;
-      filter:drop-shadow(0 0 .18px #ffb9e5);
-    }
-    .pac4-gate.open {
-      transform:scaleX(.04);
-      opacity:.18;
-    }
-
-    .pac4-cupcake {
+    .pac5-ghost-body {
       position:absolute;
-      width:25px;
-      height:25px;
-      transform:translate(-50%,-50%);
-      z-index:6;
-      opacity:.4;
-      filter:grayscale(.45) drop-shadow(0 0 5px rgba(255,119,186,.35));
-      transition:opacity .25s,filter .25s,transform .18s;
+      inset:0;
+      border-radius:50% 50% 12% 12% / 52% 52% 18% 18%;
+      background:var(--ghost-color);
+      clip-path:polygon(0 0,100% 0,100% 88%,87% 100%,74% 88%,61% 100%,48% 88%,35% 100%,22% 88%,10% 100%,0 88%);
     }
-    .pac4-cupcake.ready {
-      opacity:1;
-      filter:drop-shadow(0 0 8px rgba(255,119,186,.65));
+    .pac5-eye {
+      position:absolute;
+      top:15px;
+      width:12px;
+      height:15px;
+      border-radius:50%;
+      background:#fff;
+      z-index:2;
     }
-    .pac4-cupcake.eaten {
-      opacity:0;
-      transform:translate(-50%,-50%) scale(.42) rotate(18deg);
+    .pac5-eye.e1 { left:10px; }
+    .pac5-eye.e2 { right:10px; }
+    .pac5-eye::after {
+      content:'';
+      position:absolute;
+      width:6px;
+      height:7px;
+      border-radius:50%;
+      background:#1736a6;
+      left:4px;
+      top:5px;
     }
-    .pac4-cupcake svg { width:100%;height:100%;display:block; }
 
-    .pac4-ready {
+    .pac5-ready,
+    .pac5-clear {
       position:absolute;
       left:50%;
-      top:55%;
+      top:50%;
       transform:translate(-50%,-50%);
-      color:#ffdf32;
-      font:900 clamp(.9rem,2vw,1.5rem)/1 "Courier New",Courier,monospace;
-      letter-spacing:.08em;
-      z-index:6;
+      font-family:"Courier New",Courier,monospace;
+      font-weight:900;
+      letter-spacing:.09em;
+      z-index:12;
+      pointer-events:none;
+      text-align:center;
     }
-    .pac4-running .pac4-ready,.pac4-finished .pac4-ready { opacity:0; }
+    .pac5-ready { color:#ffdf28;font-size:clamp(1rem,2.2vw,1.7rem); }
+    .pac5-clear {
+      color:#ffdf28;
+      font-size:clamp(2rem,5vw,4.1rem);
+      opacity:0;
+      text-shadow:0 0 12px rgba(255,223,40,.55);
+    }
+    .pac5-finished .pac5-clear { animation:pac5Clear .8s ease-out forwards; }
+    @keyframes pac5Clear {
+      0% { opacity:0;transform:translate(-50%,-50%) scale(.55); }
+      55% { opacity:1;transform:translate(-50%,-50%) scale(1.08); }
+      100% { opacity:.96;transform:translate(-50%,-50%) scale(1); }
+    }
 
-    @media(max-width:760px) {
-      #countdownStage.theme-pacman .time-display-wrap {
-        left:2%!important;top:1.5%!important;max-width:38%!important;
-      }
+    @media(max-width:760px){
+      #countdownStage.theme-pacman .time-display-wrap { left:2%!important;top:1.4%!important;max-width:40%!important; }
       #countdownStage.theme-pacman #countdownDisplay,
-      #countdownStage.theme-pacman .time-display {
-        font-size:clamp(1.75rem,8vw,3rem)!important;
-      }
-      .pac4-board { left:2%;right:2%;top:19%;bottom:2.5%; }
-      .pac4-scoreboard { left:40%;top:2.4%;font-size:.54rem;gap:9%; }
-      .pac4-pellet { width:4px;height:4px; }
-      .pac4-pellet.power { width:8px;height:8px; }
+      #countdownStage.theme-pacman .time-display { font-size:clamp(1.8rem,8vw,3rem)!important; }
+      .pac5-score { right:3%;top:3.1%;gap:1.4rem;font-size:.55rem; }
+      .pac5-board { left:5%;right:4%;top:22%;bottom:5%; }
+      .pac5-route-wall,.pac5-branch-wall { stroke-width:76; }
+      .pac5-route-floor,.pac5-branch-floor { stroke-width:60; }
+      .pac5-player { width:48px;height:48px; }
+      .pac5-player::after { right:11px;top:8px;width:4px;height:4px; }
+      .pac5-ghost { width:43px;height:43px; }
+      .pac5-eye { top:13px;width:10px;height:13px; }
+      .pac5-eye.e1 { left:8px; }.pac5-eye.e2 { right:8px; }
+      .pac5-pellet { width:6px;height:6px; }
+      .pac5-pellet.power { width:13px;height:13px; }
     }
   `;
   document.head.appendChild(style);
 
-  const MAZE = [
-    "############################",
-    "#............##............#",
-    "#.####.#####.##.#####.####.#",
-    "#o####.#####.##.#####.####o#",
-    "#.####.#####.##.#####.####.#",
-    "#..........................#",
-    "#.####.##.########.##.####.#",
-    "#.####.##.########.##.####.#",
-    "#......##....##....##......#",
-    "######.#####.##.#####.######",
-    "     #.#####.##.#####.#     ",
-    "     #.##..........##.#     ",
-    "     #.##.###gg###.##.#     ",
-    "######.##.#cccccc#.##.######",
-    "..........#cccccc#..........",
-    "######.##.#cccccc#.##.######",
-    "     #.##.########.##.#     ",
-    "     #.##..........##.#     ",
-    "     #.##.########.##.#     ",
-    "######.##.########.##.######",
-    "#............##............#",
-    "#.####.#####.##.#####.####.#",
-    "#.####.#####.##.#####.####.#",
-    "#o..##................##..o#",
-    "###.##.##.########.##.##.###",
-    "###.##.##.########.##.##.###",
-    "#......##....##....##......#",
-    "#.##########.##.##########.#",
-    "#.##########.##.##########.#",
-    "#..........................#",
-    "############################"
+  const ROUTE = [
+    {x:80,y:92},
+    {x:920,y:92},
+    {x:920,y:218},
+    {x:228,y:218},
+    {x:228,y:340},
+    {x:828,y:340},
+    {x:828,y:458},
+    {x:382,y:458},
+    {x:382,y:532},
+    {x:918,y:532}
   ];
-
-  const ROWS=MAZE.length;
-  const COLS=MAZE[0].length;
-  const TUNNEL_Y=14;
-  const START={x:13,y:29};
-  const CUPCAKE={x:13,y:14};
-  const PELLET_END=.91;
 
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   const lerp=(a,b,t)=>a+(b-a)*t;
-  const cellKey=(x,y)=>`${x},${y}`;
 
   let displayedRemaining=null;
   let displayChangedAt=performance.now();
   let lastStatus='';
   let lastScene=null;
-  let state=null;
-  let raf=0;
-
+  let ghostClock=0;
+  let lastFrame=performance.now();
+  let lastPellet=-1;
+  let finishSoundPlayed=false;
   let audioCtx=null;
-  let masterGain=null;
-  let lastPelletSound=-1;
-  let finishPlayed=false;
-  let sirenPhase=0;
-  let nextSirenAt=0;
+  let raf=0;
 
   function muted(){
     try{
@@ -274,65 +282,24 @@
     return muteBtn?.getAttribute('aria-pressed')==='true' || presentationMuteBtn?.getAttribute('aria-pressed')==='true';
   }
 
-  function ensureAudio(){
-    if(audioCtx) return audioCtx;
+  function tone(freq,duration=.055,gain=.025,type='square',delay=0){
+    if(muted()) return;
     const Ctor=window.AudioContext||window.webkitAudioContext;
-    if(!Ctor) return null;
-    audioCtx=new Ctor();
-    masterGain=audioCtx.createGain();
-    masterGain.gain.value=.7;
-    const comp=audioCtx.createDynamicsCompressor();
-    comp.threshold.value=-19;comp.knee.value=10;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.12;
-    masterGain.connect(comp).connect(audioCtx.destination);
-    return audioCtx;
-  }
-
-  function unlockAudio(){
-    if(muted()) return;
-    const ctx=ensureAudio();
-    if(ctx?.state==='suspended') ctx.resume().catch(()=>{});
-  }
-  document.addEventListener('pointerdown',unlockAudio,{capture:true,passive:true});
-  document.addEventListener('keydown',unlockAudio,{capture:true});
-  startBtn?.addEventListener('pointerdown',unlockAudio,{capture:true,passive:true});
-  startBtn?.addEventListener('click',unlockAudio,{capture:true});
-
-  function tone(freq,duration,gain=.03,type='square',delay=0,endFreq=null){
-    if(muted()) return;
-    const ctx=ensureAudio();
-    if(!ctx||!masterGain) return;
-    const fire=()=>{
-      if(ctx.state!=='running'||muted()) return;
-      const at=ctx.currentTime+delay;
-      const osc=ctx.createOscillator();
-      const g=ctx.createGain();
-      osc.type=type;
-      osc.frequency.setValueAtTime(freq,at);
-      if(endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq,at+duration*.9);
+    if(!Ctor) return;
+    audioCtx ||= new Ctor();
+    const play=()=>{
+      if(audioCtx.state!=='running'||muted()) return;
+      const at=audioCtx.currentTime+delay;
+      const osc=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      osc.type=type;osc.frequency.value=freq;
       g.gain.setValueAtTime(.0001,at);
-      g.gain.exponentialRampToValueAtTime(gain,at+.004);
+      g.gain.exponentialRampToValueAtTime(gain,at+.005);
       g.gain.exponentialRampToValueAtTime(.0001,at+duration);
-      osc.connect(g).connect(masterGain);
+      osc.connect(g).connect(audioCtx.destination);
       osc.start(at);osc.stop(at+duration+.01);
     };
-    if(ctx.state==='running') fire(); else ctx.resume().then(fire).catch(()=>{});
-  }
-
-  function waka(index){
-    const high=index%2===0;
-    tone(high?520:410,.052,.03,'square',0,high?350:300);
-  }
-  function chasePulse(){
-    const f=sirenPhase%2===0?165:225;
-    sirenPhase++;
-    tone(f,.14,.011,'sawtooth',0,f*1.22);
-  }
-  function cupcakeSound(){
-    if(finishPlayed) return;
-    finishPlayed=true;
-    tone(523,.09,.044,'triangle',0,660);
-    tone(659,.09,.044,'triangle',.09,784);
-    tone(784,.15,.05,'triangle',.18,1046);
+    if(audioCtx.state==='suspended') audioCtx.resume().then(play).catch(()=>{}); else play();
   }
 
   function parseRemaining(){
@@ -342,10 +309,7 @@
     if(parts.length===3) return parts[0]*3600+parts[1]*60+parts[2];
     return null;
   }
-
-  function totalSeconds(){
-    return Math.max(1,(Number(minutesInput?.value)||0)*60+(Number(secondsInput?.value)||0));
-  }
+  function totalSeconds(){ return Math.max(1,(Number(minutesInput?.value)||0)*60+(Number(secondsInput?.value)||0)); }
 
   function progressNow(now){
     const current=parseRemaining();
@@ -360,352 +324,122 @@
     return clamp(1-estimated/totalSeconds(),0,1);
   }
 
-  function mainPassable(x,y){
-    if(x<0||x>=COLS||y<0||y>=ROWS) return false;
-    const ch=MAZE[y][x];
-    return ch==='.'||ch==='o';
-  }
-
-  function finalPassable(x,y){
-    if(x<0||x>=COLS||y<0||y>=ROWS) return false;
-    const ch=MAZE[y][x];
-    return ch==='.'||ch==='o'||ch==='g'||ch==='c';
-  }
-
-  function neighbours(cell,allowRoom=false){
-    const pass=allowRoom?finalPassable:mainPassable;
-    const out=[];
-    const dirs=[[1,0],[0,-1],[-1,0],[0,1]];
-    for(const [dx,dy] of dirs){
-      const nx=cell.x+dx,ny=cell.y+dy;
-      if(pass(nx,ny)) out.push({x:nx,y:ny});
+  function pointAlong(points,t){
+    t=clamp(t,0,1);
+    const segs=[];let total=0;
+    for(let i=0;i<points.length-1;i++){
+      const a=points[i],b=points[i+1];
+      const len=Math.hypot(b.x-a.x,b.y-a.y);
+      segs.push({a,b,len});total+=len;
     }
-    if(cell.y===TUNNEL_Y){
-      if(cell.x===0&&pass(COLS-1,TUNNEL_Y)) out.unshift({x:COLS-1,y:TUNNEL_Y,portal:true});
-      if(cell.x===COLS-1&&pass(0,TUNNEL_Y)) out.unshift({x:0,y:TUNNEL_Y,portal:true});
-    }
-    return out;
-  }
-
-  function buildClearWalk(){
-    const seen=new Set();
-    const walk=[];
-    function dfs(cell){
-      const k=cellKey(cell.x,cell.y);
-      seen.add(k);
-      walk.push({x:cell.x,y:cell.y});
-      const ns=neighbours(cell,false);
-      for(const n of ns){
-        const nk=cellKey(n.x,n.y);
-        if(!seen.has(nk)){
-          dfs(n);
-          walk.push({x:cell.x,y:cell.y});
-        }
+    let target=t*total;
+    for(const seg of segs){
+      if(target<=seg.len){
+        const u=seg.len?target/seg.len:0;
+        return {x:lerp(seg.a.x,seg.b.x,u),y:lerp(seg.a.y,seg.b.y,u),angle:Math.atan2(seg.b.y-seg.a.y,seg.b.x-seg.a.x)*180/Math.PI};
       }
+      target-=seg.len;
     }
-    dfs(START);
-    return walk;
+    const a=points[points.length-2],b=points[points.length-1];
+    return {x:b.x,y:b.y,angle:Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI};
   }
 
-  function shortestPath(start,end,allowRoom=false){
-    const queue=[start];
-    const prev=new Map([[cellKey(start.x,start.y),null]]);
-    let qi=0;
-    while(qi<queue.length){
-      const cur=queue[qi++];
-      if(cur.x===end.x&&cur.y===end.y) break;
-      for(const n of neighbours(cur,allowRoom)){
-        const nk=cellKey(n.x,n.y);
-        if(!prev.has(nk)){
-          prev.set(nk,cur);
-          queue.push({x:n.x,y:n.y});
-        }
-      }
-    }
-    const endKey=cellKey(end.x,end.y);
-    if(!prev.has(endKey)) return [start];
-    const path=[];
-    let cur=end;
-    while(cur){
-      path.push(cur);
-      cur=prev.get(cellKey(cur.x,cur.y));
-    }
-    return path.reverse();
+  function pct(point){ return {x:point.x/10,y:point.y/6}; }
+
+  function ghostMarkup(cls,color){
+    return `<div class="pac5-ghost ${cls}" style="--ghost-color:${color}"><div class="pac5-ghost-body"></div><i class="pac5-eye e1"></i><i class="pac5-eye e2"></i></div>`;
   }
 
-  function centerPct(cell){
-    return {x:(cell.x+.5)/COLS*100,y:(cell.y+.5)/ROWS*100};
-  }
+  function build(scene){
+    const pellets=Array.from({length:42},(_,i)=>{
+      const p=pct(pointAlong(ROUTE,i/41));
+      const power=i===0||i===13||i===27||i===41;
+      return `<i class="pac5-pellet${power?' power':''}" data-pac5-pellet="${i}" style="left:${p.x}%;top:${p.y}%"></i>`;
+    }).join('');
 
-  function interpolateCells(a,b,f){
-    const pa=centerPct(a),pb=centerPct(b);
-    const portal=a.y===TUNNEL_Y&&b.y===TUNNEL_Y&&Math.abs(a.x-b.x)>1;
-    if(!portal){
-      return {
-        x:lerp(pa.x,pb.x,f),
-        y:lerp(pa.y,pb.y,f),
-        angle:Math.atan2(pb.y-pa.y,pb.x-pa.x)*180/Math.PI
-      };
-    }
-
-    const movingRight=a.x===COLS-1&&b.x===0;
-    if(movingRight){
-      if(f<.5){
-        const u=f*2;
-        return {x:lerp(pa.x,102,u),y:pa.y,angle:0};
-      }
-      const u=(f-.5)*2;
-      return {x:lerp(-2,pb.x,u),y:pb.y,angle:0};
-    }
-
-    if(f<.5){
-      const u=f*2;
-      return {x:lerp(pa.x,-2,u),y:pa.y,angle:180};
-    }
-    const u=(f-.5)*2;
-    return {x:lerp(102,pb.x,u),y:pb.y,angle:180};
-  }
-
-  function positionOnPath(path,floatIndex){
-    const max=path.length-1;
-    const f=clamp(floatIndex,0,max);
-    const i=Math.floor(f);
-    const frac=f-i;
-    const a=path[i];
-    const b=path[Math.min(i+1,max)];
-    return {...interpolateCells(a,b,frac),index:i};
-  }
-
-  function wallSegments(){
-    const segs=[];
-    const isWall=(x,y)=>x<0||x>=COLS||y<0||y>=ROWS||MAZE[y][x]==='#';
-    for(let y=0;y<ROWS;y++){
-      for(let x=0;x<COLS;x++){
-        if(MAZE[y][x]!=='#') continue;
-        if(!isWall(x,y-1)) segs.push(`M ${x} ${y} H ${x+1}`);
-        if(!isWall(x+1,y)) segs.push(`M ${x+1} ${y} V ${y+1}`);
-        if(!isWall(x,y+1)) segs.push(`M ${x} ${y+1} H ${x+1}`);
-        if(!isWall(x-1,y)) segs.push(`M ${x} ${y} V ${y+1}`);
-      }
-    }
-    return segs.join(' ');
-  }
-
-  function mazeSvg(){
-    const d=wallSegments();
-    const gateX1=13,gateX2=15,gateY=12;
-    return `<svg class="pac4-maze" viewBox="0 0 ${COLS} ${ROWS}" preserveAspectRatio="none" aria-hidden="true">
-      <rect x="0" y="0" width="${COLS}" height="${ROWS}" fill="#000"/>
-      <path d="${d}" fill="none" stroke="#07134d" stroke-width=".42" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="${d}" fill="none" stroke="#2451ff" stroke-width=".19" stroke-linecap="round" stroke-linejoin="round"/>
-      <line class="pac4-gate" x1="${gateX1+.08}" y1="${gateY+.08}" x2="${gateX2-.08}" y2="${gateY+.08}"/>
-    </svg>`;
-  }
-
-  function ghostSvg(color){
-    return `<svg viewBox="0 0 28 28" aria-hidden="true">
-      <path d="M4 24V12c0-5.5 4.5-10 10-10s10 4.5 10 10v12l-3-2.2-3 2.2-4-2.2-4 2.2-3-2.2z" fill="${color}"/>
-      <circle cx="10.3" cy="12" r="3.1" fill="#fff"/><circle cx="17.7" cy="12" r="3.1" fill="#fff"/>
-      <circle cx="11.2" cy="13" r="1.5" fill="#234bff"/><circle cx="18.6" cy="13" r="1.5" fill="#234bff"/>
-    </svg>`;
-  }
-
-  function cupcakeSvg(){
-    return `<svg viewBox="0 0 40 40" aria-hidden="true">
-      <path d="M10 22 H30 L27 34 H13 Z" fill="#7a4b2c"/>
-      <path d="M9 22 C10 15 14 12 18 14 C19 10 24 9 27 13 C30 12 33 15 31 22 Z" fill="#ff9ec9"/>
-      <path d="M14 18 C16 17 18 18 18 20 C17 21 15 21 14 20 Z" fill="#fff2aa"/>
-      <circle cx="23" cy="12" r="2.3" fill="#ff4d4d"/>
-    </svg>`;
-  }
-
-  function buildScene(scene){
-    scene.classList.add('pac4-upgraded');
-    scene.classList.remove('pac3-upgraded','pac2-upgraded');
     scene.innerHTML=`
-      <div class="pac4-scoreboard"><span>1UP<br>00</span><span>HIGH SCORE<br>00</span></div>
-      <div class="pac4-board">
-        ${mazeSvg()}
-        <div class="pac4-pellets"></div>
-        <div class="pac4-actors">
-          <div class="pac4-cupcake">${cupcakeSvg()}</div>
-          <div class="pac4-player"></div>
-          <div class="pac4-ghost g1">${ghostSvg('#ff4040')}</div>
-          <div class="pac4-ghost g2">${ghostSvg('#ff9fd9')}</div>
-          <div class="pac4-ghost g3">${ghostSvg('#5de3ff')}</div>
-          <div class="pac4-ghost g4">${ghostSvg('#ffb84d')}</div>
+      <div class="pac5-score"><div>1UP<strong>00</strong></div><div>PELLETS<strong class="pac5-score-count">42</strong></div></div>
+      <div class="pac5-board">
+        <svg class="pac5-maze" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
+          <path class="pac5-route-wall" d="M80 92 H920 V218 H228 V340 H828 V458 H382 V532 H918"/>
+          <path class="pac5-route-floor" d="M80 92 H920 V218 H228 V340 H828 V458 H382 V532 H918"/>
+          <path class="pac5-route-edge" d="M80 92 H920 V218 H228 V340 H828 V458 H382 V532 H918"/>
+
+          <path class="pac5-branch-wall" d="M520 218 V138 H716 M606 340 V278 H756 M558 458 V398 H320"/>
+          <path class="pac5-branch-floor" d="M520 218 V138 H716 M606 340 V278 H756 M558 458 V398 H320"/>
+          <path class="pac5-branch-edge" d="M520 218 V138 H716 M606 340 V278 H756 M558 458 V398 H320"/>
+        </svg>
+        <div class="pac5-pellets">${pellets}</div>
+        <div class="pac5-actors">
+          <div class="pac5-player"></div>
+          ${ghostMarkup('g1','#f04444')}
+          ${ghostMarkup('g2','#ff8fd5')}
+          ${ghostMarkup('g3','#45d7ee')}
         </div>
-        <div class="pac4-ready">READY!</div>
+        <div class="pac5-ready">READY!</div>
+        <div class="pac5-clear">LEVEL CLEAR!</div>
       </div>`;
-
-    const pelletsWrap=scene.querySelector('.pac4-pellets');
-    const pellets=[];
-    for(let y=0;y<ROWS;y++){
-      for(let x=0;x<COLS;x++){
-        const ch=MAZE[y][x];
-        if(ch!=='.'&&ch!=='o') continue;
-        const p=centerPct({x,y});
-        const el=document.createElement('i');
-        el.className='pac4-pellet'+(ch==='o'?' power':'');
-        el.style.left=`${p.x}%`;
-        el.style.top=`${p.y}%`;
-        pelletsWrap.appendChild(el);
-        pellets.push({x,y,key:cellKey(x,y),el});
-      }
-    }
-
-    const clearWalk=buildClearWalk();
-    const firstVisit=new Map();
-    clearWalk.forEach((c,i)=>{
-      const k=cellKey(c.x,c.y);
-      if(!firstVisit.has(k)) firstVisit.set(k,i);
-    });
-
-    const finalRoute=shortestPath(clearWalk[clearWalk.length-1],CUPCAKE,true);
-    const cupcake=scene.querySelector('.pac4-cupcake');
-    const cp=centerPct(CUPCAKE);
-    cupcake.style.left=`${cp.x}%`;
-    cupcake.style.top=`${cp.y}%`;
-
-    state={
-      scene,
-      board:scene.querySelector('.pac4-board'),
-      player:scene.querySelector('.pac4-player'),
-      ghosts:[scene.querySelector('.g1'),scene.querySelector('.g2'),scene.querySelector('.g3'),scene.querySelector('.g4')],
-      gate:scene.querySelector('.pac4-gate'),
-      cupcake,
-      pellets,
-      clearWalk,
-      firstVisit,
-      finalRoute,
-      lastEaten:0,
-      boardW:0,
-      boardH:0
-    };
-    lastPelletSound=-1;
-    finishPlayed=false;
+    scene.classList.add('pac5-upgraded');
+    scene.dataset.pac5='1';
+    lastPellet=-1;finishSoundPlayed=false;ghostClock=0;
   }
 
-  function resizeActors(){
-    if(!state?.board) return;
-    const rect=state.board.getBoundingClientRect();
-    if(!rect.width||!rect.height) return;
-    if(Math.abs(rect.width-state.boardW)<1&&Math.abs(rect.height-state.boardH)<1) return;
-    state.boardW=rect.width;state.boardH=rect.height;
-    const cellW=rect.width/COLS,cellH=rect.height/ROWS;
-    const size=Math.max(10,Math.min(22,Math.min(cellW,cellH)*.58));
-    state.player.style.width=state.player.style.height=`${size}px`;
-    state.ghosts.forEach(g=>g.style.width=g.style.height=`${size*.94}px`);
-    state.cupcake.style.width=state.cupcake.style.height=`${Math.max(18,size*1.34)}px`;
-  }
-
-  function safeGhostPosition(pacPos,baseFloat,ghostIndex){
-    const path=state.clearWalk;
-    const minCellDistance=2.55+ghostIndex*.12;
-    let candidate=Math.max(0,baseFloat);
-    for(let tries=0;tries<90;tries++){
-      const g=positionOnPath(path,candidate);
-      const dx=(g.x-pacPos.x)/(100/COLS);
-      const dy=(g.y-pacPos.y)/(100/ROWS);
-      if(Math.hypot(dx,dy)>=minCellDistance) return g;
-      candidate=Math.max(0,candidate-2.4);
-      if(candidate===0) break;
-    }
-    const fallbackIndex=Math.max(0,Math.floor(baseFloat)-18-ghostIndex*11);
-    return positionOnPath(path,fallbackIndex);
-  }
-
-  function render(progress,now){
-    if(!state) return;
-    resizeActors();
-
+  function render(scene,p,now,dt){
+    if(scene.dataset.pac5!=='1') build(scene);
     const running=(stageStatus?.textContent.trim()||'')==='Running';
-    state.scene.classList.toggle('pac4-running',running);
-    state.scene.classList.toggle('pac4-finished',progress>=1);
+    const finished=p>=.9995;
+    scene.classList.toggle('pac5-finished',finished);
+    scene.classList.toggle('pac5-running',running);
+    const ready=scene.querySelector('.pac5-ready');
+    if(ready) ready.style.opacity=running||p>0?'0':'1';
 
-    const pelletProgress=clamp(progress/PELLET_END,0,1);
-    const clearFloat=pelletProgress*(state.clearWalk.length-1);
-    const inCupcakePhase=progress>=PELLET_END;
-
-    let pac;
-    if(!inCupcakePhase){
-      pac=positionOnPath(state.clearWalk,clearFloat);
-    }else{
-      const t=clamp((progress-PELLET_END)/(1-PELLET_END),0,1);
-      pac=positionOnPath(state.finalRoute,t*(state.finalRoute.length-1));
+    const pac=scene.querySelector('.pac5-player');
+    if(pac){
+      const pos=pct(pointAlong(ROUTE,p));
+      const raw=pointAlong(ROUTE,p);
+      pac.style.left=`${pos.x}%`;pac.style.top=`${pos.y}%`;pac.style.setProperty('--pac-dir',`${raw.angle}deg`);
+      const mouth=(Math.sin(now/85)+1)/2;
+      pac.style.setProperty('--mouth-top',`${31+mouth*12}%`);
+      pac.style.setProperty('--mouth-bottom',`${69-mouth*12}%`);
     }
 
-    state.player.style.left=`${pac.x}%`;
-    state.player.style.top=`${pac.y}%`;
-    state.player.style.setProperty('--dir',`${pac.angle}deg`);
-    const bite=running?(35-Math.abs(Math.sin(now/78))*23):35;
-    state.player.style.setProperty('--mouth-top',`${bite}%`);
-    state.player.style.setProperty('--mouth-bottom',`${100-bite}%`);
+    const pellets=[...scene.querySelectorAll('[data-pac5-pellet]')];
+    const eaten=Math.min(pellets.length,Math.floor(p*pellets.length+0.0001));
+    pellets.forEach((pellet,i)=>pellet.style.opacity=i<eaten?'0':'1');
+    const count=scene.querySelector('.pac5-score-count');if(count) count.textContent=String(Math.max(0,pellets.length-eaten)).padStart(2,'0');
+    if(running&&eaten>lastPellet&&eaten>0){ tone(eaten%2?440:525,.052,.021,'square'); }
+    lastPellet=eaten;
 
-    let eatenCount=0;
-    if(!inCupcakePhase){
-      state.pellets.forEach(pellet=>{
-        const visit=state.firstVisit.get(pellet.key);
-        const eaten=visit!==undefined&&visit<=pac.index;
-        pellet.el.classList.toggle('eaten',eaten);
-        if(eaten) eatenCount++;
-      });
-    }else{
-      state.pellets.forEach(pellet=>pellet.el.classList.add('eaten'));
-      eatenCount=state.pellets.length;
-    }
-
-    if(running&&eatenCount>lastPelletSound){
-      const diff=Math.min(7,eatenCount-Math.max(0,lastPelletSound));
-      for(let i=0;i<diff;i++) setTimeout(()=>waka(eatenCount+i),i*18);
-      lastPelletSound=eatenCount;
-    }else if(eatenCount<lastPelletSound){
-      lastPelletSound=eatenCount;
-    }
-
-    state.gate?.classList.toggle('open',inCupcakePhase);
-    state.cupcake?.classList.toggle('ready',inCupcakePhase);
-    if(progress>=.995){
-      state.cupcake?.classList.add('eaten');
-      cupcakeSound();
-    }else{
-      state.cupcake?.classList.remove('eaten');
-    }
-
-    const ghostLags=[20,38,58,79];
-    const ghostBaseFloat=Math.min(clearFloat,state.clearWalk.length-1);
-    state.ghosts.forEach((ghost,i)=>{
-      const g=safeGhostPosition(pac,ghostBaseFloat-ghostLags[i],i);
-      ghost.style.left=`${g.x}%`;
-      ghost.style.top=`${g.y}%`;
+    if(running) ghostClock+=dt;
+    const ghosts=[...scene.querySelectorAll('.pac5-ghost')];
+    const offsets=[.18,.47,.72];
+    const dirs=[1,-1,1];
+    ghosts.forEach((ghost,i)=>{
+      let t=((ghostClock/15000)*dirs[i]+offsets[i])%1;if(t<0)t+=1;
+      const gp=pct(pointAlong(ROUTE,t));
+      ghost.style.left=`${gp.x}%`;ghost.style.top=`${gp.y}%`;
+      ghost.style.transform=`translate(-50%,-50%) translateY(${Math.sin(now/180+i)*1.8}px)`;
     });
 
-    if(running&&progress<PELLET_END&&now>=nextSirenAt){
-      nextSirenAt=now+390;
-      chasePulse();
+    if(finished&&!finishSoundPlayed){
+      finishSoundPlayed=true;tone(523,.12,.032,'triangle');tone(659,.12,.032,'triangle',.13);tone(784,.18,.038,'triangle',.26);
     }
   }
 
-  function ensureScene(){
+  function tick(now){
+    const dt=Math.min(50,Math.max(0,now-lastFrame));lastFrame=now;
     const scene=sceneLayer.querySelector('.xt-pacman[data-xt-theme="pacman"]');
-    if(!scene) return null;
-    if(!scene.querySelector('.pac4-board')) buildScene(scene);
-    return scene;
+    if(scene!==lastScene){ lastScene=scene||null;displayedRemaining=null;lastPellet=-1;finishSoundPlayed=false;ghostClock=0; }
+    if(scene){ render(scene,progressNow(now),now,dt); }
+    raf=requestAnimationFrame(tick);
   }
 
-  function loop(now){
-    const scene=ensureScene();
-    if(scene!==lastScene){
-      lastScene=scene||null;
-      displayedRemaining=null;
-      state=null;
-      if(scene) buildScene(scene);
-    }
-    if(scene&&!state) buildScene(scene);
-    if(scene&&state) render(progressNow(now),now);
-    raf=requestAnimationFrame(loop);
-  }
+  const observer=new MutationObserver(()=>{
+    const scene=sceneLayer.querySelector('.xt-pacman[data-xt-theme="pacman"]');
+    if(scene&&scene.dataset.pac5!=='1') build(scene);
+  });
+  observer.observe(sceneLayer,{childList:true,subtree:true});
 
   cancelAnimationFrame(raf);
-  raf=requestAnimationFrame(loop);
+  raf=requestAnimationFrame(tick);
 })();
