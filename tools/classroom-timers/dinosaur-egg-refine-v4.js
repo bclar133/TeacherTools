@@ -144,3 +144,14 @@
   cancelAnimationFrame(raf);
   raf=requestAnimationFrame(loop);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('dinosaurEggRefineV5Script')) return;
+
+  const dinoRefineV5 = document.createElement('script');
+  dinoRefineV5.id = 'dinosaurEggRefineV5Script';
+  dinoRefineV5.src = new URL('dinosaur-egg-refine-v5.js', current.src).href;
+  dinoRefineV5.async = false;
+  document.body.appendChild(dinoRefineV5);
+})();
