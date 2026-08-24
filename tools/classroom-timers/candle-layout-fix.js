@@ -210,3 +210,14 @@
   dinoEgg.async = false;
   document.body.appendChild(dinoEgg);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('dinosaurEggRefineScript')) return;
+
+  const dinoRefine = document.createElement('script');
+  dinoRefine.id = 'dinosaurEggRefineScript';
+  dinoRefine.src = new URL('dinosaur-egg-refine.js', current.src).href;
+  dinoRefine.async = false;
+  document.body.appendChild(dinoRefine);
+})();
