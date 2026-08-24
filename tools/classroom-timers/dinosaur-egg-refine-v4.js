@@ -199,3 +199,14 @@
   dominoesSoundFix.async = false;
   document.body.appendChild(dominoesSoundFix);
 })();
+
+(() => {
+  const current = document.currentScript;
+  if (!current || document.getElementById('pacmanUpgradeScript')) return;
+
+  const pacmanUpgrade = document.createElement('script');
+  pacmanUpgrade.id = 'pacmanUpgradeScript';
+  pacmanUpgrade.src = new URL('pacman-upgrade.js', current.src).href;
+  pacmanUpgrade.async = false;
+  document.body.appendChild(pacmanUpgrade);
+})();
