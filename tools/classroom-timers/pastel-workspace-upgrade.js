@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__pastelWorkspaceUpgradeV4) return;
-  window.__pastelWorkspaceUpgradeV4 = true;
+  if (window.__pastelWorkspaceUpgradeV5) return;
+  window.__pastelWorkspaceUpgradeV5 = true;
 
   const style = document.createElement('style');
-  style.id = 'pastelWorkspaceUpgradeStyleV4';
+  style.id = 'pastelWorkspaceUpgradeStyleV5';
   style.textContent = `
     /* Keep the active workspace tab clearly visible in Dark Mode. */
     html[data-theme="dark"] .workspace-tab.active {
@@ -104,4 +104,15 @@
   window.setInterval(() => {
     targets.forEach(chooseNext);
   }, 8000);
+
+  /* A different Countdown scene always starts from a clean timer state.
+     This capture listener runs before the app's normal theme click handler:
+     first reset the current countdown/scene, then let the selected scene load at 0%. */
+  document.addEventListener('click', event => {
+    const card = event.target.closest?.('.theme-card[data-theme]');
+    if (!card) return;
+    const current = document.querySelector('.theme-card.active[data-theme]');
+    if (!current || current.dataset.theme === card.dataset.theme) return;
+    document.getElementById('countdownResetBtn')?.click();
+  }, true);
 })();
