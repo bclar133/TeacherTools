@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__pastelWorkspaceUpgradeV1) return;
-  window.__pastelWorkspaceUpgradeV1 = true;
+  if (window.__pastelWorkspaceUpgradeV2) return;
+  window.__pastelWorkspaceUpgradeV2 = true;
 
   const style = document.createElement('style');
-  style.id = 'pastelWorkspaceUpgradeStyleV1';
+  style.id = 'pastelWorkspaceUpgradeStyleV2';
   style.textContent = `
     /* The three live timer areas use the same ambient pastel treatment as DVD Bounce. */
     #intervalWorkspace .builder-stage,
@@ -34,6 +34,14 @@
     #scheduleWorkspace .builder-stage .eyebrow,
     #focusWorkspace .focus-panel .eyebrow {
       color:#5548b8;
+    }
+
+    /* Make the Interval values much easier to read at a glance. */
+    #intervalWorkspace .form-grid input {
+      font-family:var(--display,'Fredoka',sans-serif)!important;
+      font-size:1.45rem!important;
+      font-weight:800!important;
+      line-height:1!important;
     }
 
     html[data-theme="dark"] #intervalWorkspace .builder-stage,
