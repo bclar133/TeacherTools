@@ -101,7 +101,6 @@
     }
 
     const perchX=76.5;
-    // Lifted from 45.2% so the feet visibly rest on the branch rather than below it.
     const perchY=42.2;
     const x=quad(108,93,perchX,t);
     const y=quad(18,27,perchY,t);
@@ -128,4 +127,12 @@
   }
 
   requestAnimationFrame(tick);
+
+  // Load the final deterministic canopy/perch correction after all earlier Autumn layers.
+  if(!document.querySelector('script[data-autumn-balance-fix]')){
+    const script=document.createElement('script');
+    script.src='autumn-balance-fix.js?v=1';
+    script.dataset.autumnBalanceFix='true';
+    document.head.appendChild(script);
+  }
 })();
