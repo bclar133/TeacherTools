@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__stopwatchPhysicalUpgradeV4) return;
-  window.__stopwatchPhysicalUpgradeV4 = true;
+  if (window.__stopwatchPhysicalUpgradeV5) return;
+  window.__stopwatchPhysicalUpgradeV5 = true;
 
   const style = document.createElement('style');
-  style.id = 'stopwatchPhysicalUpgradeStyleV4';
+  style.id = 'stopwatchPhysicalUpgradeStyleV5';
   style.textContent = `
     /* Keep the legacy hand node only so older stopwatch code can still reference it safely. */
     .stopwatch-finger{display:none!important}
@@ -99,13 +99,10 @@
 
     /* Dark mode should affect the stopwatch scene as clearly as the rest of the app. */
     html[data-theme="dark"] .stopwatch-stage{
-      background:
-        radial-gradient(circle at 38% 42%,#314352 0%,#1a2733 48%,#0a1118 100%)!important;
+      background:radial-gradient(circle at 38% 42%,#314352 0%,#1a2733 48%,#0a1118 100%)!important;
       box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 18px 45px rgba(0,0,0,.28)!important;
     }
-    html[data-theme="dark"] .stopwatch-scene{
-      filter:drop-shadow(0 20px 24px rgba(0,0,0,.28));
-    }
+    html[data-theme="dark"] .stopwatch-scene{filter:drop-shadow(0 20px 24px rgba(0,0,0,.28))}
 
     @media(max-width:760px){
       .stopwatch-finger{display:none!important}
@@ -152,13 +149,13 @@
     else if (event.key.toLowerCase() === 'r') press('.stopwatch-side.side-left');
   }, {capture:true});
 
-  const loadAnalogueClockUpgrade = () => {
-    if (document.querySelector('script[data-analogue-clock-upgrade]')) return;
+  const loadClockDisplayUpgrade = () => {
+    if (document.querySelector('script[data-clock-display-upgrade]')) return;
     const script = document.createElement('script');
-    script.src = 'analogue-clock-upgrade.js?v=1';
-    script.dataset.analogueClockUpgrade = 'true';
+    script.src = 'analogue-clock-upgrade.js?v=2';
+    script.dataset.clockDisplayUpgrade = 'true';
     document.head.appendChild(script);
   };
-  if (document.readyState === 'complete') loadAnalogueClockUpgrade();
-  else window.addEventListener('load', loadAnalogueClockUpgrade, {once:true});
+  if (document.readyState === 'complete') loadClockDisplayUpgrade();
+  else window.addEventListener('load', loadClockDisplayUpgrade, {once:true});
 })();
