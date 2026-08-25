@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__stopwatchPhysicalUpgradeV1) return;
-  window.__stopwatchPhysicalUpgradeV1 = true;
+  if (window.__stopwatchPhysicalUpgradeV2) return;
+  window.__stopwatchPhysicalUpgradeV2 = true;
 
   const style = document.createElement('style');
-  style.id = 'stopwatchPhysicalUpgradeStyleV1';
+  style.id = 'stopwatchPhysicalUpgradeStyleV2';
   style.textContent = `
     /* Keep the legacy hand node only so the older stopwatch code can still reference it safely. */
     .stopwatch-finger{display:none!important}
@@ -27,20 +27,20 @@
     .stopwatch-crown::after{
       content:"";
       position:absolute;
-      z-index:-1;
       left:50%;
-      bottom:-18px;
-      width:46px;
-      height:20px;
+      bottom:-20px;
+      width:48px;
+      height:22px;
       transform:translateX(-50%);
       border-radius:3px 3px 8px 8px;
       background:linear-gradient(90deg,#69737b,#c0c9ce 50%,#707a82);
       box-shadow:inset 0 -2px 3px rgba(0,0,0,.16);
     }
 
+    /* Side pushers sit close to the case. Their stems overlap the case edge so there is no visible gap. */
     .stopwatch-side{
       top:24px!important;
-      width:62px!important;
+      width:64px!important;
       height:30px!important;
       border-radius:9px!important;
       background:linear-gradient(180deg,#e0e5e8 0%,#aeb8be 48%,#727d84 100%)!important;
@@ -48,12 +48,12 @@
       transition:transform .11s ease,box-shadow .11s ease!important;
     }
     .stopwatch-side.side-left{
-      left:-18px!important;
+      left:18px!important;
       transform:rotate(-34deg) translateY(0)!important;
       transform-origin:100% 50%!important;
     }
     .stopwatch-side.side-right{
-      right:-18px!important;
+      right:18px!important;
       transform:rotate(34deg) translateY(0)!important;
       transform-origin:0 50%!important;
     }
@@ -61,14 +61,14 @@
       content:"";
       position:absolute;
       top:8px;
-      width:28px;
+      width:40px;
       height:14px;
       border-radius:5px;
-      background:linear-gradient(180deg,#cbd3d7,#778188);
+      background:linear-gradient(180deg,#cbd3d7 0%,#9da8ae 48%,#778188 100%);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.28);
     }
-    .stopwatch-side.side-left::after{right:-22px}
-    .stopwatch-side.side-right::after{left:-22px}
+    .stopwatch-side.side-left::after{right:-34px}
+    .stopwatch-side.side-right::after{left:-34px}
 
     .stopwatch-crown.sw-pressed{
       transform:translateX(-50%) translateY(8px)!important;
