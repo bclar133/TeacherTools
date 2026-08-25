@@ -158,7 +158,7 @@
     }
     if (!document.querySelector('script[data-scenic-dvd-upgrade]')) {
       const scenicScript = document.createElement('script');
-      scenicScript.src = 'scenic-dvd-upgrade.js?v=3';
+      scenicScript.src = 'scenic-dvd-upgrade.js?v=4';
       scenicScript.dataset.scenicDvdUpgrade = 'true';
       document.head.appendChild(scenicScript);
     }
