@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__autumnFinishingTouchesV1) return;
-  window.__autumnFinishingTouchesV1 = true;
+  if (window.__autumnFinishingTouchesV2) return;
+  window.__autumnFinishingTouchesV2 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const display = document.getElementById('countdownDisplay');
@@ -56,7 +56,6 @@
   }
 
   function finalAutumnColour(index){
-    // Continuous range: dark brown -> chestnut -> copper/russet -> brick red.
     const hue=hash01(index);
     if(hue<.34) return mix([88,52,29],[126,62,34],hue/.34);
     if(hue<.68) return mix([126,62,34],[164,78,38],(hue-.34)/.34);
@@ -75,7 +74,6 @@
     else if(t<.70) colour=mix(greenB,gold,(t-.40)/.30);
     else colour=mix(gold,target,(t-.70)/.30);
 
-    // Small deterministic brightness differences stop the canopy looking flat.
     const shade=(hash01(index+701)-.5)*14;
     return rgb(colour.map(v=>clamp(Math.round(v+shade),0,255)));
   }
@@ -127,12 +125,4 @@
   }
 
   requestAnimationFrame(tick);
-
-  // Load the final deterministic canopy/perch correction after all earlier Autumn layers.
-  if(!document.querySelector('script[data-autumn-balance-fix]')){
-    const script=document.createElement('script');
-    script.src='autumn-balance-fix.js?v=1';
-    script.dataset.autumnBalanceFix='true';
-    document.head.appendChild(script);
-  }
 })();
