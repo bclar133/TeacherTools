@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV17) return;
-  window.__pacmanUpgradeV17 = true;
+  if (window.__pacmanUpgradeV18) return;
+  window.__pacmanUpgradeV18 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -15,11 +15,11 @@
     'pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7',
     'pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11',
     'pacmanUpgradeStyleV12','pacmanUpgradeStyleV13','pacmanUpgradeStyleV14','pacmanUpgradeStyleV15',
-    'pacmanUpgradeStyleV16','pacmanUpgradeStyleV17'
+    'pacmanUpgradeStyleV16','pacmanUpgradeStyleV17','pacmanUpgradeStyleV18'
   ].forEach(id => document.getElementById(id)?.remove());
 
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV17';
+  style.id = 'pacmanUpgradeStyleV18';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap{
       position:absolute!important;left:2.2%!important;right:auto!important;top:1.4%!important;bottom:auto!important;
@@ -188,98 +188,6 @@
   });
 
   let displayedRemaining=null,displayChangedAt=performance.now(),lastStatus='',state=null,raf=0;
-  let pacAudioCtx=null,chompBuffer=null,chompSource=null,chompGain=null,chompFilter=null;
-
-  function muted(){
-    try{
-      const stored=localStorage.getItem('ttTimers.muted');
-      if(stored!==null)return JSON.parse(stored)===true;
-    }catch{}
-    return document.getElementById('muteBtn')?.getAttribute('aria-pressed')==='true';
-  }
-
-  function makeChompBuffer(ctx){
-    // Approximate the original Pac-Man eating-dot pair:
-    // 67 ms 257->289 Hz followed by 67 ms 289->257 Hz, at a fixed cadence.
-    const rate=ctx.sampleRate;
-    const syllable=.067;
-    const duration=syllable*2;
-    const buffer=ctx.createBuffer(1,Math.ceil(rate*duration),rate);
-    const data=buffer.getChannelData(0);
-    let phase=0;
-
-    for(let i=0;i<data.length;i++){
-      const t=i/rate;
-      const second=t>=syllable;
-      const local=(t-(second?syllable:0))/syllable;
-      const start=second?289:257;
-      const end=second?257:289;
-      const freq=start+(end-start)*local;
-      phase+=2*Math.PI*freq/rate;
-
-      // 4-bit-ish WSG pulse character with a short click-free envelope on each 67 ms syllable.
-      const attack=Math.min(1,local/.035);
-      const release=Math.min(1,(1-local)/.075);
-      const env=Math.max(0,Math.min(attack,release));
-      const pulse=Math.sin(phase)>=0?1:-1;
-      const stepped=Math.round(pulse*7)/7;
-      data[i]=stepped*env*.34;
-    }
-    return buffer;
-  }
-
-  function ensurePacAudio(){
-    if(muted())return null;
-    try{
-      pacAudioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
-      if(!chompBuffer)chompBuffer=makeChompBuffer(pacAudioCtx);
-      if(pacAudioCtx.state==='suspended')pacAudioCtx.resume().catch(()=>{});
-      return pacAudioCtx;
-    }catch{return null}
-  }
-
-  function unlockPacAudio(){ensurePacAudio()}
-  document.addEventListener('pointerdown',unlockPacAudio,{capture:true,passive:true});
-  document.addEventListener('keydown',unlockPacAudio,{capture:true});
-
-  function startChompLoop(){
-    if(chompSource||muted())return;
-    const ctx=ensurePacAudio();
-    if(!ctx||ctx.state!=='running'||!chompBuffer)return;
-
-    const source=ctx.createBufferSource();
-    const filter=ctx.createBiquadFilter();
-    const gain=ctx.createGain();
-    source.buffer=chompBuffer;
-    source.loop=true;
-    filter.type='lowpass';
-    filter.frequency.setValueAtTime(1850,ctx.currentTime);
-    filter.Q.setValueAtTime(.55,ctx.currentTime);
-    gain.gain.setValueAtTime(.0001,ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(.042,ctx.currentTime+.018);
-    source.connect(filter).connect(gain).connect(ctx.destination);
-    source.start();
-    source.onended=()=>{
-      if(chompSource===source){chompSource=null;chompGain=null;chompFilter=null}
-    };
-    chompSource=source;
-    chompGain=gain;
-    chompFilter=filter;
-  }
-
-  function stopChompLoop(){
-    if(!chompSource)return;
-    const source=chompSource,gain=chompGain,ctx=pacAudioCtx;
-    chompSource=null;chompGain=null;chompFilter=null;
-    if(ctx&&gain){
-      const now=ctx.currentTime;
-      gain.gain.cancelScheduledValues(now);
-      gain.gain.setTargetAtTime(.0001,now,.012);
-      setTimeout(()=>{try{source.stop()}catch{}},55);
-    }else{
-      try{source.stop()}catch{}
-    }
-  }
 
   function parseRemaining(){
     const parts=display.textContent.trim().split(':').map(Number);
@@ -312,7 +220,6 @@
   }
 
   function buildScene(){
-    stopChompLoop();
     const pellets=PELLETS.map((p,i)=>`<i class="pac13-pellet${p.power?' power':''}" data-pellet="${i}" style="left:${p.x}%;top:${p.y}%"></i>`).join('');
     sceneLayer.innerHTML=`<div class="xt-scene xt-pacman pac13-upgraded" data-xt-theme="pacman">
       <div class="pac13-score">PELLETS<strong class="pac13-count">${PELLET_COUNT}</strong></div>
@@ -337,7 +244,7 @@
 
   function ensureScene(){
     const pacScene=sceneLayer.querySelector('.xt-pacman[data-xt-theme="pacman"]');
-    if(!pacScene){state=null;stopChompLoop();return false}
+    if(!pacScene){state=null;return false}
     if(!pacScene.classList.contains('pac13-upgraded')){buildScene();return true}
     if(!state||state.scene!==pacScene)buildScene();
     return true;
@@ -360,9 +267,6 @@
     if(current===0||p>=.999)state.finishedLatched=true;
     const finished=state.finishedLatched;
     const moving=runningNow(current,total)&&!finished;
-
-    if(moving&&!muted())startChompLoop();
-    else stopChompLoop();
 
     const pacDist=clamp(p,0,1)*ROUTE.total,pacRaw=pointAtDistance(pacDist),pac=pct(pacRaw);
     if(state.player){
