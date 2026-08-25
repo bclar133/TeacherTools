@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__clockDisplayUpgradeV3) return;
-  window.__clockDisplayUpgradeV3 = true;
+  if (window.__clockDisplayUpgradeV4) return;
+  window.__clockDisplayUpgradeV4 = true;
 
   const stage = document.getElementById('clockStage');
   const digital = document.getElementById('digitalClock');
@@ -15,7 +15,7 @@
   if (!stage || !digital || !analogue || !flip || !scenic || !srcHour || !srcMinute || !srcSecond) return;
 
   const style = document.createElement('style');
-  style.id = 'clockDisplayUpgradeStyleV3';
+  style.id = 'clockDisplayUpgradeStyleV4';
   style.textContent = `
     #clockStage .clock-view[hidden]{display:none!important}
     #clockStage .clock-view.clock-upgrade-visible{display:grid!important}
@@ -37,13 +37,12 @@
     #analogueClock .clock-hand.second::after{content:"";position:absolute;left:50%;bottom:-17%;width:3px;height:20%;transform:translateX(-50%);background:#e4574c;border-radius:3px}
     #analogueClock .clock-pin{position:absolute!important;z-index:8!important;left:50%!important;top:50%!important;width:22px!important;height:22px!important;transform:translate(-50%,-50%)!important;border-radius:50%!important;background:#e4574c!important;box-shadow:0 2px 4px rgba(0,0,0,.25),inset 0 2px 2px rgba(255,255,255,.25)!important}
 
-    /* Hide the legacy flip nodes; app-core still writes time into them for our observer. */
+    /* App-core keeps these source nodes updated; the custom renderer below owns the visible flip clock. */
     #flipClock > #flipHour,
     #flipClock > #flipMinute,
     #flipClock > #flipSecond,
     #flipClock > span{display:none!important}
 
-    /* Dedicated split-flap renderer. Always one horizontal row. */
     #flipClock.clock-upgrade-visible{
       display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;
       width:100%!important;height:100%!important;padding:32px 22px!important;box-sizing:border-box!important;overflow:hidden!important
@@ -59,34 +58,59 @@
     .split-flap-card{
       --card-w:clamp(105px,18vw,205px);--card-h:clamp(140px,23vw,255px);
       position:relative;flex:0 1 var(--card-w);width:var(--card-w);height:var(--card-h);min-width:0;
-      perspective:1100px;border-radius:18px;box-shadow:0 20px 38px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.08);background:#142b3e
+      perspective:950px;transform-style:preserve-3d;border-radius:18px;
+      box-shadow:0 20px 38px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.08);background:#142b3e
     }
-    .split-flap-half{
-      position:absolute;left:0;width:100%;height:50%;overflow:hidden;background:#29445a;color:#f8f8f4;
-      font-family:var(--display)!important;font-weight:800;letter-spacing:-.045em;text-shadow:0 4px 0 rgba(0,0,0,.15);
-      backface-visibility:hidden;-webkit-backface-visibility:hidden
+    .split-flap-static-half,
+    .split-flap-face{
+      position:absolute;left:0;width:100%;height:50%;overflow:hidden;color:#f8f8f4;
+      font-family:var(--display)!important;font-weight:800;letter-spacing:-.045em;text-shadow:0 4px 0 rgba(0,0,0,.15)
     }
-    .split-flap-half.top{top:0;border-radius:18px 18px 0 0;background:linear-gradient(180deg,#304e66,#263f54);border-bottom:1px solid rgba(0,0,0,.58)}
-    .split-flap-half.bottom{bottom:0;border-radius:0 0 18px 18px;background:linear-gradient(180deg,#1d374c,#152b3e);border-top:1px solid rgba(255,255,255,.05)}
+    .split-flap-static-half.top,
+    .split-flap-face.front{
+      top:0;border-radius:18px 18px 0 0;background:linear-gradient(180deg,#304e66,#263f54);border-bottom:1px solid rgba(0,0,0,.58)
+    }
+    .split-flap-static-half.bottom,
+    .split-flap-face.back{
+      bottom:0;border-radius:0 0 18px 18px;background:linear-gradient(180deg,#1d374c,#152b3e);border-top:1px solid rgba(255,255,255,.05)
+    }
     .split-flap-number{
       position:absolute;left:0;width:100%;height:200%;display:flex;align-items:center;justify-content:center;
       font-size:clamp(4.4rem,10vw,8.8rem)!important;line-height:1
     }
-    .split-flap-half.top .split-flap-number{top:0}
-    .split-flap-half.bottom .split-flap-number{top:-100%}
-    .split-flap-static{z-index:1}
-    .split-flap-static.top{z-index:2}
-    .split-flap-fold{z-index:5;pointer-events:none}
-    .split-flap-fold.top{transform-origin:50% 100%;transform:rotateX(0deg)}
-    .split-flap-fold.bottom{transform-origin:50% 0%;transform:rotateX(90deg);z-index:4}
-    .split-flap-hinge{position:absolute;left:0;right:0;top:50%;height:2px;transform:translateY(-1px);background:#091723;z-index:8;box-shadow:0 -1px 0 rgba(255,255,255,.07),0 1px 0 rgba(0,0,0,.38);pointer-events:none}
+    .split-flap-static-half.top .split-flap-number,
+    .split-flap-face.front .split-flap-number{top:0}
+    .split-flap-static-half.bottom .split-flap-number,
+    .split-flap-face.back .split-flap-number{top:-100%}
+
+    /* One physical flap rotates continuously through 180 degrees around the centre hinge. */
+    .split-flap-flipper{
+      position:absolute;left:0;top:0;width:100%;height:50%;z-index:7;
+      transform-origin:50% 100%;transform-style:preserve-3d;will-change:transform,filter
+    }
+    .split-flap-face{
+      inset:0;height:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.07)
+    }
+    .split-flap-face.front{z-index:2}
+    .split-flap-face.back{
+      top:0;bottom:auto;transform:rotateX(180deg);z-index:1;
+      border-radius:0 0 18px 18px
+    }
+    .split-flap-card::after{
+      content:"";position:absolute;left:0;right:0;bottom:0;height:50%;z-index:5;pointer-events:none;
+      border-radius:0 0 18px 18px;background:linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,0));opacity:0
+    }
+    .split-flap-card.flipping::after{animation:splitFlapShadow .68s ease-out}
+    @keyframes splitFlapShadow{
+      0%{opacity:.04} 38%{opacity:.12} 52%{opacity:.36} 72%{opacity:.18} 100%{opacity:0}
+    }
+    .split-flap-hinge{
+      position:absolute;left:0;right:0;top:50%;height:2px;transform:translateY(-1px);background:#091723;z-index:10;
+      box-shadow:0 -1px 0 rgba(255,255,255,.07),0 1px 0 rgba(0,0,0,.38);pointer-events:none
+    }
     .split-flap-hinge::before,.split-flap-hinge::after{content:"";position:absolute;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#0a1925;box-shadow:inset 0 1px 1px rgba(255,255,255,.08)}
     .split-flap-hinge::before{left:9px}.split-flap-hinge::after{right:9px}
-
-    .split-flap-card.flipping .split-flap-fold.top{animation:splitTop .28s cubic-bezier(.55,.04,.9,.45) forwards}
-    .split-flap-card.flipping .split-flap-fold.bottom{animation:splitBottom .28s cubic-bezier(.12,.55,.25,1) .28s forwards}
-    @keyframes splitTop{from{transform:rotateX(0deg);filter:brightness(1)}to{transform:rotateX(-90deg);filter:brightness(.58)}}
-    @keyframes splitBottom{from{transform:rotateX(90deg);filter:brightness(.6)}to{transform:rotateX(0deg);filter:brightness(1)}}
 
     html[data-theme="dark"] #clockStage{background:linear-gradient(145deg,#101c27,#071019)!important}
     html[data-theme="dark"] #analogueClock .clock-face{border-color:#788792!important;background:radial-gradient(circle,#27333d 0 62%,#1d2730 78%,#121a21 100%)!important;color:#eef5f8!important;box-shadow:0 22px 50px rgba(0,0,0,.55),inset 0 0 24px rgba(0,0,0,.42),inset 0 0 0 3px #485761!important}
@@ -99,7 +123,8 @@
       #flipClock.clock-upgrade-visible{padding:18px 8px!important}
       .split-flap-row{gap:5px!important}
       .split-flap-card{--card-w:clamp(72px,24vw,112px);--card-h:clamp(98px,30vw,145px);border-radius:12px}
-      .split-flap-half.top{border-radius:12px 12px 0 0}.split-flap-half.bottom{border-radius:0 0 12px 12px}
+      .split-flap-static-half.top,.split-flap-face.front{border-radius:12px 12px 0 0}
+      .split-flap-static-half.bottom,.split-flap-face.back{border-radius:0 0 12px 12px}
       .split-flap-number{font-size:clamp(3rem,14vw,5.1rem)!important}
       .split-flap-sep{font-size:clamp(2.1rem,7vw,3.2rem)!important}
       #analogueClock .clock-face{width:min(84vw,430px)!important;border-width:16px!important}
@@ -132,9 +157,8 @@
     }
   }
 
-  /* Build a real split-flap renderer, independent of the legacy flip layout. */
-  const oldRow = flip.querySelector('.split-flap-row');
-  if (oldRow) oldRow.remove();
+  /* Dedicated split-flap renderer. */
+  flip.querySelector('.split-flap-row')?.remove();
   const row = document.createElement('div');
   row.className = 'split-flap-row';
   row.innerHTML = `
@@ -148,17 +172,22 @@
   function buildCard(root, value) {
     root.dataset.value = value;
     root.innerHTML = `
-      <div class="split-flap-half split-flap-static top"><div class="split-flap-number">${value}</div></div>
-      <div class="split-flap-half split-flap-static bottom"><div class="split-flap-number">${value}</div></div>
-      <div class="split-flap-half split-flap-fold top"><div class="split-flap-number">${value}</div></div>
-      <div class="split-flap-half split-flap-fold bottom"><div class="split-flap-number">${value}</div></div>
+      <div class="split-flap-static-half top"><div class="split-flap-number">${value}</div></div>
+      <div class="split-flap-static-half bottom"><div class="split-flap-number">${value}</div></div>
+      <div class="split-flap-flipper">
+        <div class="split-flap-face front"><div class="split-flap-number">${value}</div></div>
+        <div class="split-flap-face back"><div class="split-flap-number">${value}</div></div>
+      </div>
       <div class="split-flap-hinge"></div>`;
     return {
       root,
-      staticTop: root.querySelector('.split-flap-static.top .split-flap-number'),
-      staticBottom: root.querySelector('.split-flap-static.bottom .split-flap-number'),
-      foldTop: root.querySelector('.split-flap-fold.top .split-flap-number'),
-      foldBottom: root.querySelector('.split-flap-fold.bottom .split-flap-number')
+      staticTop: root.querySelector('.split-flap-static-half.top .split-flap-number'),
+      staticBottom: root.querySelector('.split-flap-static-half.bottom .split-flap-number'),
+      flipper: root.querySelector('.split-flap-flipper'),
+      front: root.querySelector('.split-flap-face.front .split-flap-number'),
+      back: root.querySelector('.split-flap-face.back .split-flap-number'),
+      animation: null,
+      queuedValue: null
     };
   }
 
@@ -168,29 +197,65 @@
     second: buildCard(row.querySelector('[data-flap="second"]'), srcSecond.textContent.trim() || '00')
   };
 
+  function commitCard(card, value) {
+    card.staticTop.textContent = value;
+    card.staticBottom.textContent = value;
+    card.front.textContent = value;
+    card.back.textContent = value;
+    card.root.dataset.value = value;
+    card.root.classList.remove('flipping');
+    card.flipper.style.transform = 'rotateX(0deg)';
+  }
+
   function flipTo(card, nextValue) {
     const current = card.root.dataset.value || '';
-    if (nextValue === current || card.root.classList.contains('flipping')) return;
+    if (nextValue === current && !card.animation) return;
 
-    /* New top is waiting underneath. Current bottom remains until second half of flip. */
+    if (card.animation) {
+      card.queuedValue = nextValue;
+      return;
+    }
+
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      commitCard(card, nextValue);
+      return;
+    }
+
+    /* Behind the moving flap: the new top is already waiting, while the old bottom stays put. */
     card.staticTop.textContent = nextValue;
     card.staticBottom.textContent = current;
-    card.foldTop.textContent = current;
-    card.foldBottom.textContent = nextValue;
-
-    card.root.classList.remove('flipping');
-    void card.root.offsetWidth;
+    card.front.textContent = current;
+    card.back.textContent = nextValue;
     card.root.classList.add('flipping');
 
-    clearTimeout(card.root.__finishFlip);
-    card.root.__finishFlip = setTimeout(() => {
-      card.staticTop.textContent = nextValue;
-      card.staticBottom.textContent = nextValue;
-      card.foldTop.textContent = nextValue;
-      card.foldBottom.textContent = nextValue;
-      card.root.dataset.value = nextValue;
-      card.root.classList.remove('flipping');
-    }, 590);
+    card.animation = card.flipper.animate([
+      {transform:'rotateX(0deg)', filter:'brightness(1)', offset:0},
+      {transform:'rotateX(-55deg)', filter:'brightness(.83)', offset:.30},
+      {transform:'rotateX(-88deg)', filter:'brightness(.48)', offset:.47},
+      {transform:'rotateX(-94deg)', filter:'brightness(.50)', offset:.53},
+      {transform:'rotateX(-128deg)', filter:'brightness(.72)', offset:.72},
+      {transform:'rotateX(-180deg)', filter:'brightness(1)', offset:1}
+    ], {
+      duration:680,
+      easing:'cubic-bezier(.38,.04,.18,1)',
+      fill:'forwards'
+    });
+
+    const finish = () => {
+      const anim = card.animation;
+      card.animation = null;
+      anim?.cancel();
+      commitCard(card, nextValue);
+
+      const queued = card.queuedValue;
+      card.queuedValue = null;
+      if (queued && queued !== nextValue) requestAnimationFrame(() => flipTo(card, queued));
+    };
+
+    card.animation.finished.then(finish).catch(() => {
+      card.animation = null;
+      commitCard(card, nextValue);
+    });
   }
 
   function syncFlip() {
