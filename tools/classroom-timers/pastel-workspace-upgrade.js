@@ -1,12 +1,19 @@
 (() => {
   'use strict';
 
-  if (window.__pastelWorkspaceUpgradeV3) return;
-  window.__pastelWorkspaceUpgradeV3 = true;
+  if (window.__pastelWorkspaceUpgradeV4) return;
+  window.__pastelWorkspaceUpgradeV4 = true;
 
   const style = document.createElement('style');
-  style.id = 'pastelWorkspaceUpgradeStyleV3';
+  style.id = 'pastelWorkspaceUpgradeStyleV4';
   style.textContent = `
+    /* Keep the active workspace tab clearly visible in Dark Mode. */
+    html[data-theme="dark"] .workspace-tab.active {
+      color:#f4f8fc!important;
+      background:#26364b!important;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 4px 13px rgba(0,0,0,.24)!important;
+    }
+
     /* Interval, Focus, Schedule and Stopwatch share the same ambient pastel treatment. */
     #intervalWorkspace .builder-stage,
     #scheduleWorkspace .builder-stage,
