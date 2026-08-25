@@ -1,27 +1,29 @@
 (() => {
   'use strict';
 
-  if (window.__pastelWorkspaceUpgradeV2) return;
-  window.__pastelWorkspaceUpgradeV2 = true;
+  if (window.__pastelWorkspaceUpgradeV3) return;
+  window.__pastelWorkspaceUpgradeV3 = true;
 
   const style = document.createElement('style');
-  style.id = 'pastelWorkspaceUpgradeStyleV2';
+  style.id = 'pastelWorkspaceUpgradeStyleV3';
   style.textContent = `
-    /* The three live timer areas use the same ambient pastel treatment as DVD Bounce. */
+    /* Interval, Focus, Schedule and Stopwatch share the same ambient pastel treatment. */
     #intervalWorkspace .builder-stage,
     #scheduleWorkspace .builder-stage,
-    #focusWorkspace .focus-panel {
+    #focusWorkspace .focus-panel,
+    #stopwatchWorkspace #stopwatchStage {
       background-image:none!important;
-      background:var(--workspace-pastel,#f3c6d8)!important;
-      transition:background-color 7s ease-in-out, background 7s ease-in-out!important;
+      background-color:var(--workspace-pastel,#f3c6d8)!important;
+      transition:background-color 7s ease-in-out!important;
     }
 
-    /* Make sure presentation mode does not replace the colour with the old panel background. */
+    /* Presentation mode must keep the same visible pastel rather than restoring an old panel/stage background. */
     body.presentation-mode #intervalWorkspace .builder-stage,
     body.presentation-mode #scheduleWorkspace .builder-stage,
-    body.presentation-mode #focusWorkspace .focus-panel {
+    body.presentation-mode #focusWorkspace .focus-panel,
+    body.presentation-mode #stopwatchWorkspace #stopwatchStage {
       background-image:none!important;
-      background:var(--workspace-pastel,#f3c6d8)!important;
+      background-color:var(--workspace-pastel,#f3c6d8)!important;
     }
 
     /* Keep text readable over every pastel. */
@@ -68,7 +70,8 @@
   const targets = [
     document.querySelector('#intervalWorkspace .builder-stage'),
     document.querySelector('#focusWorkspace .focus-panel'),
-    document.querySelector('#scheduleWorkspace .builder-stage')
+    document.querySelector('#scheduleWorkspace .builder-stage'),
+    document.querySelector('#stopwatchWorkspace #stopwatchStage')
   ].filter(Boolean);
 
   const states = new Map(targets.map((el, index) => [el, { index: index % PASTELS.length }]));
@@ -84,9 +87,11 @@
     el.style.setProperty('--workspace-pastel', PASTELS[next]);
   }
 
-  /* Give each workspace an immediate visible colour, then drift independently. */
+  /* Give each workspace an immediate visible colour, then let each drift independently. */
   targets.forEach((el, index) => {
-    el.style.setProperty('--workspace-pastel', PASTELS[(index * 3) % PASTELS.length]);
+    const first = (index * 3) % PASTELS.length;
+    states.get(el).index = first;
+    el.style.setProperty('--workspace-pastel', PASTELS[first]);
   });
 
   window.setInterval(() => {
