@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__stopwatchPhysicalUpgradeV6) return;
-  window.__stopwatchPhysicalUpgradeV6 = true;
+  if (window.__stopwatchPhysicalUpgradeV7) return;
+  window.__stopwatchPhysicalUpgradeV7 = true;
 
   const style = document.createElement('style');
-  style.id = 'stopwatchPhysicalUpgradeStyleV6';
+  style.id = 'stopwatchPhysicalUpgradeStyleV7';
   style.textContent = `
     /* Keep the legacy hand node only so older stopwatch code can still reference it safely. */
     .stopwatch-finger{display:none!important}
@@ -149,13 +149,20 @@
     else if (event.key.toLowerCase() === 'r') press('.stopwatch-side.side-left');
   }, {capture:true});
 
-  const loadClockDisplayUpgrade = () => {
-    if (document.querySelector('script[data-clock-display-upgrade]')) return;
-    const script = document.createElement('script');
-    script.src = 'analogue-clock-upgrade.js?v=4';
-    script.dataset.clockDisplayUpgrade = 'true';
-    document.head.appendChild(script);
+  const loadClockUpgrades = () => {
+    if (!document.querySelector('script[data-clock-display-upgrade]')) {
+      const clockScript = document.createElement('script');
+      clockScript.src = 'analogue-clock-upgrade.js?v=4';
+      clockScript.dataset.clockDisplayUpgrade = 'true';
+      document.head.appendChild(clockScript);
+    }
+    if (!document.querySelector('script[data-scenic-dvd-upgrade]')) {
+      const scenicScript = document.createElement('script');
+      scenicScript.src = 'scenic-dvd-upgrade.js?v=1';
+      scenicScript.dataset.scenicDvdUpgrade = 'true';
+      document.head.appendChild(scenicScript);
+    }
   };
-  if (document.readyState === 'complete') loadClockDisplayUpgrade();
-  else window.addEventListener('load', loadClockDisplayUpgrade, {once:true});
+  if (document.readyState === 'complete') loadClockUpgrades();
+  else window.addEventListener('load', loadClockUpgrades, {once:true});
 })();
