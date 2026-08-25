@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__scenicDvdUpgradeV2) return;
-  window.__scenicDvdUpgradeV2 = true;
+  if (window.__scenicDvdUpgradeV3) return;
+  window.__scenicDvdUpgradeV3 = true;
 
   const scenic = document.getElementById('scenicClock');
   if (!scenic) return;
@@ -11,7 +11,7 @@
   if (scenicButton) scenicButton.textContent = 'DVD Bounce';
 
   const style = document.createElement('style');
-  style.id = 'scenicDvdUpgradeStyleV2';
+  style.id = 'scenicDvdUpgradeStyleV3';
   style.textContent = `
     #scenicClock.dvd-scene{
       position:relative!important;
@@ -36,9 +36,11 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      min-width:clamp(250px,32vw,430px);
+      width:clamp(360px,38vw,520px);
+      min-width:0;
+      max-width:none;
       height:clamp(105px,14vw,178px);
-      padding:0 clamp(20px,3vw,40px);
+      padding:0 28px;
       box-sizing:border-box;
       border-radius:clamp(18px,2vw,30px);
       background:rgba(255,255,255,.46);
@@ -48,8 +50,10 @@
       font-family:var(--display,'Fredoka',sans-serif);
       font-size:clamp(3.2rem,8vw,7.4rem);
       font-weight:800;
+      font-variant-numeric:tabular-nums;
+      font-feature-settings:'tnum' 1;
       line-height:1;
-      letter-spacing:.015em;
+      letter-spacing:0;
       white-space:nowrap;
       user-select:none;
       pointer-events:none;
@@ -74,7 +78,13 @@
     }
     @media(max-width:760px){
       #scenicClock.dvd-scene{min-height:390px!important}
-      .dvd-time-logo{min-width:clamp(205px,56vw,300px);height:clamp(88px,25vw,125px);font-size:clamp(2.5rem,13vw,4.7rem)}
+      .dvd-time-logo{
+        width:clamp(250px,64vw,320px);
+        min-width:0;
+        height:clamp(88px,25vw,125px);
+        padding:0 18px;
+        font-size:clamp(2.5rem,13vw,4.7rem)
+      }
     }
     @media(prefers-reduced-motion:reduce){
       #scenicClock.dvd-scene{transition:none!important}
@@ -130,7 +140,7 @@
   }
 
   function scheduleCorner(now){
-    const delay=(360+Math.random()*120)*1000; // 6–8 minutes
+    const delay=(360+Math.random()*120)*1000;
     state.nextCornerAt=now+delay;
     state.chaseStartAt=state.nextCornerAt-7000;
     state.targetCorner=Math.floor(Math.random()*4);
@@ -202,7 +212,6 @@
     if(now>=state.nextCornerAt){
       hitPerfectCorner(now,b);
     }else if(now>=state.chaseStartAt){
-      // Final diagonal intercept: reach the chosen corner on the exact scheduled frame.
       const target=cornerPosition(state.targetCorner,b);
       const remaining=Math.max(.018,(state.nextCornerAt-now)/1000);
       state.vx=(target.x-state.x)/remaining;
