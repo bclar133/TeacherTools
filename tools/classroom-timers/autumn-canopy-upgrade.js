@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__autumnCanopyUpgradeV1) return;
-  window.__autumnCanopyUpgradeV1 = true;
+  if (window.__autumnCanopyUpgradeV2) return;
+  window.__autumnCanopyUpgradeV2 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -12,11 +12,11 @@
   if (!sceneLayer || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'autumnCanopyUpgradeStyleV1';
+  style.id = 'autumnCanopyUpgradeStyleV2';
   style.textContent = `
     .xt-autumn.autumn-v2 .autumn-v2-leaf{display:none!important}
     .autumn-canopy-leaf{
-      position:absolute;z-index:7;width:var(--leaf-size);height:calc(var(--leaf-size) * .72);
+      position:absolute;z-index:7;width:var(--leaf-size);height:calc(var(--leaf-size) * .74);
       border-radius:80% 20% 75% 25%;transform:translate(-50%,-50%) rotate(var(--leaf-rot));
       transform-origin:50% 50%;box-shadow:0 2px 2px rgba(58,43,24,.13);
       will-change:left,top,transform,background;pointer-events:none
@@ -93,38 +93,65 @@
   function buildDenseCanopy(scene){
     scene.querySelectorAll('.autumn-canopy-leaf').forEach(el=>el.remove());
 
-    // Dense overlapping clusters follow every branch, with extra weight at the branch tips.
+    // Compact overlapping clusters trace each branch so very little wood is visible.
+    // Extra clusters at every branch tip stop the ends looking bare.
     const clusters=[
-      {x:43,y:23,rx:11,ry:9,count:22},
-      {x:50,y:29,rx:10,ry:9,count:18},
-      {x:42,y:46,rx:11,ry:9,count:20},
-      {x:51,y:43,rx:10,ry:9,count:17},
-      {x:59,y:22,rx:10,ry:9,count:18},
-      {x:65,y:30,rx:11,ry:10,count:20},
-      {x:75,y:22,rx:11,ry:9,count:20},
-      {x:82,y:29,rx:10,ry:9,count:18},
-      {x:90,y:37,rx:10,ry:10,count:22},
-      {x:83,y:45,rx:11,ry:9,count:18},
-      {x:71,y:46,rx:11,ry:9,count:18},
-      {x:60,y:43,rx:10,ry:9,count:17}
+      // upper-left branch, from trunk to tip
+      {x:57,y:31,rx:6.0,ry:5.2,count:18},
+      {x:51,y:27,rx:6.0,ry:5.2,count:18},
+      {x:45,y:23,rx:6.2,ry:5.4,count:20},
+      {x:38,y:19,rx:6.4,ry:5.5,count:24},
+      {x:33,y:17,rx:6.0,ry:5.2,count:22},
+
+      // high central / top growth
+      {x:57,y:20,rx:6.8,ry:5.8,count:20},
+      {x:63,y:17,rx:6.7,ry:5.7,count:20},
+      {x:69,y:18,rx:6.5,ry:5.6,count:20},
+
+      // upper-right branch to its tip
+      {x:61,y:31,rx:6.0,ry:5.2,count:18},
+      {x:66,y:26,rx:6.0,ry:5.2,count:18},
+      {x:71,y:21,rx:6.2,ry:5.3,count:20},
+      {x:76,y:17,rx:6.3,ry:5.4,count:23},
+
+      // lower-left branch, from trunk to tip
+      {x:55,y:43,rx:6.2,ry:5.2,count:18},
+      {x:49,y:42,rx:6.2,ry:5.2,count:18},
+      {x:43,y:40,rx:6.3,ry:5.3,count:20},
+      {x:36,y:38,rx:6.4,ry:5.4,count:22},
+      {x:29,y:36,rx:6.5,ry:5.5,count:25},
+
+      // lower-right branch, from trunk to tip
+      {x:61,y:43,rx:6.2,ry:5.2,count:18},
+      {x:68,y:41,rx:6.2,ry:5.2,count:19},
+      {x:75,y:38,rx:6.3,ry:5.3,count:20},
+      {x:82,y:35,rx:6.4,ry:5.4,count:22},
+      {x:89,y:32,rx:6.6,ry:5.5,count:25},
+
+      // central fill to remove canopy holes around forks
+      {x:53,y:34,rx:7.0,ry:6.0,count:22},
+      {x:61,y:35,rx:7.0,ry:6.0,count:22},
+      {x:68,y:33,rx:6.8,ry:5.8,count:20},
+      {x:46,y:33,rx:6.8,ry:5.8,count:20}
     ];
 
     const metas=[];
     clusters.forEach(cluster=>{
       for(let i=0;i<cluster.count;i++){
         const angle=Math.random()*Math.PI*2;
-        const radius=Math.sqrt(Math.random());
+        // Pull leaves toward the cluster centre; this creates a compact, overlapping canopy.
+        const radius=Math.pow(Math.random(),.72);
         const left=cluster.x+Math.cos(angle)*cluster.rx*radius;
         const top=cluster.y+Math.sin(angle)*cluster.ry*radius;
         metas.push({
           left,
           top,
-          size:11.5+Math.random()*12,
+          size:15+Math.random()*11,
           rot:-80+Math.random()*160,
           spin:(Math.random()>.5?1:-1)*(170+Math.random()*250),
-          finalX:clamp(left-10+Math.random()*20,34,96),
+          finalX:clamp(left-7+Math.random()*14,20,97),
           finalY:85+Math.random()*8,
-          sway:(Math.random()-.5)*11,
+          sway:(Math.random()-.5)*7,
           phase:Math.random()*Math.PI*2,
           variation:Math.round(-7+Math.random()*14),
           order:0
@@ -155,12 +182,12 @@
   function install(){
     const scene=sceneLayer.querySelector('.xt-autumn.autumn-v2[data-xt-theme="autumn"]');
     if(!scene){active=null;return;}
-    if(scene.dataset.denseCanopyV1==='true'){
+    if(scene.dataset.denseCanopyV2==='true'){
       if(!active||active.scene!==scene){
         active={
           scene,
           leaves:[...scene.querySelectorAll('.autumn-canopy-leaf')],
-          metas:scene.__denseCanopyMeta||[],
+          metas:scene.__denseCanopyMetaV2||[],
           birdOne:scene.querySelector('.bird-one'),
           birdTwo:scene.querySelector('.bird-two')
         };
@@ -168,10 +195,11 @@
       return;
     }
 
-    scene.dataset.denseCanopyV1='true';
-    scene.querySelectorAll('.autumn-v2-leaf').forEach(el=>el.remove());
+    scene.dataset.denseCanopyV2='true';
+    delete scene.dataset.denseCanopyV1;
+    scene.querySelectorAll('.autumn-v2-leaf,.autumn-canopy-leaf').forEach(el=>el.remove());
     const canopy=buildDenseCanopy(scene);
-    scene.__denseCanopyMeta=canopy.metas;
+    scene.__denseCanopyMetaV2=canopy.metas;
 
     active={
       scene,
@@ -230,8 +258,7 @@
       leaf.style.zIndex=local>=1?'3':'7';
     });
 
-    // Perched directly on visible branch lines, with feet touching the branch and bodies above it.
-    // Yellow bird is deliberately smaller than the blue bird.
+    // Birds remain clearly in front of the dense canopy and sit on branch lines.
     renderBird(active.birdOne,progress,now,{x:50.5,y:30.4,angle:-27},{x:31,y:16},{x:-7,y:7},.90,-1);
     renderBird(active.birdTwo,progress,now,{x:77.5,y:32.8,angle:8},{x:90,y:17},{x:107,y:8},1.08,1);
   }
