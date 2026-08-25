@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__countdownControlsUpgradeV1) return;
-  window.__countdownControlsUpgradeV1 = true;
+  if (window.__countdownControlsUpgradeV2) return;
+  window.__countdownControlsUpgradeV2 = true;
 
   const grid = document.querySelector('#countdownWorkspace .quick-times');
   const minutes = document.getElementById('countdownMinutes');
@@ -10,7 +10,7 @@
   if (!grid || !minutes || !seconds) return;
 
   const style = document.createElement('style');
-  style.id = 'countdownControlsUpgradeStyleV1';
+  style.id = 'countdownControlsUpgradeStyleV2';
   style.textContent = `
     #countdownWorkspace .quick-times{
       grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -101,6 +101,9 @@
   };
 
   const applySeconds = total => {
+    const startButton = document.getElementById('countdownStartBtn');
+    if (startButton?.textContent.includes('Pause')) document.getElementById('countdownResetBtn')?.click();
+
     total = Math.max(0, Math.min(180 * 60 + 59, Math.round(total)));
     minutes.value = Math.floor(total / 60);
     seconds.value = total % 60;
