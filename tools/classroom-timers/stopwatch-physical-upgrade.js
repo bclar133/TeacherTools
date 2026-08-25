@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__stopwatchPhysicalUpgradeV7) return;
-  window.__stopwatchPhysicalUpgradeV7 = true;
+  if (window.__stopwatchPhysicalUpgradeV8) return;
+  window.__stopwatchPhysicalUpgradeV8 = true;
 
   const style = document.createElement('style');
-  style.id = 'stopwatchPhysicalUpgradeStyleV7';
+  style.id = 'stopwatchPhysicalUpgradeStyleV8';
   style.textContent = `
     /* Keep the legacy hand node only so older stopwatch code can still reference it safely. */
     .stopwatch-finger{display:none!important}
@@ -149,7 +149,7 @@
     else if (event.key.toLowerCase() === 'r') press('.stopwatch-side.side-left');
   }, {capture:true});
 
-  const loadClockUpgrades = () => {
+  const loadUpgrades = () => {
     if (!document.querySelector('script[data-clock-display-upgrade]')) {
       const clockScript = document.createElement('script');
       clockScript.src = 'analogue-clock-upgrade.js?v=4';
@@ -162,7 +162,13 @@
       scenicScript.dataset.scenicDvdUpgrade = 'true';
       document.head.appendChild(scenicScript);
     }
+    if (!document.querySelector('script[data-presentation-fullscreen-upgrade]')) {
+      const presentationScript = document.createElement('script');
+      presentationScript.src = 'presentation-fullscreen-upgrade.js?v=1';
+      presentationScript.dataset.presentationFullscreenUpgrade = 'true';
+      document.head.appendChild(presentationScript);
+    }
   };
-  if (document.readyState === 'complete') loadClockUpgrades();
-  else window.addEventListener('load', loadClockUpgrades, {once:true});
+  if (document.readyState === 'complete') loadUpgrades();
+  else window.addEventListener('load', loadUpgrades, {once:true});
 })();
