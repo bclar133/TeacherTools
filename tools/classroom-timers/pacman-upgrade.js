@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV15) return;
-  window.__pacmanUpgradeV15 = true;
+  if (window.__pacmanUpgradeV16) return;
+  window.__pacmanUpgradeV16 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -14,11 +14,12 @@
   [
     'pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7',
     'pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11',
-    'pacmanUpgradeStyleV12','pacmanUpgradeStyleV13','pacmanUpgradeStyleV14','pacmanUpgradeStyleV15'
+    'pacmanUpgradeStyleV12','pacmanUpgradeStyleV13','pacmanUpgradeStyleV14','pacmanUpgradeStyleV15',
+    'pacmanUpgradeStyleV16'
   ].forEach(id => document.getElementById(id)?.remove());
 
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV15';
+  style.id = 'pacmanUpgradeStyleV16';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap{
       position:absolute!important;left:2.2%!important;right:auto!important;top:1.8%!important;bottom:auto!important;
@@ -50,11 +51,8 @@
     .pac13-pellets,.pac13-actors{pointer-events:none}
 
     .pac13-wall{
-      fill:none;stroke:#2352ff;stroke-width:58;stroke-linecap:round;stroke-linejoin:round;
-      filter:drop-shadow(0 0 3px rgba(45,82,255,.34))
-    }
-    .pac13-floor{
-      fill:none;stroke:#000;stroke-width:52;stroke-linecap:round;stroke-linejoin:round
+      fill:none;stroke:#2352ff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;
+      vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 3px rgba(45,82,255,.4))
     }
 
     .pac13-pellet{
@@ -115,6 +113,7 @@
   `;
   document.head.appendChild(style);
 
+  // Pac-Man travels on this centre route. Each neighbouring pass is 58 units apart.
   const POINTS=[
     {x:70,y:60},{x:930,y:60},{x:930,y:540},{x:70,y:540},
     {x:70,y:118},{x:872,y:118},{x:872,y:482},{x:128,y:482},
@@ -122,7 +121,17 @@
     {x:186,y:234},{x:756,y:234},{x:756,y:366},{x:244,y:366},
     {x:500,y:366}
   ];
-  const PATH_D=POINTS.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
+
+  // One real wall, halfway between adjacent passes of the route.
+  // This replaces the old thick-blue + black-overlay trick that created double corners.
+  const WALL_POINTS=[
+    {x:70,y:31},{x:959,y:31},{x:959,y:569},{x:41,y:569},
+    {x:41,y:89},{x:901,y:89},{x:901,y:511},{x:99,y:511},
+    {x:99,y:147},{x:843,y:147},{x:843,y:453},{x:157,y:453},
+    {x:157,y:205},{x:785,y:205},{x:785,y:395},{x:215,y:395}
+  ];
+  const WALL_D=WALL_POINTS.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
+
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   const lerp=(a,b,t)=>a+(b-a)*t;
 
@@ -167,7 +176,7 @@
   });
 
   let displayedRemaining=null,displayChangedAt=performance.now(),lastStatus='',state=null,raf=0;
-  let pacAudioCtx=null,lastChompAt=0,chompFlip=false;
+  let pacAudioCtx=null,chompBuffer=null,chompSource=null,chompGain=null;
 
   function muted(){
     try{
@@ -177,10 +186,43 @@
     return document.getElementById('muteBtn')?.getAttribute('aria-pressed')==='true';
   }
 
+  function makeChompBuffer(ctx){
+    // Fixed 240 ms two-syllable arcade loop. It never depends on timer duration or pellet spacing.
+    const rate=ctx.sampleRate;
+    const duration=.24;
+    const buffer=ctx.createBuffer(1,Math.ceil(rate*duration),rate);
+    const data=buffer.getChannelData(0);
+    let phase=0;
+
+    for(let i=0;i<data.length;i++){
+      const t=i/rate;
+      const half=Math.min(1,Math.floor(t/.12));
+      const local=(t-half*.12)/.12;
+      const attack=Math.min(1,local/.07);
+      const release=Math.min(1,(1-local)/.18);
+      const env=Math.max(0,Math.min(attack,release));
+
+      // Alternating down/up pitch movement gives the familiar waka-waka character.
+      const start=half===0?330:170;
+      const end=half===0?165:335;
+      const shaped=local*local*(3-2*local);
+      const freq=start+(end-start)*shaped;
+      phase+=2*Math.PI*freq/rate;
+
+      // Rounded 4-bit-ish arcade waveform: buzzy, but not the harsh square wave from V15.
+      const s=Math.sin(phase)+.42*Math.sin(phase*2)+.18*Math.sin(phase*3);
+      const clipped=Math.max(-1,Math.min(1,s*.78));
+      const quantized=Math.round(clipped*10)/10;
+      data[i]=quantized*env*.52;
+    }
+    return buffer;
+  }
+
   function ensurePacAudio(){
     if(muted())return null;
     try{
       pacAudioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+      if(!chompBuffer)chompBuffer=makeChompBuffer(pacAudioCtx);
       if(pacAudioCtx.state==='suspended')pacAudioCtx.resume().catch(()=>{});
       return pacAudioCtx;
     }catch{return null}
@@ -190,26 +232,36 @@
   document.addEventListener('pointerdown',unlockPacAudio,{capture:true,passive:true});
   document.addEventListener('keydown',unlockPacAudio,{capture:true});
 
-  function playChomp(now){
-    if(now-lastChompAt<155||muted())return;
+  function startChompLoop(){
+    if(chompSource||muted())return;
     const ctx=ensurePacAudio();
-    if(!ctx||ctx.state!=='running')return;
-    lastChompAt=now;
-    chompFlip=!chompFlip;
+    if(!ctx||ctx.state!=='running'||!chompBuffer)return;
 
-    const osc=ctx.createOscillator();
+    const source=ctx.createBufferSource();
     const gain=ctx.createGain();
-    osc.type='square';
-    const t=ctx.currentTime;
-    const f1=chompFlip?520:360;
-    const f2=chompFlip?330:560;
-    osc.frequency.setValueAtTime(f1,t);
-    osc.frequency.exponentialRampToValueAtTime(f2,t+.055);
-    gain.gain.setValueAtTime(.0001,t);
-    gain.gain.exponentialRampToValueAtTime(.018,t+.008);
-    gain.gain.exponentialRampToValueAtTime(.0001,t+.075);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(t);osc.stop(t+.085);
+    source.buffer=chompBuffer;
+    source.loop=true;
+    gain.gain.setValueAtTime(.0001,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.055,ctx.currentTime+.025);
+    source.connect(gain).connect(ctx.destination);
+    source.start();
+    source.onended=()=>{if(chompSource===source){chompSource=null;chompGain=null}};
+    chompSource=source;
+    chompGain=gain;
+  }
+
+  function stopChompLoop(){
+    if(!chompSource)return;
+    const source=chompSource,gain=chompGain,ctx=pacAudioCtx;
+    chompSource=null;chompGain=null;
+    if(ctx&&gain){
+      const now=ctx.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setTargetAtTime(.0001,now,.018);
+      setTimeout(()=>{try{source.stop()}catch{}},80);
+    }else{
+      try{source.stop()}catch{}
+    }
   }
 
   function parseRemaining(){
@@ -243,13 +295,13 @@
   }
 
   function buildScene(){
+    stopChompLoop();
     const pellets=PELLETS.map((p,i)=>`<i class="pac13-pellet${p.power?' power':''}" data-pellet="${i}" style="left:${p.x}%;top:${p.y}%"></i>`).join('');
     sceneLayer.innerHTML=`<div class="xt-scene xt-pacman pac13-upgraded" data-xt-theme="pacman">
       <div class="pac13-score">PELLETS<strong class="pac13-count">${PELLET_COUNT}</strong></div>
       <div class="pac13-board">
         <svg class="pac13-maze" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-          <path class="pac13-wall" d="${PATH_D}"/>
-          <path class="pac13-floor" d="${PATH_D}"/>
+          <path class="pac13-wall" d="${WALL_D}"/>
         </svg>
         <div class="pac13-pellets">${pellets}</div>
         <div class="pac13-actors">
@@ -264,12 +316,11 @@
       pellets:[...scene.querySelectorAll('.pac13-pellet')],count:scene.querySelector('.pac13-count'),
       ready:scene.querySelector('.pac13-ready'),lastProgress:0,finishedLatched:false
     };
-    lastChompAt=0;
   }
 
   function ensureScene(){
     const pacScene=sceneLayer.querySelector('.xt-pacman[data-xt-theme="pacman"]');
-    if(!pacScene){state=null;return false}
+    if(!pacScene){state=null;stopChompLoop();return false}
     if(!pacScene.classList.contains('pac13-upgraded')){buildScene();return true}
     if(!state||state.scene!==pacScene)buildScene();
     return true;
@@ -285,7 +336,6 @@
       state.lastProgress=0;
       displayedRemaining=current;
       displayChangedAt=now;
-      lastChompAt=0;
       p=0;
     }
 
@@ -294,14 +344,15 @@
     const finished=state.finishedLatched;
     const moving=runningNow(current,total)&&!finished;
 
-    if(moving)playChomp(now);
+    if(moving&&!muted())startChompLoop();
+    else stopChompLoop();
 
     const pacDist=clamp(p,0,1)*ROUTE.total,pacRaw=pointAtDistance(pacDist),pac=pct(pacRaw);
     if(state.player){
       state.player.style.left=`${pac.x}%`;
       state.player.style.top=`${pac.y}%`;
       state.player.style.transform=pacmanTransformForAngle(pacRaw.angle);
-      const bite=moving?(Math.sin(now/88)*.5+.5):.2;
+      const bite=moving?(Math.sin(now/72)*.5+.5):.2;
       state.player.style.setProperty('--mouth-top',`${30+bite*12}%`);
       state.player.style.setProperty('--mouth-bottom',`${70-bite*12}%`);
     }
