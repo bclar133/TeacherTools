@@ -151,4 +151,14 @@
     if (event.code === 'Space') press('.stopwatch-crown');
     else if (event.key.toLowerCase() === 'r') press('.stopwatch-side.side-left');
   }, {capture:true});
+
+  const loadAnalogueClockUpgrade = () => {
+    if (document.querySelector('script[data-analogue-clock-upgrade]')) return;
+    const script = document.createElement('script');
+    script.src = 'analogue-clock-upgrade.js?v=1';
+    script.dataset.analogueClockUpgrade = 'true';
+    document.head.appendChild(script);
+  };
+  if (document.readyState === 'complete') loadAnalogueClockUpgrade();
+  else window.addEventListener('load', loadAnalogueClockUpgrade, {once:true});
 })();
