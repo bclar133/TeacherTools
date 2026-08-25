@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__scenicDvdUpgradeV3) return;
-  window.__scenicDvdUpgradeV3 = true;
+  if (window.__scenicDvdUpgradeV4) return;
+  window.__scenicDvdUpgradeV4 = true;
 
   const scenic = document.getElementById('scenicClock');
   if (!scenic) return;
@@ -11,7 +11,7 @@
   if (scenicButton) scenicButton.textContent = 'DVD Bounce';
 
   const style = document.createElement('style');
-  style.id = 'scenicDvdUpgradeStyleV3';
+  style.id = 'scenicDvdUpgradeStyleV4';
   style.textContent = `
     #scenicClock.dvd-scene{
       position:relative!important;
@@ -20,8 +20,8 @@
       min-height:500px!important;
       overflow:hidden!important;
       isolation:isolate;
-      background-color:var(--dvd-bg,#f4c7d9)!important;
-      transition:background-color 14s linear!important;
+      background-color:var(--dvd-bg,#f3c6d8)!important;
+      transition:background-color 7s ease-in-out!important;
     }
     #scenicClock.dvd-scene.clock-upgrade-visible{display:block!important}
     #scenicClock.dvd-scene > .scenic-orb,
@@ -87,7 +87,7 @@
       }
     }
     @media(prefers-reduced-motion:reduce){
-      #scenicClock.dvd-scene{transition:none!important}
+      #scenicClock.dvd-scene{transition:background-color 7s linear!important}
       .dvd-time-logo{will-change:auto}
     }
   `;
@@ -102,6 +102,18 @@
   logo.textContent = '--:--:--';
   scenic.appendChild(logo);
 
+  const PASTELS = [
+    '#f3c6d8', // rose pink
+    '#ffd0c2', // peach
+    '#ffe3a8', // warm yellow
+    '#cdebbf', // mint green
+    '#bdebdc', // aqua mint
+    '#bcdff5', // sky blue
+    '#c9d0f4', // periwinkle
+    '#d9c6f2', // lavender
+    '#efc7e8'  // lilac pink
+  ];
+
   const state = {
     x:48,
     y:48,
@@ -115,16 +127,11 @@
     targetCorner:0,
     cornerHoldUntil:0,
     lastSecond:-1,
-    colorTimer:0
+    colorTimer:0,
+    pastelIndex:-1
   };
 
   const pad = n => String(n).padStart(2,'0');
-  const randomPastel = () => {
-    const hue = Math.floor(Math.random()*360);
-    const sat = 58 + Math.floor(Math.random()*20);
-    const light = 80 + Math.floor(Math.random()*9);
-    return `hsl(${hue} ${sat}% ${light}%)`;
-  };
 
   function updateTime(){
     const now = new Date();
@@ -136,7 +143,12 @@
   }
 
   function choosePastel(){
-    scenic.style.setProperty('--dvd-bg',randomPastel());
+    let next=state.pastelIndex;
+    while(next===state.pastelIndex&&PASTELS.length>1){
+      next=Math.floor(Math.random()*PASTELS.length);
+    }
+    state.pastelIndex=next;
+    scenic.style.setProperty('--dvd-bg',PASTELS[next]);
   }
 
   function scheduleCorner(now){
@@ -240,7 +252,7 @@
     updateTime();
     choosePastel();
     if(!state.nextCornerAt||state.nextCornerAt<state.lastNow+1000)scheduleCorner(state.lastNow);
-    if(!state.colorTimer)state.colorTimer=window.setInterval(choosePastel,16000);
+    if(!state.colorTimer)state.colorTimer=window.setInterval(choosePastel,8000);
     if(!state.raf)state.raf=requestAnimationFrame(render);
   }
 
