@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__stopwatchPhysicalUpgradeV3) return;
-  window.__stopwatchPhysicalUpgradeV3 = true;
+  if (window.__stopwatchPhysicalUpgradeV4) return;
+  window.__stopwatchPhysicalUpgradeV4 = true;
 
   const style = document.createElement('style');
-  style.id = 'stopwatchPhysicalUpgradeStyleV3';
+  style.id = 'stopwatchPhysicalUpgradeStyleV4';
   style.textContent = `
     /* Keep the legacy hand node only so older stopwatch code can still reference it safely. */
     .stopwatch-finger{display:none!important}
@@ -13,7 +13,11 @@
     /* There is now one stopwatch appearance only, so hide the old style selector. */
     #stopwatchWorkspace .mode-toolbar .select-label{display:none!important}
 
-    .stopwatch-body{overflow:visible!important}
+    /* Drop the entire watch assembly slightly so the crown/loop are not clipped. */
+    .stopwatch-body{
+      overflow:visible!important;
+      top:28px!important;
+    }
 
     /* Keep the dotted circular scale, but remove the horizontal/vertical crosshair lines. */
     .watch-track::before,
@@ -105,6 +109,7 @@
 
     @media(max-width:760px){
       .stopwatch-finger{display:none!important}
+      .stopwatch-body{top:24px!important}
     }
   `;
   document.head.appendChild(style);
