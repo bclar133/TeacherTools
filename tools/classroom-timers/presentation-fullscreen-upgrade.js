@@ -1,12 +1,20 @@
 (() => {
   'use strict';
 
-  if (window.__presentationFullscreenUpgradeV1) return;
-  window.__presentationFullscreenUpgradeV1 = true;
+  if (window.__presentationFullscreenUpgradeV2) return;
+  window.__presentationFullscreenUpgradeV2 = true;
 
   const style = document.createElement('style');
-  style.id = 'presentationFullscreenUpgradeStyleV1';
+  style.id = 'presentationFullscreenUpgradeStyleV2';
   style.textContent = `
+    /* The old Scenic view has an opaque gradient background-image. Remove it globally so
+       the DVD scene's changing --dvd-bg colour is actually visible. */
+    #scenicClock.dvd-scene{
+      background-image:none!important;
+      background-color:var(--dvd-bg,#f3c6d8)!important;
+      transition:background-color 7s ease-in-out!important;
+    }
+
     /* Presentation mode owns the whole viewport — no app-shell or panel gutters. */
     html:has(body.presentation-mode),
     html:fullscreen,
