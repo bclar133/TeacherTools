@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__stopwatchPhysicalUpgradeV9) return;
-  window.__stopwatchPhysicalUpgradeV9 = true;
+  if (window.__stopwatchPhysicalUpgradeV10) return;
+  window.__stopwatchPhysicalUpgradeV10 = true;
 
   const style = document.createElement('style');
-  style.id = 'stopwatchPhysicalUpgradeStyleV9';
+  style.id = 'stopwatchPhysicalUpgradeStyleV10';
   style.textContent = `
     /* Keep the legacy hand node only so older stopwatch code can still reference it safely. */
     .stopwatch-finger{display:none!important}
@@ -167,6 +167,12 @@
       presentationScript.src = 'presentation-fullscreen-upgrade.js?v=2';
       presentationScript.dataset.presentationFullscreenUpgrade = 'true';
       document.head.appendChild(presentationScript);
+    }
+    if (!document.querySelector('script[data-pastel-workspace-upgrade]')) {
+      const pastelScript = document.createElement('script');
+      pastelScript.src = 'pastel-workspace-upgrade.js?v=1';
+      pastelScript.dataset.pastelWorkspaceUpgrade = 'true';
+      document.head.appendChild(pastelScript);
     }
   };
   if (document.readyState === 'complete') loadUpgrades();
