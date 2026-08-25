@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV19) return;
-  window.__pacmanUpgradeV19 = true;
+  if (window.__pacmanUpgradeV20) return;
+  window.__pacmanUpgradeV20 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -15,11 +15,12 @@
     'pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7',
     'pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11',
     'pacmanUpgradeStyleV12','pacmanUpgradeStyleV13','pacmanUpgradeStyleV14','pacmanUpgradeStyleV15',
-    'pacmanUpgradeStyleV16','pacmanUpgradeStyleV17','pacmanUpgradeStyleV18','pacmanUpgradeStyleV19'
+    'pacmanUpgradeStyleV16','pacmanUpgradeStyleV17','pacmanUpgradeStyleV18','pacmanUpgradeStyleV19',
+    'pacmanUpgradeStyleV20'
   ].forEach(id => document.getElementById(id)?.remove());
 
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV19';
+  style.id = 'pacmanUpgradeStyleV20';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap{
       position:absolute!important;left:2.2%!important;right:auto!important;top:1.4%!important;bottom:auto!important;
@@ -96,6 +97,8 @@
       position:absolute;inset:0;border-radius:50% 50% 12% 12% / 54% 54% 18% 18%;background:#ff5b57;
       clip-path:polygon(0 0,100% 0,100% 86%,86% 100%,70% 86%,54% 100%,38% 86%,22% 100%,8% 86%,0 92%)
     }
+    .pac13-ghost.pink .pac13-ghost-body{background:#ff9fda}
+    .pac13-ghost.cyan .pac13-ghost-body{background:#59e4ee}
     .pac13-eye{position:absolute;top:8px;width:6px;height:8px;border-radius:50%;background:#fff;z-index:2}
     .pac13-eye.e1{left:5px}.pac13-eye.e2{right:5px}
     .pac13-eye::after{content:'';position:absolute;width:3px;height:3px;border-radius:50%;background:#1739a8;left:2px;top:3px}
@@ -217,8 +220,8 @@
     return clamp(1-estimated/total,0,1);
   }
 
-  function ghostMarkup(){
-    return `<div class="pac13-ghost"><div class="pac13-ghost-body"></div><i class="pac13-eye e1"></i><i class="pac13-eye e2"></i></div>`;
+  function ghostMarkup(kind='red'){
+    return `<div class="pac13-ghost ${kind}"><div class="pac13-ghost-body"></div><i class="pac13-eye e1"></i><i class="pac13-eye e2"></i></div>`;
   }
 
   function buildScene(){
@@ -231,14 +234,14 @@
         </svg>
         <div class="pac13-pellets">${pellets}</div>
         <div class="pac13-actors">
-          <div class="pac13-player"></div>${ghostMarkup()}
+          <div class="pac13-player"></div>${ghostMarkup('red')}${ghostMarkup('pink')}${ghostMarkup('cyan')}
           <div class="pac13-ready">READY!</div><div class="pac13-clear">LEVEL CLEAR!</div>
         </div>
       </div>
     </div>`;
     const scene=sceneLayer.querySelector('.pac13-upgraded');
     state={
-      scene,player:scene.querySelector('.pac13-player'),ghost:scene.querySelector('.pac13-ghost'),
+      scene,player:scene.querySelector('.pac13-player'),ghosts:[...scene.querySelectorAll('.pac13-ghost')],
       pellets:[...scene.querySelectorAll('.pac13-pellet')],count:scene.querySelector('.pac13-count'),
       ready:scene.querySelector('.pac13-ready'),lastProgress:0,finishedLatched:false
     };
@@ -280,14 +283,17 @@
       state.player.style.setProperty('--mouth-bottom',`${70-bite*12}%`);
     }
 
-    const gap=118+8*Math.sin(p*Math.PI*8);
-    const ghostVisible=pacDist>150&&!finished;
-    const ghostRaw=pointAtDistance(Math.max(0,pacDist-gap)),ghost=pct(ghostRaw);
-    if(state.ghost){
-      state.ghost.classList.toggle('show',ghostVisible);
-      state.ghost.style.left=`${ghost.x}%`;
-      state.ghost.style.top=`${ghost.y}%`;
-    }
+    const ghostGaps=[118,188,258];
+    state.ghosts.forEach((ghostEl,index)=>{
+      const wobble=7*Math.sin(p*Math.PI*(7+index)+index*1.7);
+      const gap=ghostGaps[index]+wobble;
+      const visible=pacDist>gap+24&&!finished;
+      const ghostRaw=pointAtDistance(Math.max(0,pacDist-gap));
+      const ghost=pct(ghostRaw);
+      ghostEl.classList.toggle('show',visible);
+      ghostEl.style.left=`${ghost.x}%`;
+      ghostEl.style.top=`${ghost.y}%`;
+    });
 
     let remaining=0;
     state.pellets.forEach((pellet,i)=>{
