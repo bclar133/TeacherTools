@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV13) return;
-  window.__pacmanUpgradeV13 = true;
+  if (window.__pacmanUpgradeV14) return;
+  window.__pacmanUpgradeV14 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -14,11 +14,11 @@
   [
     'pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7',
     'pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11',
-    'pacmanUpgradeStyleV12','pacmanUpgradeStyleV13'
+    'pacmanUpgradeStyleV12','pacmanUpgradeStyleV13','pacmanUpgradeStyleV14'
   ].forEach(id => document.getElementById(id)?.remove());
 
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV13';
+  style.id = 'pacmanUpgradeStyleV14';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap{
       position:absolute!important;left:2.2%!important;right:auto!important;top:1.8%!important;bottom:auto!important;
@@ -43,7 +43,7 @@
 
     .pac13-board{
       position:absolute;left:6%;right:4%;top:17%;bottom:4.5%;background:#000;
-      border:5px solid #2352ff;border-radius:14px;
+      border:3px solid #2352ff;border-radius:14px;
       box-shadow:0 0 10px rgba(49,82,255,.38);overflow:hidden;z-index:2
     }
     .pac13-maze,.pac13-pellets,.pac13-actors{position:absolute;inset:0;width:100%;height:100%}
@@ -66,6 +66,7 @@
       animation:pac13Power .7s steps(2,end) infinite
     }
     .pac13-pellet.eaten{opacity:0}
+    .pac13-pellet.power.eaten{animation:none!important;opacity:0!important}
     @keyframes pac13Power{50%{opacity:.3}}
 
     .pac13-player{
@@ -228,7 +229,16 @@
   function animate(now){
     if(!ensureScene()||!state)return;
     let p=progressNow(now);const current=parseRemaining(),total=totalSeconds();
-    if(state.finishedLatched&&current!==null&&current>=total-.1){state.finishedLatched=false;state.lastProgress=0}
+
+    const resetToStart=current!==null&&current>=total-.1&&p<=.001&&(state.lastProgress>.001||state.finishedLatched);
+    if(resetToStart){
+      state.finishedLatched=false;
+      state.lastProgress=0;
+      displayedRemaining=current;
+      displayChangedAt=now;
+      p=0;
+    }
+
     state.lastProgress=Math.max(state.lastProgress,p);p=state.lastProgress;
     if(current===0||p>=.999)state.finishedLatched=true;
     const finished=state.finishedLatched;
@@ -254,7 +264,7 @@
 
     let remaining=0;
     state.pellets.forEach((pellet,i)=>{
-      const eaten=p>=PELLETS[i].t-.002;
+      const eaten=p>0&&p>=PELLETS[i].t-.002;
       pellet.classList.toggle('eaten',eaten);
       if(!eaten)remaining++;
     });
