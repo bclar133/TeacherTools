@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV18) return;
-  window.__pacmanUpgradeV18 = true;
+  if (window.__pacmanUpgradeV19) return;
+  window.__pacmanUpgradeV19 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -15,11 +15,11 @@
     'pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7',
     'pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11',
     'pacmanUpgradeStyleV12','pacmanUpgradeStyleV13','pacmanUpgradeStyleV14','pacmanUpgradeStyleV15',
-    'pacmanUpgradeStyleV16','pacmanUpgradeStyleV17','pacmanUpgradeStyleV18'
+    'pacmanUpgradeStyleV16','pacmanUpgradeStyleV17','pacmanUpgradeStyleV18','pacmanUpgradeStyleV19'
   ].forEach(id => document.getElementById(id)?.remove());
 
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV18';
+  style.id = 'pacmanUpgradeStyleV19';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap{
       position:absolute!important;left:2.2%!important;right:auto!important;top:1.4%!important;bottom:auto!important;
@@ -123,24 +123,22 @@
   `;
   document.head.appendChild(style);
 
-  // Pac-Man route: consistent 58-unit spacing between each neighbouring pass.
+  // Pac-Man follows one continuous non-overlapping spiral into the centre.
   const POINTS=[
     {x:70,y:60},{x:930,y:60},{x:930,y:540},{x:70,y:540},
     {x:70,y:118},{x:872,y:118},{x:872,y:482},{x:128,y:482},
     {x:128,y:176},{x:814,y:176},{x:814,y:424},{x:186,y:424},
     {x:186,y:234},{x:756,y:234},{x:756,y:366},{x:244,y:366},
-    {x:500,y:366}
+    {x:244,y:300},{x:500,y:300}
   ];
 
-  // A single continuous wall sits halfway between adjacent route passes.
-  // The final inward turns are included so the centre repeats the same pattern as every outer layer.
+  // A single continuous wall sits between adjacent route passes and leaves the centre entrance open.
   const WALL_POINTS=[
     {x:70,y:31},{x:959,y:31},{x:959,y:569},{x:41,y:569},
     {x:41,y:89},{x:901,y:89},{x:901,y:511},{x:99,y:511},
     {x:99,y:147},{x:843,y:147},{x:843,y:453},{x:157,y:453},
     {x:157,y:205},{x:785,y:205},{x:785,y:395},{x:215,y:395},
-    {x:215,y:263},{x:727,y:263},{x:727,y:337},{x:273,y:337},
-    {x:500,y:337}
+    {x:215,y:263},{x:727,y:263},{x:727,y:337},{x:273,y:337}
   ];
   const WALL_D=WALL_POINTS.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
 
@@ -181,10 +179,14 @@
     return 'translate(-50%,-50%) rotate(-90deg)';
   }
 
-  const PELLET_COUNT=104;
+  // Equal route-distance spacing, including a pellet exactly at the final endpoint.
+  const TARGET_PELLET_SPACING=79;
+  const PELLET_GAPS=Math.max(1,Math.round(ROUTE.total/TARGET_PELLET_SPACING));
+  const PELLET_COUNT=PELLET_GAPS+1;
   const PELLETS=Array.from({length:PELLET_COUNT},(_,i)=>{
-    const t=i/(PELLET_COUNT-1),p=pointAlong(t);
-    return{t,x:p.x/10,y:p.y/6,power:i===0||i===34||i===69||i===PELLET_COUNT-1};
+    const t=i/PELLET_GAPS,p=pointAlong(t);
+    const power=i===0||i===Math.round(PELLET_GAPS/3)||i===Math.round(PELLET_GAPS*2/3)||i===PELLET_GAPS;
+    return{t,x:p.x/10,y:p.y/6,power};
   });
 
   let displayedRemaining=null,displayChangedAt=performance.now(),lastStatus='',state=null,raf=0;
