@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV11) return;
-  window.__pacmanUpgradeV11 = true;
+  if (window.__pacmanUpgradeV12) return;
+  window.__pacmanUpgradeV12 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -11,11 +11,11 @@
   const secondsInput = document.getElementById('countdownSeconds');
   if (!sceneLayer || !display) return;
 
-  ['pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7','pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11']
+  ['pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7','pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11','pacmanUpgradeStyleV12']
     .forEach(id => document.getElementById(id)?.remove());
 
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV11';
+  style.id = 'pacmanUpgradeStyleV12';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap{
       position:absolute!important;left:2.2%!important;right:auto!important;top:1.8%!important;bottom:auto!important;
@@ -42,11 +42,13 @@
     .pac10-maze,.pac10-pellets,.pac10-actors{position:absolute;inset:0;width:100%;height:100%}
     .pac10-pellets,.pac10-actors{pointer-events:none}
 
-    .pac10-wall{
-      fill:none;stroke:#2352ff;stroke-width:100;stroke-linecap:round;stroke-linejoin:round;
-      filter:drop-shadow(0 0 5px rgba(45,82,255,.5))
+    .pac10-maze-fill{
+      fill:#2352ff;
+      filter:drop-shadow(0 0 5px rgba(45,82,255,.5));
     }
-    .pac10-floor{fill:none;stroke:#000;stroke-width:52;stroke-linecap:round;stroke-linejoin:round}
+    .pac10-corridor{
+      fill:none;stroke:#000;stroke-width:52;stroke-linecap:round;stroke-linejoin:round;
+    }
 
     .pac10-pellet{
       position:absolute;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);background:#ffe2a7;
@@ -57,7 +59,7 @@
     @keyframes pac10Power{50%{opacity:.3}}
 
     .pac10-player{
-      position:absolute;width:30px;height:30px;border-radius:50%;transform:translate(-50%,-50%) rotate(var(--dir,0deg));
+      position:absolute;width:30px;height:30px;border-radius:50%;transform:translate(-50%,-50%);
       transform-origin:50% 50%;background:#ffda18;z-index:9;filter:drop-shadow(0 0 6px rgba(255,218,24,.35));
       clip-path:polygon(100% 0,100% var(--mouth-top,33%),56% 50%,100% var(--mouth-bottom,67%),100% 100%,0 100%,0 0);
       will-change:left,top,transform
@@ -94,6 +96,7 @@
       .pac10-board{left:3%;right:2%;top:20%;bottom:3%}
       .pac10-player{width:27px;height:27px}.pac10-ghost{width:23px;height:23px}
       .pac10-pellet{width:5px;height:5px}.pac10-pellet.power{width:11px;height:11px}
+      .pac10-corridor{stroke-width:46}
     }
   `;
   document.head.appendChild(style);
@@ -133,6 +136,14 @@
   function pointAlong(t){return pointAtDistance(clamp(t,0,1)*ROUTE.total)}
   const pct=p=>({x:p.x/10,y:p.y/6});
 
+  function pacmanTransformForAngle(angle){
+    const a=((angle%360)+360)%360;
+    if(a<45||a>=315)return 'translate(-50%,-50%)';
+    if(a<135)return 'translate(-50%,-50%) rotate(90deg)';
+    if(a<225)return 'translate(-50%,-50%) scaleX(-1)';
+    return 'translate(-50%,-50%) rotate(-90deg)';
+  }
+
   const PELLET_COUNT=92;
   const PELLETS=Array.from({length:PELLET_COUNT},(_,i)=>{
     const t=i/(PELLET_COUNT-1),p=pointAlong(t);
@@ -154,8 +165,7 @@
     if(current===null)return state?.lastProgress??0;
     const total=totalSeconds(),status=(stageStatus?.textContent.trim()||'').toLowerCase();
     const paused=status.includes('pause');
-    const started=current<total-.1;
-    const running=started&&!paused&&current>0;
+    const running=!paused&&current>0&&(status.includes('running')||current<total);
     if(displayedRemaining===null||current!==displayedRemaining||status!==lastStatus){
       displayedRemaining=current;displayChangedAt=now;lastStatus=status;
     }
@@ -172,7 +182,8 @@
       <div class="pac10-score">PELLETS<strong class="pac10-count">${PELLET_COUNT}</strong></div>
       <div class="pac10-board">
         <svg class="pac10-maze" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-          <path class="pac10-wall" d="${PATH_D}"/><path class="pac10-floor" d="${PATH_D}"/>
+          <rect class="pac10-maze-fill" x="40" y="40" width="880" height="520" rx="36" ry="36"></rect>
+          <path class="pac10-corridor" d="${PATH_D}"></path>
         </svg>
         <div class="pac10-pellets">${pellets}</div>
         <div class="pac10-actors"><div class="pac10-player"></div>${ghostMarkup()}<div class="pac10-ready">READY!</div><div class="pac10-clear">LEVEL CLEAR!</div></div>
@@ -200,13 +211,15 @@
 
     const pacDist=clamp(p,0,1)*ROUTE.total,pacRaw=pointAtDistance(pacDist),pac=pct(pacRaw);
     if(state.player){
-      state.player.style.left=`${pac.x}%`;state.player.style.top=`${pac.y}%`;state.player.style.setProperty('--dir',`${pacRaw.angle}deg`);
+      state.player.style.left=`${pac.x}%`;
+      state.player.style.top=`${pac.y}%`;
+      state.player.style.transform=pacmanTransformForAngle(pacRaw.angle);
       const moving=p>0&&!finished;const bite=moving?(Math.sin(now/88)*.5+.5):.2;
       state.player.style.setProperty('--mouth-top',`${30+bite*12}%`);state.player.style.setProperty('--mouth-bottom',`${70-bite*12}%`);
     }
 
-    const gap=124+8*Math.sin(p*Math.PI*8);
-    const ghostVisible=pacDist>160&&!finished;
+    const gap=112+10*Math.sin(p*Math.PI*8);
+    const ghostVisible=pacDist>145&&!finished;
     const ghostRaw=pointAtDistance(Math.max(0,pacDist-gap)),ghost=pct(ghostRaw);
     if(state.ghost){
       state.ghost.classList.toggle('show',ghostVisible);
