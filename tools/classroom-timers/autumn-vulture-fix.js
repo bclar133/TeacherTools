@@ -100,4 +100,15 @@
   }
 
   requestAnimationFrame(render);
+
+  const loadFinalPerch = () => {
+    if (document.querySelector('script[data-autumn-vulture-perch-final]')) return;
+    const script = document.createElement('script');
+    script.src = 'autumn-vulture-perch-final.js?v=1';
+    script.dataset.autumnVulturePerchFinal = 'true';
+    document.head.appendChild(script);
+  };
+
+  if (document.readyState === 'complete') setTimeout(loadFinalPerch, 0);
+  else window.addEventListener('load', loadFinalPerch, { once:true });
 })();
