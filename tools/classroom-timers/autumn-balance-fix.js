@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__autumnBalanceFixV1) return;
-  window.__autumnBalanceFixV1 = true;
+  if (window.__autumnBalanceFixV2) return;
+  window.__autumnBalanceFixV2 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const display = document.getElementById('countdownDisplay');
@@ -12,8 +12,10 @@
   if (!sceneLayer || !display) return;
 
   const style = document.createElement('style');
-  style.id = 'autumnBalanceFixStyleV1';
+  style.id = 'autumnBalanceFixStyleV2';
   style.textContent = `
+    .xt-autumn .xt-tree-branch{z-index:2!important}
+    .xt-autumn .xt-tree-trunk{z-index:5!important}
     .autumn-balance-leaf{
       position:absolute;z-index:8;width:var(--leaf-size);height:calc(var(--leaf-size) * .74);
       border-radius:80% 20% 75% 25%;transform:translate(-50%,-50%) rotate(var(--leaf-rot));
@@ -70,10 +72,10 @@
 
   function finalColour(index){
     const h=hash01(index+930);
-    if(h<.28) return mix([88,52,29],[126,62,34],h/.28);
-    if(h<.58) return mix([126,62,34],[171,82,39],(h-.28)/.30);
-    if(h<.82) return mix([171,82,39],[174,58,39],(h-.58)/.24);
-    return mix([174,58,39],[142,42,39],(h-.82)/.18);
+    if(h<.26) return mix([86,50,29],[122,61,34],h/.26);
+    if(h<.55) return mix([122,61,34],[169,82,39],(h-.26)/.29);
+    if(h<.80) return mix([169,82,39],[177,58,39],(h-.55)/.25);
+    return mix([177,58,39],[143,41,40],(h-.80)/.20);
   }
 
   function leafColour(progress,index){
@@ -87,41 +89,106 @@
     return rgb(c.map(v=>clamp(Math.round(v+shade),0,255)));
   }
 
-  function addBand(metas,x1,y1,x2,y2,count,width,seed){
-    const dx=x2-x1,dy=y2-y1;
+  function branchSegment(branch,sceneRect){
+    const markerA=document.createElement('i');
+    const markerB=document.createElement('i');
+    const common='position:absolute;width:1px;height:1px;top:50%;pointer-events:none;opacity:0;';
+    markerA.style.cssText=common+'left:0;';
+    markerB.style.cssText=common+'right:0;';
+    branch.append(markerA,markerB);
+    const a=markerA.getBoundingClientRect();
+    const b=markerB.getBoundingClientRect();
+    markerA.remove(); markerB.remove();
+    if(!sceneRect.width||!sceneRect.height) return null;
+    return {
+      x1:(a.left-sceneRect.left)/sceneRect.width*100,
+      y1:(a.top-sceneRect.top)/sceneRect.height*100,
+      x2:(b.left-sceneRect.left)/sceneRect.width*100,
+      y2:(b.top-sceneRect.top)/sceneRect.height*100
+    };
+  }
+
+  function addAlongSegment(metas,segment,seed,sceneRect){
+    const dx=segment.x2-segment.x1,dy=segment.y2-segment.y1;
+    const px=dx*sceneRect.width/100,py=dy*sceneRect.height/100;
+    const pixelLength=Math.hypot(px,py);
+    if(pixelLength<28) return;
     const mag=Math.hypot(dx,dy)||1;
     const nx=-dy/mag,ny=dx/mag;
+    const count=Math.max(34,Math.round(pixelLength/4.4));
+    const width=3.1;
+
     for(let i=0;i<count;i++){
-      const u=(i+.35+hash01(seed+i)*.3)/count;
+      const u=clamp((i+.18+hash01(seed+i)*.64)/count,0,1);
       const across=(hash01(seed+i+100)-.5)*2*width;
-      const along=(hash01(seed+i+200)-.5)*1.25;
-      const left=x1+dx*u+nx*across+(dx/mag)*along;
-      const top=y1+dy*u+ny*across+(dy/mag)*along;
+      const along=(hash01(seed+i+200)-.5)*1.0;
+      const left=segment.x1+dx*u+nx*across+(dx/mag)*along;
+      const top=segment.y1+dy*u+ny*across+(dy/mag)*along;
       metas.push({
         left,top,
         size:15+hash01(seed+i+300)*10,
-        rot:-75+hash01(seed+i+400)*150,
+        rot:-78+hash01(seed+i+400)*156,
         spin:(hash01(seed+i+500)>.5?1:-1)*(180+hash01(seed+i+600)*210),
-        finalX:clamp(left-6+hash01(seed+i+700)*12,22,97),
+        finalX:clamp(left-6+hash01(seed+i+700)*12,4,97),
         finalY:86+hash01(seed+i+800)*7,
         sway:(hash01(seed+i+900)-.5)*6,
         phase:hash01(seed+i+1000)*Math.PI*2,
         order:0
       });
     }
+
+    // Extra foliage at the branch tip so bare wood never protrudes past the canopy.
+    const tipIsSecond=segment.x2>segment.x1 || Math.abs(segment.x2-segment.x1)<2;
+    const tx=tipIsSecond?segment.x2:segment.x1;
+    const ty=tipIsSecond?segment.y2:segment.y1;
+    for(let i=0;i<14;i++){
+      const angle=hash01(seed+2000+i)*Math.PI*2;
+      const radius=Math.sqrt(hash01(seed+2100+i))*3.8;
+      const left=tx+Math.cos(angle)*radius;
+      const top=ty+Math.sin(angle)*radius;
+      metas.push({
+        left,top,
+        size:15+hash01(seed+2200+i)*10,
+        rot:-80+hash01(seed+2300+i)*160,
+        spin:(hash01(seed+2400+i)>.5?1:-1)*(180+hash01(seed+2500+i)*210),
+        finalX:clamp(left-6+hash01(seed+2600+i)*12,4,97),
+        finalY:86+hash01(seed+2700+i)*7,
+        sway:(hash01(seed+2800+i)-.5)*6,
+        phase:hash01(seed+2900+i)*Math.PI*2,
+        order:0
+      });
+    }
+  }
+
+  function nearestPerch(segments,sceneRect){
+    const target={x:76.5,y:43.5};
+    let best=null;
+    let bestD=Infinity;
+    segments.forEach(segment=>{
+      const vx=segment.x2-segment.x1,vy=segment.y2-segment.y1;
+      const len2=vx*vx+vy*vy||1;
+      const u=clamp(((target.x-segment.x1)*vx+(target.y-segment.y1)*vy)/len2,.12,.88);
+      const x=segment.x1+vx*u,y=segment.y1+vy*u;
+      const d=Math.hypot(x-target.x,y-target.y);
+      if(d<bestD){
+        let angle=Math.atan2(vy*sceneRect.height,vx*sceneRect.width)*180/Math.PI;
+        if(angle>90) angle-=180;
+        if(angle<-90) angle+=180;
+        bestD=d;
+        best={x,y:y-2.65,angle};
+      }
+    });
+    return best||{x:76.5,y:43.2,angle:-15};
   }
 
   function build(scene){
     scene.querySelectorAll('.autumn-balance-leaf').forEach(el=>el.remove());
+    const sceneRect=scene.getBoundingClientRect();
+    const branches=[...scene.querySelectorAll('.xt-tree-branch')];
+    const segments=branches.map(branch=>branchSegment(branch,sceneRect)).filter(Boolean);
     const metas=[];
+    segments.forEach((segment,index)=>addAlongSegment(metas,segment,100+index*5000,sceneRect));
 
-    // These paths deliberately sit on top of the actual exposed right-side branches.
-    addBand(metas,63.2,50.5,77.8,27.5,56,3.4,10);   // upper-right branch
-    addBand(metas,64.0,70.8,95.0,46.0,82,3.8,300);  // long lower-right branch
-    addBand(metas,72.0,36.0,88.5,31.0,34,3.0,700);  // right-hand outer/tip fill
-    addBand(metas,61.5,48.0,70.0,33.5,30,2.8,1000); // inner fork fill
-
-    // Deterministic fall order keeps the starting canopy balanced on every refresh.
     const ranked=metas.map((_,i)=>({i,key:hash01(i+1500)})).sort((a,b)=>a.key-b.key);
     ranked.forEach((item,rank)=>metas[item.i].order=rank);
 
@@ -138,7 +205,7 @@
       leaves.push(leaf);
     });
     scene.appendChild(fragment);
-    return {scene,leaves,metas};
+    return {scene,leaves,metas,segments,perch:nearestPerch(segments,sceneRect)};
   }
 
   function ensureScene(){
@@ -166,21 +233,19 @@
     });
   }
 
-  function renderVulture(scene,progress,now){
-    const vulture=scene.querySelector('.autumn-v2-vulture');
+  function renderVulture(instance,progress,now){
+    const vulture=instance.scene.querySelector('.autumn-v2-vulture');
     if(!vulture) return;
     const t=clamp((progress-.91)/.085,0,1);
     if(t<=0) return;
 
-    const perchX=76.5;
-    const perchY=43.3;
-    const x=quad(108,93,perchX,t);
-    const y=quad(18,28,perchY,t);
+    const perch=instance.perch;
+    const x=quad(108,93,perch.x,t);
+    const y=quad(18,28,perch.y,t);
     const flying=t<.90;
     const wing=flying ? -18+Math.sin(now/58)*28 : -7;
     const scale=lerp(.82,1,t);
-    // The branch rises to the right, so the perched bird tilts with it. This puts both feet on the wood.
-    const rotation=flying ? lerp(8,-15,t) : -15;
+    const rotation=flying ? lerp(8,perch.angle,t) : perch.angle;
 
     vulture.style.opacity='1';
     vulture.style.left=`${x}%`;
@@ -194,10 +259,17 @@
     if(instance){
       const progress=progressNow(now);
       renderLeaves(instance,progress);
-      renderVulture(instance.scene,progress,now);
+      renderVulture(instance,progress,now);
     }
     requestAnimationFrame(tick);
   }
+
+  window.addEventListener('resize',()=>{
+    if(active?.scene?.isConnected){
+      active.scene.querySelectorAll('.autumn-balance-leaf').forEach(el=>el.remove());
+      active=null;
+    }
+  });
 
   requestAnimationFrame(tick);
 })();
