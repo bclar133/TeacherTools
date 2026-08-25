@@ -1,16 +1,26 @@
 (() => {
   'use strict';
 
-  if (window.__stopwatchPhysicalUpgradeV2) return;
-  window.__stopwatchPhysicalUpgradeV2 = true;
+  if (window.__stopwatchPhysicalUpgradeV3) return;
+  window.__stopwatchPhysicalUpgradeV3 = true;
 
   const style = document.createElement('style');
-  style.id = 'stopwatchPhysicalUpgradeStyleV2';
+  style.id = 'stopwatchPhysicalUpgradeStyleV3';
   style.textContent = `
-    /* Keep the legacy hand node only so the older stopwatch code can still reference it safely. */
+    /* Keep the legacy hand node only so older stopwatch code can still reference it safely. */
     .stopwatch-finger{display:none!important}
 
+    /* There is now one stopwatch appearance only, so hide the old style selector. */
+    #stopwatchWorkspace .mode-toolbar .select-label{display:none!important}
+
     .stopwatch-body{overflow:visible!important}
+
+    /* Keep the dotted circular scale, but remove the horizontal/vertical crosshair lines. */
+    .watch-track::before,
+    .watch-track::after{
+      content:none!important;
+      display:none!important;
+    }
 
     .stopwatch-crown{
       left:50%!important;
@@ -83,11 +93,36 @@
       box-shadow:inset 0 2px 4px rgba(0,0,0,.16),0 1px 3px rgba(0,0,0,.18)!important;
     }
 
+    /* Dark mode should affect the stopwatch scene as clearly as the rest of the app. */
+    html[data-theme="dark"] .stopwatch-stage{
+      background:
+        radial-gradient(circle at 38% 42%,#314352 0%,#1a2733 48%,#0a1118 100%)!important;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 18px 45px rgba(0,0,0,.28)!important;
+    }
+    html[data-theme="dark"] .stopwatch-scene{
+      filter:drop-shadow(0 20px 24px rgba(0,0,0,.28));
+    }
+
     @media(max-width:760px){
       .stopwatch-finger{display:none!important}
     }
   `;
   document.head.appendChild(style);
+
+  const normaliseStyle = () => {
+    const selector = document.getElementById('stopwatchStyle');
+    const stage = document.getElementById('stopwatchStage');
+    if (selector) selector.value = 'classic';
+    if (stage) {
+      stage.classList.remove('style-track','style-mission','style-retro');
+      stage.classList.add('style-classic');
+    }
+    try { localStorage.setItem('ttTimers.stopwatchStyle', JSON.stringify('classic')); } catch {}
+  };
+
+  normaliseStyle();
+  requestAnimationFrame(normaliseStyle);
+  window.addEventListener('load', normaliseStyle, {once:true});
 
   const press = selector => {
     const pusher = document.querySelector(selector);
