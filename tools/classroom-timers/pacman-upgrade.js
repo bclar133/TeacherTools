@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV10) return;
-  window.__pacmanUpgradeV10 = true;
+  if (window.__pacmanUpgradeV11) return;
+  window.__pacmanUpgradeV11 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -11,11 +11,11 @@
   const secondsInput = document.getElementById('countdownSeconds');
   if (!sceneLayer || !display) return;
 
-  ['pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7','pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10']
+  ['pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7','pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11']
     .forEach(id => document.getElementById(id)?.remove());
 
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV10';
+  style.id = 'pacmanUpgradeStyleV11';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap{
       position:absolute!important;left:2.2%!important;right:auto!important;top:1.8%!important;bottom:auto!important;
@@ -41,12 +41,12 @@
     }
     .pac10-maze,.pac10-pellets,.pac10-actors{position:absolute;inset:0;width:100%;height:100%}
     .pac10-pellets,.pac10-actors{pointer-events:none}
+
     .pac10-wall{
-      fill:none;stroke:#2352ff;stroke-width:70;stroke-linecap:round;stroke-linejoin:round;
+      fill:none;stroke:#2352ff;stroke-width:100;stroke-linecap:round;stroke-linejoin:round;
       filter:drop-shadow(0 0 5px rgba(45,82,255,.5))
     }
-    .pac10-floor{fill:none;stroke:#000;stroke-width:46;stroke-linecap:round;stroke-linejoin:round}
-    .pac10-edge{fill:none;stroke:#718dff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+    .pac10-floor{fill:none;stroke:#000;stroke-width:52;stroke-linecap:round;stroke-linejoin:round}
 
     .pac10-pellet{
       position:absolute;width:6px;height:6px;border-radius:50%;transform:translate(-50%,-50%);background:#ffe2a7;
@@ -92,7 +92,6 @@
       #countdownStage.theme-pacman .time-display-wrap{left:2%!important;top:1.4%!important;max-width:40%!important}
       #countdownStage.theme-pacman #countdownDisplay,#countdownStage.theme-pacman .time-display{font-size:clamp(1.8rem,8vw,3rem)!important}
       .pac10-board{left:3%;right:2%;top:20%;bottom:3%}
-      .pac10-wall{stroke-width:64}.pac10-floor{stroke-width:42}
       .pac10-player{width:27px;height:27px}.pac10-ghost{width:23px;height:23px}
       .pac10-pellet{width:5px;height:5px}.pac10-pellet.power{width:11px;height:11px}
     }
@@ -100,9 +99,10 @@
   document.head.appendChild(style);
 
   const POINTS=[
-    {x:90,y:80},{x:910,y:80},{x:910,y:520},{x:90,y:520},{x:90,y:165},{x:825,y:165},
-    {x:825,y:435},{x:175,y:435},{x:175,y:250},{x:740,y:250},{x:740,y:365},{x:260,y:365},
-    {x:260,y:310},{x:650,y:310}
+    {x:90,y:70},{x:910,y:70},{x:910,y:530},{x:90,y:530},
+    {x:90,y:170},{x:810,y:170},{x:810,y:430},{x:190,y:430},
+    {x:190,y:270},{x:710,y:270},{x:710,y:330},{x:290,y:330},
+    {x:500,y:330}
   ];
   const PATH_D=POINTS.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -172,7 +172,7 @@
       <div class="pac10-score">PELLETS<strong class="pac10-count">${PELLET_COUNT}</strong></div>
       <div class="pac10-board">
         <svg class="pac10-maze" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-          <path class="pac10-wall" d="${PATH_D}"/><path class="pac10-floor" d="${PATH_D}"/><path class="pac10-edge" d="${PATH_D}"/>
+          <path class="pac10-wall" d="${PATH_D}"/><path class="pac10-floor" d="${PATH_D}"/>
         </svg>
         <div class="pac10-pellets">${pellets}</div>
         <div class="pac10-actors"><div class="pac10-player"></div>${ghostMarkup()}<div class="pac10-ready">READY!</div><div class="pac10-clear">LEVEL CLEAR!</div></div>
@@ -205,8 +205,8 @@
       state.player.style.setProperty('--mouth-top',`${30+bite*12}%`);state.player.style.setProperty('--mouth-bottom',`${70-bite*12}%`);
     }
 
-    const gap=112+10*Math.sin(p*Math.PI*8);
-    const ghostVisible=pacDist>145&&!finished;
+    const gap=124+8*Math.sin(p*Math.PI*8);
+    const ghostVisible=pacDist>160&&!finished;
     const ghostRaw=pointAtDistance(Math.max(0,pacDist-gap)),ghost=pct(ghostRaw);
     if(state.ghost){
       state.ghost.classList.toggle('show',ghostVisible);
