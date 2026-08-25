@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__stopwatchPhysicalUpgradeV5) return;
-  window.__stopwatchPhysicalUpgradeV5 = true;
+  if (window.__stopwatchPhysicalUpgradeV6) return;
+  window.__stopwatchPhysicalUpgradeV6 = true;
 
   const style = document.createElement('style');
-  style.id = 'stopwatchPhysicalUpgradeStyleV5';
+  style.id = 'stopwatchPhysicalUpgradeStyleV6';
   style.textContent = `
     /* Keep the legacy hand node only so older stopwatch code can still reference it safely. */
     .stopwatch-finger{display:none!important}
@@ -152,7 +152,7 @@
   const loadClockDisplayUpgrade = () => {
     if (document.querySelector('script[data-clock-display-upgrade]')) return;
     const script = document.createElement('script');
-    script.src = 'analogue-clock-upgrade.js?v=3';
+    script.src = 'analogue-clock-upgrade.js?v=4';
     script.dataset.clockDisplayUpgrade = 'true';
     document.head.appendChild(script);
   };
