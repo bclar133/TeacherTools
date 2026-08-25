@@ -152,7 +152,7 @@
   const loadClockDisplayUpgrade = () => {
     if (document.querySelector('script[data-clock-display-upgrade]')) return;
     const script = document.createElement('script');
-    script.src = 'analogue-clock-upgrade.js?v=2';
+    script.src = 'analogue-clock-upgrade.js?v=3';
     script.dataset.clockDisplayUpgrade = 'true';
     document.head.appendChild(script);
   };
