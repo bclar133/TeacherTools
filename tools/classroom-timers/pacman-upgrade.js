@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  if (window.__pacmanUpgradeV16) return;
-  window.__pacmanUpgradeV16 = true;
+  if (window.__pacmanUpgradeV17) return;
+  window.__pacmanUpgradeV17 = true;
 
   const sceneLayer = document.getElementById('sceneLayer');
   const stageStatus = document.getElementById('stageStatus');
@@ -15,15 +15,15 @@
     'pacmanUpgradeStyleV4','pacmanUpgradeStyleV5','pacmanUpgradeStyleV6','pacmanUpgradeStyleV7',
     'pacmanUpgradeStyleV8','pacmanUpgradeStyleV9','pacmanUpgradeStyleV10','pacmanUpgradeStyleV11',
     'pacmanUpgradeStyleV12','pacmanUpgradeStyleV13','pacmanUpgradeStyleV14','pacmanUpgradeStyleV15',
-    'pacmanUpgradeStyleV16'
+    'pacmanUpgradeStyleV16','pacmanUpgradeStyleV17'
   ].forEach(id => document.getElementById(id)?.remove());
 
   const style = document.createElement('style');
-  style.id = 'pacmanUpgradeStyleV16';
+  style.id = 'pacmanUpgradeStyleV17';
   style.textContent = `
     #countdownStage.theme-pacman .time-display-wrap{
-      position:absolute!important;left:2.2%!important;right:auto!important;top:1.8%!important;bottom:auto!important;
-      transform:none!important;width:auto!important;max-width:32%!important;z-index:40!important;
+      position:absolute!important;left:2.2%!important;right:auto!important;top:1.4%!important;bottom:auto!important;
+      transform:none!important;width:auto!important;max-width:none!important;z-index:40!important;
       justify-items:start!important;text-align:left!important
     }
     #countdownStage.theme-pacman #countdownDisplay,
@@ -32,11 +32,20 @@
       line-height:.92!important;font-weight:700!important;font-variant-numeric:tabular-nums!important;
       letter-spacing:.01em!important;padding:.15em .24em!important;width:auto!important;min-width:0!important;white-space:nowrap!important
     }
-    #countdownStage.theme-pacman .timer-message{font-family:"Courier New",Courier,monospace!important}
+    #countdownStage.theme-pacman .timer-message{
+      position:absolute!important;left:calc(100% + 12px)!important;top:2px!important;bottom:auto!important;
+      margin:0!important;padding:4px 10px!important;white-space:nowrap!important;
+      font-family:"Courier New",Courier,monospace!important;font-size:.75rem!important;
+      line-height:1.1!important;letter-spacing:.02em!important
+    }
+    #countdownStage.theme-pacman.finished .timer-message,
+    #countdownStage.theme-pacman.timer-stage.finished .timer-message{
+      margin:0!important;top:2px!important;font-size:.82rem!important;padding:5px 11px!important
+    }
 
     .xt-pacman.pac13-upgraded{background:#000!important;overflow:hidden!important}
     .pac13-score{
-      position:absolute;right:5%;top:3%;color:#fff;z-index:3;opacity:.9;
+      position:absolute;right:5%;top:2.2%;color:#fff;z-index:3;opacity:.9;
       font:700 clamp(.62rem,1.2vw,.96rem)/1.05 "Courier New",Courier,monospace;
       letter-spacing:.08em;text-align:center;pointer-events:none
     }
@@ -103,17 +112,18 @@
     .pac13-finished .pac13-clear{opacity:.98;transform:translate(-50%,-50%) scale(1)}
 
     @media(max-width:760px){
-      #countdownStage.theme-pacman .time-display-wrap{left:2%!important;top:1.4%!important;max-width:40%!important}
+      #countdownStage.theme-pacman .time-display-wrap{left:2%!important;top:1%!important;max-width:none!important}
       #countdownStage.theme-pacman #countdownDisplay,
       #countdownStage.theme-pacman .time-display{font-size:clamp(1.8rem,8vw,3rem)!important}
-      .pac13-board{left:3%;right:2%;top:20%;bottom:3%}
+      #countdownStage.theme-pacman .timer-message{left:0!important;top:calc(100% + 5px)!important}
+      .pac13-board{left:3%;right:2%;top:22%;bottom:3%}
       .pac13-player{width:27px;height:27px}.pac13-ghost{width:23px;height:23px}
       .pac13-pellet{width:5px;height:5px}.pac13-pellet.power{width:11px;height:11px}
     }
   `;
   document.head.appendChild(style);
 
-  // Pac-Man travels on this centre route. Each neighbouring pass is 58 units apart.
+  // Pac-Man route: consistent 58-unit spacing between each neighbouring pass.
   const POINTS=[
     {x:70,y:60},{x:930,y:60},{x:930,y:540},{x:70,y:540},
     {x:70,y:118},{x:872,y:118},{x:872,y:482},{x:128,y:482},
@@ -122,13 +132,15 @@
     {x:500,y:366}
   ];
 
-  // One real wall, halfway between adjacent passes of the route.
-  // This replaces the old thick-blue + black-overlay trick that created double corners.
+  // A single continuous wall sits halfway between adjacent route passes.
+  // The final inward turns are included so the centre repeats the same pattern as every outer layer.
   const WALL_POINTS=[
     {x:70,y:31},{x:959,y:31},{x:959,y:569},{x:41,y:569},
     {x:41,y:89},{x:901,y:89},{x:901,y:511},{x:99,y:511},
     {x:99,y:147},{x:843,y:147},{x:843,y:453},{x:157,y:453},
-    {x:157,y:205},{x:785,y:205},{x:785,y:395},{x:215,y:395}
+    {x:157,y:205},{x:785,y:205},{x:785,y:395},{x:215,y:395},
+    {x:215,y:263},{x:727,y:263},{x:727,y:337},{x:273,y:337},
+    {x:500,y:337}
   ];
   const WALL_D=WALL_POINTS.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
 
@@ -176,7 +188,7 @@
   });
 
   let displayedRemaining=null,displayChangedAt=performance.now(),lastStatus='',state=null,raf=0;
-  let pacAudioCtx=null,chompBuffer=null,chompSource=null,chompGain=null;
+  let pacAudioCtx=null,chompBuffer=null,chompSource=null,chompGain=null,chompFilter=null;
 
   function muted(){
     try{
@@ -187,33 +199,31 @@
   }
 
   function makeChompBuffer(ctx){
-    // Fixed 240 ms two-syllable arcade loop. It never depends on timer duration or pellet spacing.
+    // Approximate the original Pac-Man eating-dot pair:
+    // 67 ms 257->289 Hz followed by 67 ms 289->257 Hz, at a fixed cadence.
     const rate=ctx.sampleRate;
-    const duration=.24;
+    const syllable=.067;
+    const duration=syllable*2;
     const buffer=ctx.createBuffer(1,Math.ceil(rate*duration),rate);
     const data=buffer.getChannelData(0);
     let phase=0;
 
     for(let i=0;i<data.length;i++){
       const t=i/rate;
-      const half=Math.min(1,Math.floor(t/.12));
-      const local=(t-half*.12)/.12;
-      const attack=Math.min(1,local/.07);
-      const release=Math.min(1,(1-local)/.18);
-      const env=Math.max(0,Math.min(attack,release));
-
-      // Alternating down/up pitch movement gives the familiar waka-waka character.
-      const start=half===0?330:170;
-      const end=half===0?165:335;
-      const shaped=local*local*(3-2*local);
-      const freq=start+(end-start)*shaped;
+      const second=t>=syllable;
+      const local=(t-(second?syllable:0))/syllable;
+      const start=second?289:257;
+      const end=second?257:289;
+      const freq=start+(end-start)*local;
       phase+=2*Math.PI*freq/rate;
 
-      // Rounded 4-bit-ish arcade waveform: buzzy, but not the harsh square wave from V15.
-      const s=Math.sin(phase)+.42*Math.sin(phase*2)+.18*Math.sin(phase*3);
-      const clipped=Math.max(-1,Math.min(1,s*.78));
-      const quantized=Math.round(clipped*10)/10;
-      data[i]=quantized*env*.52;
+      // 4-bit-ish WSG pulse character with a short click-free envelope on each 67 ms syllable.
+      const attack=Math.min(1,local/.035);
+      const release=Math.min(1,(1-local)/.075);
+      const env=Math.max(0,Math.min(attack,release));
+      const pulse=Math.sin(phase)>=0?1:-1;
+      const stepped=Math.round(pulse*7)/7;
+      data[i]=stepped*env*.34;
     }
     return buffer;
   }
@@ -238,27 +248,34 @@
     if(!ctx||ctx.state!=='running'||!chompBuffer)return;
 
     const source=ctx.createBufferSource();
+    const filter=ctx.createBiquadFilter();
     const gain=ctx.createGain();
     source.buffer=chompBuffer;
     source.loop=true;
+    filter.type='lowpass';
+    filter.frequency.setValueAtTime(1850,ctx.currentTime);
+    filter.Q.setValueAtTime(.55,ctx.currentTime);
     gain.gain.setValueAtTime(.0001,ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(.055,ctx.currentTime+.025);
-    source.connect(gain).connect(ctx.destination);
+    gain.gain.exponentialRampToValueAtTime(.042,ctx.currentTime+.018);
+    source.connect(filter).connect(gain).connect(ctx.destination);
     source.start();
-    source.onended=()=>{if(chompSource===source){chompSource=null;chompGain=null}};
+    source.onended=()=>{
+      if(chompSource===source){chompSource=null;chompGain=null;chompFilter=null}
+    };
     chompSource=source;
     chompGain=gain;
+    chompFilter=filter;
   }
 
   function stopChompLoop(){
     if(!chompSource)return;
     const source=chompSource,gain=chompGain,ctx=pacAudioCtx;
-    chompSource=null;chompGain=null;
+    chompSource=null;chompGain=null;chompFilter=null;
     if(ctx&&gain){
       const now=ctx.currentTime;
       gain.gain.cancelScheduledValues(now);
-      gain.gain.setTargetAtTime(.0001,now,.018);
-      setTimeout(()=>{try{source.stop()}catch{}},80);
+      gain.gain.setTargetAtTime(.0001,now,.012);
+      setTimeout(()=>{try{source.stop()}catch{}},55);
     }else{
       try{source.stop()}catch{}
     }
@@ -352,7 +369,7 @@
       state.player.style.left=`${pac.x}%`;
       state.player.style.top=`${pac.y}%`;
       state.player.style.transform=pacmanTransformForAngle(pacRaw.angle);
-      const bite=moving?(Math.sin(now/72)*.5+.5):.2;
+      const bite=moving?(Math.sin(now/67)*.5+.5):.2;
       state.player.style.setProperty('--mouth-top',`${30+bite*12}%`);
       state.player.style.setProperty('--mouth-bottom',`${70-bite*12}%`);
     }
