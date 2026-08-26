@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__mobileStopwatchLayoutFixV2) return;
-  window.__mobileStopwatchLayoutFixV2 = true;
+  if (window.__mobileStopwatchLayoutFixV3) return;
+  window.__mobileStopwatchLayoutFixV3 = true;
 
   const style = document.createElement('style');
-  style.id = 'mobileStopwatchLayoutFixV2';
+  style.id = 'mobileStopwatchLayoutFixV3';
   style.textContent = `
     @media (max-width:600px) {
       /* Normal phone view: the watch is positioned independently from the controls.
@@ -184,6 +184,60 @@
 
       body.presentation-mode #stopwatchWorkspace .laps-list li {
         color:#fff!important;
+      }
+    }
+
+    /* Android Chrome's fullscreen safety banner also covers the bottom controls on
+       Countdown, Interval, Focus and Schedule. Keep every live control bar above that
+       browser-owned area and make the buttons span the available screen width. */
+    @media (max-width:900px) and (pointer:coarse) {
+      body.presentation-mode #countdownWorkspace .timer-controls,
+      body.presentation-mode #intervalWorkspace .timer-controls,
+      body.presentation-mode #focusWorkspace .timer-controls,
+      body.presentation-mode #scheduleWorkspace .timer-controls {
+        display:flex!important;
+        position:fixed!important;
+        z-index:100020!important;
+        left:8px!important;
+        right:8px!important;
+        bottom:max(76px,calc(66px + env(safe-area-inset-bottom)))!important;
+        transform:none!important;
+        width:auto!important;
+        max-width:none!important;
+        margin:0!important;
+        padding:7px!important;
+        gap:7px!important;
+        justify-content:stretch!important;
+        align-items:stretch!important;
+        flex-wrap:nowrap!important;
+        border:1px solid rgba(255,255,255,.24)!important;
+        border-radius:16px!important;
+        background:rgba(10,22,36,.78)!important;
+        box-shadow:0 9px 30px rgba(0,0,0,.3)!important;
+        backdrop-filter:blur(11px)!important;
+      }
+
+      body.presentation-mode #countdownWorkspace .timer-controls .control-button,
+      body.presentation-mode #intervalWorkspace .timer-controls .control-button,
+      body.presentation-mode #focusWorkspace .timer-controls .control-button,
+      body.presentation-mode #scheduleWorkspace .timer-controls .control-button {
+        flex:1 1 0!important;
+        width:0!important;
+        min-width:0!important;
+        min-height:56px!important;
+        padding:0 7px!important;
+        border-radius:12px!important;
+        font-size:clamp(.76rem,2.7vw,.94rem)!important;
+        font-weight:900!important;
+        white-space:nowrap!important;
+      }
+
+      /* Reserve visual breathing room behind the raised controls. */
+      body.presentation-mode #countdownWorkspace .timer-stage,
+      body.presentation-mode #intervalWorkspace .builder-stage,
+      body.presentation-mode #focusWorkspace .focus-panel,
+      body.presentation-mode #scheduleWorkspace .builder-stage {
+        padding-bottom:150px!important;
       }
     }
   `;
