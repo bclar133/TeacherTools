@@ -1,23 +1,36 @@
 (() => {
   'use strict';
 
-  if (window.__countdownControlsUpgradeV3) return;
-  window.__countdownControlsUpgradeV3 = true;
+  if (window.__countdownControlsUpgradeV4) return;
+  window.__countdownControlsUpgradeV4 = true;
 
   const grid = document.querySelector('#countdownWorkspace .quick-times');
   const minutes = document.getElementById('countdownMinutes');
   const seconds = document.getElementById('countdownSeconds');
   if (!grid || !minutes || !seconds) return;
 
-  /* Filtering is no longer needed: show every Countdown scene and remove the filter row. */
+  /* Filtering is no longer needed. Clear any old saved filter and keep every scene visible,
+     even if the older app startup code runs after this upgrade. */
+  try { localStorage.setItem('ttTimers.themeFilter', JSON.stringify('all')); } catch {}
   document.querySelector('#countdownWorkspace .theme-filters')?.remove();
-  document.querySelectorAll('#countdownWorkspace .theme-card').forEach(card => {
-    card.hidden = false;
-    card.removeAttribute('hidden');
-  });
+  const themeGrid = document.getElementById('themeGrid');
+  const revealAllThemes = () => {
+    document.querySelectorAll('#countdownWorkspace .theme-card').forEach(card => {
+      card.hidden = false;
+      card.removeAttribute('hidden');
+    });
+  };
+  revealAllThemes();
+  if (themeGrid) {
+    new MutationObserver(revealAllThemes).observe(themeGrid, {
+      subtree:true,
+      attributes:true,
+      attributeFilter:['hidden']
+    });
+  }
 
   const style = document.createElement('style');
-  style.id = 'countdownControlsUpgradeStyleV3';
+  style.id = 'countdownControlsUpgradeStyleV4';
   style.textContent = `
     #countdownWorkspace .quick-times{
       grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -141,8 +154,6 @@
     else if (reset) applySetupSeconds(0);
   });
 
-  /* app.js creates the compact +10 sec button after app-core loads. Its old handler
-     paused and rebuilt the timer. Capture it first and extend the live timer in place. */
   document.addEventListener('click', event => {
     const button = event.target.closest?.('#countdownAddTenBtn');
     if (!button) return;
