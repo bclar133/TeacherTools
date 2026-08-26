@@ -1,16 +1,23 @@
 (() => {
   'use strict';
 
-  if (window.__countdownControlsUpgradeV2) return;
-  window.__countdownControlsUpgradeV2 = true;
+  if (window.__countdownControlsUpgradeV3) return;
+  window.__countdownControlsUpgradeV3 = true;
 
   const grid = document.querySelector('#countdownWorkspace .quick-times');
   const minutes = document.getElementById('countdownMinutes');
   const seconds = document.getElementById('countdownSeconds');
   if (!grid || !minutes || !seconds) return;
 
+  /* Filtering is no longer needed: show every Countdown scene and remove the filter row. */
+  document.querySelector('#countdownWorkspace .theme-filters')?.remove();
+  document.querySelectorAll('#countdownWorkspace .theme-card').forEach(card => {
+    card.hidden = false;
+    card.removeAttribute('hidden');
+  });
+
   const style = document.createElement('style');
-  style.id = 'countdownControlsUpgradeStyleV2';
+  style.id = 'countdownControlsUpgradeStyleV3';
   style.textContent = `
     #countdownWorkspace .quick-times{
       grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -84,6 +91,7 @@
     button.removeAttribute('data-seconds');
   });
 
+  document.querySelector('#countdownWorkspace .countdown-presets')?.remove();
   const presets = document.createElement('div');
   presets.className = 'countdown-presets';
   presets.innerHTML = `
@@ -100,9 +108,9 @@
     return Math.round(m * 60 + s);
   };
 
-  const applySeconds = total => {
-    const startButton = document.getElementById('countdownStartBtn');
-    if (startButton?.textContent.includes('Pause')) document.getElementById('countdownResetBtn')?.click();
+  const applySetupSeconds = total => {
+    const status = document.getElementById('stageStatus')?.textContent;
+    if (status === 'Running' || status === 'Paused') document.getElementById('countdownResetBtn')?.click();
 
     total = Math.max(0, Math.min(180 * 60 + 59, Math.round(total)));
     minutes.value = Math.floor(total / 60);
@@ -110,18 +118,36 @@
     minutes.dispatchEvent(new Event('change', {bubbles:true}));
   };
 
+  const addTime = amount => {
+    if (typeof window.__ttAddCountdownTime === 'function') {
+      window.__ttAddCountdownTime(amount);
+      return;
+    }
+    applySetupSeconds(currentSeconds() + amount);
+  };
+
   grid.addEventListener('click', event => {
     const button = event.target.closest('button[data-add-seconds]');
     if (!button) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    applySeconds(currentSeconds() + Number(button.dataset.addSeconds || 0));
+    addTime(Number(button.dataset.addSeconds || 0));
   }, true);
 
   presets.addEventListener('click', event => {
     const preset = event.target.closest('button[data-preset-seconds]');
     const reset = event.target.closest('button[data-reset-time]');
-    if (preset) applySeconds(Number(preset.dataset.presetSeconds));
-    else if (reset) applySeconds(0);
+    if (preset) applySetupSeconds(Number(preset.dataset.presetSeconds));
+    else if (reset) applySetupSeconds(0);
   });
+
+  /* app.js creates the compact +10 sec button after app-core loads. Its old handler
+     paused and rebuilt the timer. Capture it first and extend the live timer in place. */
+  document.addEventListener('click', event => {
+    const button = event.target.closest?.('#countdownAddTenBtn');
+    if (!button) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    addTime(10);
+  }, true);
 })();
