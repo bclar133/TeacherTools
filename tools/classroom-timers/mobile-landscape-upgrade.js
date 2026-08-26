@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__mobileLandscapeUpgradeV5) return;
-  window.__mobileLandscapeUpgradeV5 = true;
+  if (window.__mobileLandscapeUpgradeV6) return;
+  window.__mobileLandscapeUpgradeV6 = true;
 
   const style = document.createElement('style');
-  style.id = 'mobileLandscapeUpgradeStyleV5';
+  style.id = 'mobileLandscapeUpgradeStyleV6';
   style.textContent = `
     .mobile-fullscreen-entry,
     .mobile-orientation-prompt { display:none; }
@@ -16,18 +16,18 @@
       .mobile-fullscreen-entry {
         display:grid;
         justify-items:center;
-        gap:5px;
-        margin:8px auto 2px;
+        gap:4px;
+        margin:7px auto 2px;
         width:min(100%,360px);
       }
       .mobile-fullscreen-button {
-        width:100%; min-height:44px; padding:0 16px; border:0; border-radius:13px;
+        width:100%; min-height:42px; padding:0 16px; border:0; border-radius:13px;
         color:#fff; background:linear-gradient(135deg,var(--violet),#4f42c8);
         box-shadow:0 8px 22px rgba(89,74,207,.24);
-        font-family:var(--display,'Fredoka',sans-serif); font-size:.92rem; font-weight:800;
+        font-family:var(--display,'Fredoka',sans-serif); font-size:.88rem; font-weight:800;
       }
       .mobile-fullscreen-note {
-        margin:0; color:var(--muted); font-size:.64rem; font-weight:800; text-align:center;
+        margin:0; color:var(--muted); font-size:.61rem; font-weight:800; text-align:center;
       }
       body.presentation-mode .mobile-fullscreen-entry { display:none!important; }
 
@@ -41,28 +41,35 @@
       }
       body.presentation-mode.mobile-orientation-needed .mobile-orientation-prompt { display:block; }
 
-      /* Much more compact normal-mode Stopwatch so all controls are comfortably visible. */
+      /* Phone Stopwatch: keep the physical watch compact and reserve clear space for controls. */
       body:not(.presentation-mode) #stopwatchWorkspace .solo-panel {
-        padding:10px!important;
+        padding:8px!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .mode-toolbar {
-        margin-bottom:8px!important;
+        margin-bottom:4px!important;
+      }
+      body:not(.presentation-mode) #stopwatchWorkspace .mode-toolbar p {
+        margin-top:2px!important;
+        font-size:.72rem!important;
+        line-height:1.2!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace #stopwatchStage {
         min-height:0!important;
-        padding:5px 7px 8px!important;
-        gap:4px!important;
+        padding:4px 6px 7px!important;
+        gap:3px!important;
         grid-template-columns:1fr!important;
-        grid-template-rows:255px auto auto!important;
+        grid-template-rows:205px auto auto auto!important;
         overflow:visible!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-scene {
-        min-height:255px!important;
-        height:255px!important;
+        min-height:205px!important;
+        height:205px!important;
+        padding:0!important;
+        overflow:visible!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-body {
-        top:-3px!important;
-        transform:scale(.50)!important;
+        top:-26px!important;
+        transform:scale(.40)!important;
         transform-origin:50% 50%!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-actions {
@@ -70,25 +77,42 @@
         display:flex!important;
         flex-direction:row!important;
         flex-wrap:nowrap!important;
-        gap:5px!important;
+        gap:4px!important;
         justify-content:stretch!important;
-        padding-top:3px!important;
+        padding-top:0!important;
+        margin:0!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-actions .control-button {
         flex:1 1 0!important;
         width:auto!important;
         min-width:0!important;
-        min-height:42px!important;
+        min-height:39px!important;
         padding:0 5px!important;
-        font-size:.80rem!important;
+        font-size:.76rem!important;
         white-space:nowrap!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .laps-list {
         width:100%!important;
-        max-height:68px!important;
+        max-height:46px!important;
         margin:0!important;
-        padding-top:3px!important;
-        font-size:.72rem!important;
+        padding:1px 0 0!important;
+        font-size:.66rem!important;
+        line-height:1.15!important;
+      }
+      body:not(.presentation-mode) #stopwatchWorkspace .laps-list li {
+        padding:3px 5px!important;
+      }
+      body:not(.presentation-mode) #stopwatchWorkspace .mobile-fullscreen-entry {
+        width:100%!important;
+        margin:3px auto 0!important;
+        gap:2px!important;
+      }
+      body:not(.presentation-mode) #stopwatchWorkspace .mobile-fullscreen-button {
+        min-height:38px!important;
+        font-size:.78rem!important;
+      }
+      body:not(.presentation-mode) #stopwatchWorkspace .mobile-fullscreen-note {
+        font-size:.58rem!important;
       }
 
       /* Real controls stay available over the scene in mobile presentation mode. */
@@ -125,10 +149,10 @@
       body.presentation-mode #focusWorkspace .focus-panel { padding-bottom:76px!important; }
 
       /* Stopwatch is the portrait exception. Leave room for controls and lap readout. */
-      body.presentation-mode #stopwatchWorkspace .stopwatch-scene { padding-bottom:160px!important; }
+      body.presentation-mode #stopwatchWorkspace .stopwatch-scene { padding-bottom:168px!important; }
       body.presentation-mode #stopwatchWorkspace .stopwatch-body {
-        top:-20px!important;
-        transform:scale(.60)!important;
+        top:-28px!important;
+        transform:scale(.54)!important;
         transform-origin:50% 50%!important;
       }
 
@@ -214,7 +238,7 @@
   const countdown = document.getElementById('countdownWorkspace');
   makeFullscreenEntry(countdown, countdown?.querySelector('.keyboard-tip'));
   const stopwatch = document.getElementById('stopwatchWorkspace');
-  makeFullscreenEntry(stopwatch, stopwatch?.querySelector('.stopwatch-actions'));
+  makeFullscreenEntry(stopwatch, stopwatch?.querySelector('.laps-list'));
   const clock = document.getElementById('clockWorkspace');
   makeFullscreenEntry(clock, clock?.querySelector('#clockStage'));
   const interval = document.getElementById('intervalWorkspace');
