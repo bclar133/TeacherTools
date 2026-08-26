@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__pastelWorkspaceUpgradeV7) return;
-  window.__pastelWorkspaceUpgradeV7 = true;
+  if (window.__pastelWorkspaceUpgradeV8) return;
+  window.__pastelWorkspaceUpgradeV8 = true;
 
   const style = document.createElement('style');
-  style.id = 'pastelWorkspaceUpgradeStyleV7';
+  style.id = 'pastelWorkspaceUpgradeStyleV8';
   style.textContent = `
     html[data-theme="dark"] .workspace-tab.active {
       color:#f4f8fc!important;
@@ -97,7 +97,7 @@
 
   if (!document.querySelector('script[data-countdown-controls-upgrade]')) {
     const controlsScript = document.createElement('script');
-    controlsScript.src = 'countdown-controls-upgrade.js?v=3';
+    controlsScript.src = 'countdown-controls-upgrade.js?v=4';
     controlsScript.dataset.countdownControlsUpgrade = 'true';
     document.head.appendChild(controlsScript);
   }
