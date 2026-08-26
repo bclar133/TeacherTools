@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__pastelWorkspaceUpgradeV8) return;
-  window.__pastelWorkspaceUpgradeV8 = true;
+  if (window.__pastelWorkspaceUpgradeV9) return;
+  window.__pastelWorkspaceUpgradeV9 = true;
 
   const style = document.createElement('style');
-  style.id = 'pastelWorkspaceUpgradeStyleV8';
+  style.id = 'pastelWorkspaceUpgradeStyleV9';
   style.textContent = `
     html[data-theme="dark"] .workspace-tab.active {
       color:#f4f8fc!important;
@@ -100,5 +100,12 @@
     controlsScript.src = 'countdown-controls-upgrade.js?v=4';
     controlsScript.dataset.countdownControlsUpgrade = 'true';
     document.head.appendChild(controlsScript);
+  }
+
+  if (!document.querySelector('script[data-day-night-stars-upgrade]')) {
+    const starsScript = document.createElement('script');
+    starsScript.src = 'day-night-stars-upgrade.js?v=1';
+    starsScript.dataset.dayNightStarsUpgrade = 'true';
+    document.head.appendChild(starsScript);
   }
 })();
