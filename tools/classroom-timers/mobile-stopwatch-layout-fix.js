@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__mobileStopwatchLayoutFixV1) return;
-  window.__mobileStopwatchLayoutFixV1 = true;
+  if (window.__mobileStopwatchLayoutFixV2) return;
+  window.__mobileStopwatchLayoutFixV2 = true;
 
   const style = document.createElement('style');
-  style.id = 'mobileStopwatchLayoutFixV1';
+  style.id = 'mobileStopwatchLayoutFixV2';
   style.textContent = `
     @media (max-width:600px) {
       /* Normal phone view: the watch is positioned independently from the controls.
@@ -106,11 +106,84 @@
         line-height:1.15!important;
       }
 
-      /* Keep the portrait fullscreen watch compact enough to leave clear room for
-         the floating lap panel and controls. */
+      /* Portrait fullscreen Stopwatch. Chrome for Android shows its own temporary
+         fullscreen safety banner at the bottom of the screen. Web pages cannot hide
+         that browser UI, so keep the working controls safely above that area. */
       body.presentation-mode #stopwatchWorkspace .stopwatch-body {
         transform:scale(.47)!important;
         top:-34px!important;
+      }
+
+      body.presentation-mode #stopwatchWorkspace .stopwatch-scene {
+        padding-bottom:190px!important;
+      }
+
+      body.presentation-mode #stopwatchWorkspace .stopwatch-actions {
+        display:flex!important;
+        position:fixed!important;
+        z-index:100020!important;
+        left:8px!important;
+        right:8px!important;
+        bottom:max(70px,calc(60px + env(safe-area-inset-bottom)))!important;
+        transform:none!important;
+        width:auto!important;
+        max-width:none!important;
+        margin:0!important;
+        padding:7px!important;
+        gap:7px!important;
+        justify-content:stretch!important;
+        flex-wrap:nowrap!important;
+        border:1px solid rgba(255,255,255,.24)!important;
+        border-radius:16px!important;
+        background:rgba(10,22,36,.78)!important;
+        box-shadow:0 9px 30px rgba(0,0,0,.3)!important;
+        backdrop-filter:blur(11px)!important;
+      }
+
+      body.presentation-mode #stopwatchWorkspace .stopwatch-actions .control-button {
+        flex:1 1 0!important;
+        width:0!important;
+        min-width:0!important;
+        min-height:56px!important;
+        padding:0 8px!important;
+        border-radius:12px!important;
+        font-size:.94rem!important;
+        font-weight:900!important;
+        white-space:nowrap!important;
+      }
+
+      /* Don't waste fullscreen space on the placeholder. Once a real lap exists,
+         the list appears above the full-width controls. */
+      body.presentation-mode #stopwatchWorkspace .laps-list:has(.empty-state) {
+        display:none!important;
+      }
+
+      body.presentation-mode #stopwatchWorkspace .laps-list:not(:has(.empty-state)) {
+        display:block!important;
+        position:fixed!important;
+        z-index:100019!important;
+        left:8px!important;
+        right:8px!important;
+        bottom:max(142px,calc(132px + env(safe-area-inset-bottom)))!important;
+        transform:none!important;
+        width:auto!important;
+        max-width:none!important;
+        max-height:86px!important;
+        overflow:auto!important;
+        margin:0!important;
+        padding:7px 10px!important;
+        border:1px solid rgba(255,255,255,.2)!important;
+        border-radius:12px!important;
+        background:rgba(10,22,36,.72)!important;
+        color:#fff!important;
+        box-shadow:0 7px 24px rgba(0,0,0,.24)!important;
+        backdrop-filter:blur(9px)!important;
+        font-size:.78rem!important;
+        font-weight:800!important;
+      }
+
+      body.presentation-mode #stopwatchWorkspace .laps-list li {
+        color:#fff!important;
       }
     }
   `;
