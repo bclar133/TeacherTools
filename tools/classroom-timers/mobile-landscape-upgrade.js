@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__mobileLandscapeUpgradeV2) return;
-  window.__mobileLandscapeUpgradeV2 = true;
+  if (window.__mobileLandscapeUpgradeV3) return;
+  window.__mobileLandscapeUpgradeV3 = true;
 
   const style = document.createElement('style');
-  style.id = 'mobileLandscapeUpgradeStyleV2';
+  style.id = 'mobileLandscapeUpgradeStyleV3';
   style.textContent = `
     .mobile-fullscreen-entry,
     .mobile-landscape-prompt {
@@ -13,8 +13,7 @@
     }
 
     @media (max-width:900px) and (pointer:coarse) {
-      /* Phones do not need desktop keyboard shortcuts. Replace them with a clear
-         presentation button and keep the landscape guidance beside it. */
+      /* Phones do not need desktop keyboard shortcuts. */
       #countdownWorkspace .keyboard-tip {
         display:none!important;
       }
@@ -69,7 +68,7 @@
         pointer-events:none;
       }
 
-      body.presentation-mode.mobile-landscape-needed .mobile-landscape-prompt {
+      body.presentation-mode.mobile-orientation-needed .mobile-landscape-prompt {
         display:block;
       }
 
@@ -77,8 +76,52 @@
         display:none!important;
       }
 
-      /* Keep the real timer controls available in phone presentation mode.
-         They float over the active scene instead of consuming scene height. */
+      /* Compact normal-mode Stopwatch so all three controls remain visible on a phone. */
+      body:not(.presentation-mode) #stopwatchWorkspace #stopwatchStage {
+        min-height:0!important;
+        padding:8px 8px 10px!important;
+        gap:6px!important;
+        grid-template-columns:1fr!important;
+        grid-template-rows:330px auto auto!important;
+        overflow:visible!important;
+      }
+
+      body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-scene {
+        min-height:330px!important;
+        height:330px!important;
+      }
+
+      body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-body {
+        top:4px!important;
+        transform:scale(.62)!important;
+        transform-origin:50% 50%!important;
+      }
+
+      body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-actions {
+        width:100%!important;
+        display:flex!important;
+        flex-direction:row!important;
+        flex-wrap:nowrap!important;
+        gap:6px!important;
+        justify-content:stretch!important;
+      }
+
+      body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-actions .control-button {
+        flex:1 1 0!important;
+        width:auto!important;
+        min-width:0!important;
+        min-height:44px!important;
+        padding:0 7px!important;
+        font-size:.78rem!important;
+      }
+
+      body:not(.presentation-mode) #stopwatchWorkspace .laps-list {
+        width:100%!important;
+        max-height:92px!important;
+        padding-top:5px!important;
+      }
+
+      /* Keep the real timer controls available in phone presentation mode. */
       body.presentation-mode #countdownWorkspace .timer-controls,
       body.presentation-mode #stopwatchWorkspace .stopwatch-actions,
       body.presentation-mode #intervalWorkspace .timer-controls,
@@ -127,17 +170,26 @@
         min-width:82px!important;
       }
 
-      /* Leave breathing room behind the floating controls on live builder screens. */
       body.presentation-mode #intervalWorkspace .builder-stage,
       body.presentation-mode #scheduleWorkspace .builder-stage,
       body.presentation-mode #focusWorkspace .focus-panel {
         padding-bottom:76px!important;
       }
+
+      /* Stopwatch is intentionally the portrait exception. */
+      body.presentation-mode #stopwatchWorkspace .stopwatch-scene {
+        padding-bottom:70px!important;
+      }
+
+      body.presentation-mode #stopwatchWorkspace .stopwatch-body {
+        top:0!important;
+        transform:scale(.72)!important;
+        transform-origin:50% 50%!important;
+      }
     }
 
     @media (max-width:900px) and (pointer:coarse) and (orientation:landscape) {
       body.presentation-mode #countdownWorkspace .timer-controls,
-      body.presentation-mode #stopwatchWorkspace .stopwatch-actions,
       body.presentation-mode #intervalWorkspace .timer-controls,
       body.presentation-mode #focusWorkspace .timer-controls,
       body.presentation-mode #scheduleWorkspace .timer-controls {
@@ -146,7 +198,6 @@
       }
 
       body.presentation-mode #countdownWorkspace .timer-controls .control-button,
-      body.presentation-mode #stopwatchWorkspace .stopwatch-actions .control-button,
       body.presentation-mode #intervalWorkspace .timer-controls .control-button,
       body.presentation-mode #focusWorkspace .timer-controls .control-button,
       body.presentation-mode #scheduleWorkspace .timer-controls .control-button {
@@ -160,16 +211,26 @@
 
   const phoneQuery = window.matchMedia('(max-width:900px) and (pointer:coarse)');
   const portraitQuery = window.matchMedia('(orientation:portrait)');
+  const landscapeQuery = window.matchMedia('(orientation:landscape)');
   const isPhoneLike = () => phoneQuery.matches;
+
+  function activeWorkspaceName() {
+    return document.querySelector('.workspace-panel.active')?.dataset.panel || 'countdown';
+  }
+
+  function preferredOrientation() {
+    return activeWorkspaceName() === 'stopwatch' ? 'portrait' : 'landscape';
+  }
 
   function makeFullscreenEntry(workspace, anchor, position = 'afterend') {
     if (!workspace || !anchor || workspace.querySelector('.mobile-fullscreen-entry')) return;
 
+    const stopwatchEntry = workspace.id === 'stopwatchWorkspace';
     const entry = document.createElement('div');
     entry.className = 'mobile-fullscreen-entry';
     entry.innerHTML = `
       <button class="mobile-fullscreen-button" type="button">⛶ Full screen</button>
-      <p class="mobile-fullscreen-note">📱 Full screen looks best in landscape on phones.</p>
+      <p class="mobile-fullscreen-note">📱 Full screen looks best in ${stopwatchEntry ? 'portrait' : 'landscape'} on phones.</p>
     `;
 
     if (position === 'append') anchor.appendChild(entry);
@@ -203,36 +264,49 @@
     prompt.id = 'mobileLandscapePrompt';
     prompt.className = 'mobile-landscape-prompt';
     prompt.setAttribute('role', 'status');
-    prompt.textContent = '↻ Rotate your phone to landscape for the best full-screen view';
     document.body.appendChild(prompt);
   }
 
-  function setFallbackPrompt(show) {
-    document.body.classList.toggle('mobile-landscape-needed', Boolean(show && isPhoneLike() && portraitQuery.matches));
+  function wrongOrientation(orientation) {
+    return orientation === 'portrait' ? landscapeQuery.matches : portraitQuery.matches;
   }
 
-  async function lockLandscape() {
+  function setFallbackPrompt(show, orientation = preferredOrientation()) {
+    const prompt = document.getElementById('mobileLandscapePrompt');
+    if (prompt) {
+      prompt.textContent = orientation === 'portrait'
+        ? '↻ Rotate your phone to portrait for the Stopwatch'
+        : '↻ Rotate your phone to landscape for the best full-screen view';
+    }
+    document.body.classList.toggle(
+      'mobile-orientation-needed',
+      Boolean(show && isPhoneLike() && wrongOrientation(orientation))
+    );
+  }
+
+  async function lockPreferredOrientation() {
     if (!isPhoneLike() || !document.body.classList.contains('presentation-mode')) return;
 
+    const orientation = preferredOrientation();
     let locked = false;
     try {
       if (screen.orientation?.lock) {
-        await screen.orientation.lock('landscape');
+        await screen.orientation.lock(orientation);
         locked = true;
       } else if (screen.lockOrientation) {
-        locked = Boolean(screen.lockOrientation('landscape'));
+        locked = Boolean(screen.lockOrientation(orientation));
       } else if (screen.mozLockOrientation) {
-        locked = Boolean(screen.mozLockOrientation('landscape'));
+        locked = Boolean(screen.mozLockOrientation(orientation));
       } else if (screen.msLockOrientation) {
-        locked = Boolean(screen.msLockOrientation('landscape'));
+        locked = Boolean(screen.msLockOrientation(orientation));
       }
     } catch {}
 
-    setFallbackPrompt(!locked);
+    setFallbackPrompt(!locked, orientation);
   }
 
   function unlockOrientation() {
-    setFallbackPrompt(false);
+    document.body.classList.remove('mobile-orientation-needed');
     try { screen.orientation?.unlock?.(); } catch {}
     try { screen.unlockOrientation?.(); } catch {}
     try { screen.mozUnlockOrientation?.(); } catch {}
@@ -241,7 +315,7 @@
 
   document.addEventListener('fullscreenchange', () => {
     if (document.fullscreenElement && document.body.classList.contains('presentation-mode')) {
-      setTimeout(lockLandscape, 60);
+      setTimeout(lockPreferredOrientation, 60);
     } else if (!document.body.classList.contains('presentation-mode')) {
       unlockOrientation();
     }
@@ -250,7 +324,7 @@
   document.getElementById('fullscreenBtn')?.addEventListener('click', () => {
     if (!isPhoneLike()) return;
     setTimeout(() => {
-      if (document.body.classList.contains('presentation-mode')) lockLandscape();
+      if (document.body.classList.contains('presentation-mode')) lockPreferredOrientation();
       else unlockOrientation();
     }, 180);
   });
@@ -261,10 +335,12 @@
 
   const orientationChanged = () => {
     if (!document.body.classList.contains('presentation-mode')) return;
-    if (!portraitQuery.matches) setFallbackPrompt(false);
-    else if (isPhoneLike()) setTimeout(lockLandscape, 80);
+    const orientation = preferredOrientation();
+    if (!wrongOrientation(orientation)) setFallbackPrompt(false, orientation);
+    else if (isPhoneLike()) setTimeout(lockPreferredOrientation, 80);
   };
 
   portraitQuery.addEventListener?.('change', orientationChanged);
+  landscapeQuery.addEventListener?.('change', orientationChanged);
   window.addEventListener('orientationchange', orientationChanged);
 })();
