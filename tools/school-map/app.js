@@ -1,4 +1,7 @@
 (() => {
+  const brandLogo = document.querySelector('.brand-logo');
+  if (brandLogo) brandLogo.src = 'logo.png';
+
   const svg = document.getElementById('campusMap');
   const viewport = document.getElementById('mapViewport');
   const transformEl = document.getElementById('mapTransform');
