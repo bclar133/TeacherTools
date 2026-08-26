@@ -254,7 +254,7 @@
 
   const current=document.currentScript;
   const core=document.createElement('script');
-  core.src=new URL('app-core.js',current.src).href;
+  core.src=new URL('app-core.js?v=2',current.src).href;
   core.async=false;
   document.body.appendChild(core);
 })();
