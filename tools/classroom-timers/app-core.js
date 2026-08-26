@@ -147,7 +147,9 @@
     raf: null,
     theme: storage.get('countdownTheme', 'sunrise'),
     lastSecond: null,
-    sceneData: null
+    sceneData: null,
+    sceneAnchorProgress: null,
+    sceneAnchorRemainingMs: null
   };
 
   function getInputSeconds() {
@@ -162,6 +164,11 @@
     $('#countdownSeconds').value = seconds % 60;
   }
 
+  function clearCountdownSceneAnchor() {
+    countdown.sceneAnchorProgress = null;
+    countdown.sceneAnchorRemainingMs = null;
+  }
+
   function setCountdownDuration(seconds, {render = true} = {}) {
     seconds = clamp(Number(seconds) || 0, 0, 180 * 60 + 59);
     countdown.totalMs = seconds * 1000;
@@ -169,12 +176,17 @@
     countdown.running = false;
     cancelAnimationFrame(countdown.raf);
     countdown.lastSecond = null;
+    clearCountdownSceneAnchor();
     syncCountdownInputs(seconds);
     updateCountdownButtons();
     if (render) renderCountdown(0);
   }
 
   function countdownProgress() {
+    if (countdown.sceneAnchorProgress !== null && countdown.sceneAnchorRemainingMs > 0) {
+      const local = clamp(1 - countdown.remainingMs / countdown.sceneAnchorRemainingMs, 0, 1);
+      return clamp(countdown.sceneAnchorProgress + (1 - countdown.sceneAnchorProgress) * local, 0, 1);
+    }
     if (countdown.totalMs <= 0) return 1;
     return clamp(1 - countdown.remainingMs / countdown.totalMs, 0, 1);
   }
@@ -228,19 +240,56 @@
     countdown.running = false;
     countdown.remainingMs = countdown.totalMs;
     countdown.lastSecond = null;
+    clearCountdownSceneAnchor();
     buildCountdownScene(countdown.theme);
     renderCountdown(0);
     updateCountdownButtons();
   }
 
-  function addMinute() {
-    countdown.totalMs += 60000;
-    countdown.remainingMs += 60000;
-    if (countdown.running) countdown.endAt += 60000;
+  function addCountdownTime(seconds) {
+    const deltaMs = Math.max(0, Number(seconds) || 0) * 1000;
+    if (!deltaMs) return;
+
+    const maxMs = (180 * 60 + 59) * 1000;
+    if (countdown.remainingMs <= 0) {
+      const added = Math.min(deltaMs, maxMs);
+      countdown.totalMs = added;
+      countdown.remainingMs = added;
+      countdown.running = false;
+      countdown.lastSecond = null;
+      clearCountdownSceneAnchor();
+      syncCountdownInputs(Math.round(countdown.totalMs / 1000));
+      buildCountdownScene(countdown.theme);
+      renderCountdown(0);
+      updateCountdownButtons();
+      return;
+    }
+
+    const currentProgress = countdownProgress();
+    const oldRemaining = countdown.remainingMs;
+    countdown.remainingMs = Math.min(maxMs, countdown.remainingMs + deltaMs);
+    const actualDelta = countdown.remainingMs - oldRemaining;
+    if (actualDelta <= 0) return;
+
+    countdown.totalMs = Math.min(maxMs, countdown.totalMs + actualDelta);
+    if (countdown.running) countdown.endAt += actualDelta;
+
+    if (currentProgress > 0 && currentProgress < 1) {
+      countdown.sceneAnchorProgress = currentProgress;
+      countdown.sceneAnchorRemainingMs = countdown.remainingMs;
+    }
+
     syncCountdownInputs(Math.round(countdown.totalMs / 1000));
-    renderCountdown(countdownProgress());
+    renderCountdown(currentProgress);
+    updateCountdownButtons();
+  }
+
+  function addMinute() {
+    addCountdownTime(60);
     showToast('+1 minute');
   }
+
+  window.__ttAddCountdownTime = seconds => addCountdownTime(seconds);
 
   function chooseCountdownTheme(name) {
     countdown.theme = themeMeta[name] ? name : 'sunrise';
