@@ -2,7 +2,7 @@
   'use strict';
 
   const base = document.createElement('script');
-  base.src = new URL('app-base.js', document.currentScript.src).href;
+  base.src = new URL('app-base.js?v=2', document.currentScript.src).href;
   base.async = false;
 
   base.addEventListener('load', () => {
@@ -131,34 +131,19 @@
       addMinuteButton.parentElement?.insertBefore(addTenButton, addMinuteButton);
 
       addTenButton.addEventListener('click', () => {
+        if (typeof window.__ttAddCountdownTime === 'function') {
+          window.__ttAddCountdownTime(10);
+          return;
+        }
+
         const minutes = document.getElementById('countdownMinutes');
         const seconds = document.getElementById('countdownSeconds');
-        const startButton = document.getElementById('countdownStartBtn');
-        const stageStatus = document.getElementById('stageStatus');
-        const display = document.getElementById('countdownDisplay');
         if (!minutes || !seconds) return;
-
-        const applySeconds = total => {
-          total = Math.max(0, Math.min(180 * 60 + 59, Math.round(total)));
-          minutes.value = String(Math.floor(total / 60));
-          seconds.value = String(total % 60);
-          seconds.dispatchEvent(new Event('change', { bubbles: true }));
-        };
-
-        if (stageStatus?.textContent === 'Running' && startButton && display) {
-          // Pause, extend the currently displayed remaining time, then resume.
-          startButton.click();
-          requestAnimationFrame(() => {
-            const parts = display.textContent.trim().split(':').map(Number);
-            let remaining = 0;
-            if (parts.length === 2) remaining = parts[0] * 60 + parts[1];
-            else if (parts.length === 3) remaining = parts[0] * 3600 + parts[1] * 60 + parts[2];
-            applySeconds(remaining + 10);
-            startButton.click();
-          });
-        } else {
-          applySeconds((Number(minutes.value) || 0) * 60 + (Number(seconds.value) || 0) + 10);
-        }
+        let total = (Number(minutes.value) || 0) * 60 + (Number(seconds.value) || 0) + 10;
+        total = Math.max(0, Math.min(180 * 60 + 59, Math.round(total)));
+        minutes.value = String(Math.floor(total / 60));
+        seconds.value = String(total % 60);
+        seconds.dispatchEvent(new Event('change', { bubbles: true }));
       });
     }
 
