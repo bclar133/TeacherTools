@@ -6,7 +6,7 @@
   if (!sceneLayer || !stage) return;
 
   const style = document.createElement('style');
-  style.id = 'rampBallPhysicsV4';
+  style.id = 'rampBallPhysicsV5';
   style.textContent = `
     .ramp-scene.physics-ramp-active {
       background:
@@ -257,8 +257,10 @@
 
     ramps.forEach((ramp,index)=>{
       const x1=ramp.x1*10,y1=ramp.y1*6,x2=ramp.x2*10,y2=ramp.y2*6;
-      svg.appendChild(svgEl('line',{class:'physics-ramp-support',x1:x1+18,y1:y1+15,x2:x1+18,y2:Math.min(585,y1+78)}));
-      svg.appendChild(svgEl('rect',{class:'physics-ramp-foot',x:x1-3,y:Math.min(575,y1+72),width:42,height:9,rx:4}));
+      const firstSupportX=x1+(index===1?2:18);
+      const firstSupportY=y1+(index===1?5:15);
+      svg.appendChild(svgEl('line',{class:'physics-ramp-support',x1:firstSupportX,y1:firstSupportY,x2:firstSupportX,y2:Math.min(585,y1+78)}));
+      svg.appendChild(svgEl('rect',{class:'physics-ramp-foot',x:firstSupportX-21,y:Math.min(575,y1+72),width:42,height:9,rx:4}));
       const supportX=x2+(index%2===0?-18:18);
       svg.appendChild(svgEl('line',{class:'physics-ramp-support',x1:supportX,y1:y2+13,x2:supportX,y2:Math.min(585,y2+73)}));
       svg.appendChild(svgEl('rect',{class:'physics-ramp-foot',x:supportX-20,y:Math.min(575,y2+68),width:42,height:9,rx:4}));
