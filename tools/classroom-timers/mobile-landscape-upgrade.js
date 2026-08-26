@@ -1,11 +1,11 @@
 (() => {
   'use strict';
 
-  if (window.__mobileLandscapeUpgradeV4) return;
-  window.__mobileLandscapeUpgradeV4 = true;
+  if (window.__mobileLandscapeUpgradeV5) return;
+  window.__mobileLandscapeUpgradeV5 = true;
 
   const style = document.createElement('style');
-  style.id = 'mobileLandscapeUpgradeStyleV4';
+  style.id = 'mobileLandscapeUpgradeStyleV5';
   style.textContent = `
     .mobile-fullscreen-entry,
     .mobile-orientation-prompt { display:none; }
@@ -17,17 +17,17 @@
         display:grid;
         justify-items:center;
         gap:5px;
-        margin:10px auto 2px;
+        margin:8px auto 2px;
         width:min(100%,360px);
       }
       .mobile-fullscreen-button {
-        width:100%; min-height:46px; padding:0 16px; border:0; border-radius:13px;
+        width:100%; min-height:44px; padding:0 16px; border:0; border-radius:13px;
         color:#fff; background:linear-gradient(135deg,var(--violet),#4f42c8);
         box-shadow:0 8px 22px rgba(89,74,207,.24);
-        font-family:var(--display,'Fredoka',sans-serif); font-size:.95rem; font-weight:800;
+        font-family:var(--display,'Fredoka',sans-serif); font-size:.92rem; font-weight:800;
       }
       .mobile-fullscreen-note {
-        margin:0; color:var(--muted); font-size:.66rem; font-weight:800; text-align:center;
+        margin:0; color:var(--muted); font-size:.64rem; font-weight:800; text-align:center;
       }
       body.presentation-mode .mobile-fullscreen-entry { display:none!important; }
 
@@ -41,28 +41,54 @@
       }
       body.presentation-mode.mobile-orientation-needed .mobile-orientation-prompt { display:block; }
 
-      /* Compact normal-mode Stopwatch so all controls fit on-screen. */
+      /* Much more compact normal-mode Stopwatch so all controls are comfortably visible. */
+      body:not(.presentation-mode) #stopwatchWorkspace .solo-panel {
+        padding:10px!important;
+      }
+      body:not(.presentation-mode) #stopwatchWorkspace .mode-toolbar {
+        margin-bottom:8px!important;
+      }
       body:not(.presentation-mode) #stopwatchWorkspace #stopwatchStage {
-        min-height:0!important; padding:8px 8px 10px!important; gap:6px!important;
-        grid-template-columns:1fr!important; grid-template-rows:330px auto auto!important;
+        min-height:0!important;
+        padding:5px 7px 8px!important;
+        gap:4px!important;
+        grid-template-columns:1fr!important;
+        grid-template-rows:255px auto auto!important;
         overflow:visible!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-scene {
-        min-height:330px!important; height:330px!important;
+        min-height:255px!important;
+        height:255px!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-body {
-        top:4px!important; transform:scale(.62)!important; transform-origin:50% 50%!important;
+        top:-3px!important;
+        transform:scale(.50)!important;
+        transform-origin:50% 50%!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-actions {
-        width:100%!important; display:flex!important; flex-direction:row!important;
-        flex-wrap:nowrap!important; gap:6px!important; justify-content:stretch!important;
+        width:100%!important;
+        display:flex!important;
+        flex-direction:row!important;
+        flex-wrap:nowrap!important;
+        gap:5px!important;
+        justify-content:stretch!important;
+        padding-top:3px!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .stopwatch-actions .control-button {
-        flex:1 1 0!important; width:auto!important; min-width:0!important; min-height:44px!important;
-        padding:0 7px!important; font-size:.78rem!important;
+        flex:1 1 0!important;
+        width:auto!important;
+        min-width:0!important;
+        min-height:42px!important;
+        padding:0 5px!important;
+        font-size:.80rem!important;
+        white-space:nowrap!important;
       }
       body:not(.presentation-mode) #stopwatchWorkspace .laps-list {
-        width:100%!important; max-height:92px!important; padding-top:5px!important;
+        width:100%!important;
+        max-height:68px!important;
+        margin:0!important;
+        padding-top:3px!important;
+        font-size:.72rem!important;
       }
 
       /* Real controls stay available over the scene in mobile presentation mode. */
@@ -99,9 +125,11 @@
       body.presentation-mode #focusWorkspace .focus-panel { padding-bottom:76px!important; }
 
       /* Stopwatch is the portrait exception. Leave room for controls and lap readout. */
-      body.presentation-mode #stopwatchWorkspace .stopwatch-scene { padding-bottom:148px!important; }
+      body.presentation-mode #stopwatchWorkspace .stopwatch-scene { padding-bottom:160px!important; }
       body.presentation-mode #stopwatchWorkspace .stopwatch-body {
-        top:-12px!important; transform:scale(.68)!important; transform-origin:50% 50%!important;
+        top:-20px!important;
+        transform:scale(.60)!important;
+        transform-origin:50% 50%!important;
       }
 
       /* The desktop presentation stylesheet hides laps completely. Restore them on phones. */
