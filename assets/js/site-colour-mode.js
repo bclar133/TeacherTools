@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const storageKey = 'chalkbox-site-colour-mode';
+  const storageKey = 'teacherToolsTheme';
   const body = document.body;
   const buttons = [...document.querySelectorAll('[data-site-theme-toggle]')];
 
