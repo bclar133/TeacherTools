@@ -49,13 +49,21 @@
   background:linear-gradient(135deg,#ffe66a 0 52%,#ffc43d 52% 100%);
 }
 
-.theme-balloon.popped .balloon-wrap {
+.theme-balloon.popped .balloon-wrap,
+.theme-balloon.manual-pop .balloon-wrap {
   opacity:0;
   transform:translate(-50%,-47%) scale(.12) rotate(8deg);
 }
 
+/* Live microphone pop: brief comic burst. */
 .theme-balloon.popped .balloon-pop {
   animation:balloonComicPop .9s cubic-bezier(.16,.9,.26,1) both;
+}
+
+/* Manual test pop: enter quickly, then stay visible while the slider remains
+   in the Too Loud zone so the visual can be inspected without racing an animation. */
+.theme-balloon.manual-pop .balloon-pop {
+  animation:balloonManualPop .38s cubic-bezier(.16,.9,.26,1) both;
 }
 
 @keyframes balloonComicPop {
@@ -78,6 +86,21 @@
   100% {
     opacity:0;
     transform:translate(-50%,-50%) scale(1.32) rotate(5deg);
+  }
+}
+
+@keyframes balloonManualPop {
+  0% {
+    opacity:0;
+    transform:translate(-50%,-50%) scale(.18) rotate(-14deg);
+  }
+  65% {
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1.12) rotate(4deg);
+  }
+  100% {
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1) rotate(-2deg);
   }
 }
 
