@@ -1,6 +1,6 @@
 # Classroom Timers
 
-A projector-friendly suite of classroom timing tools for Teacher Tools.
+A projector-friendly suite of classroom timing tools for Chalkbox.
 
 ## Included modes
 
