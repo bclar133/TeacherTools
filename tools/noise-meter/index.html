@@ -22,9 +22,14 @@
       <h1>Noise Meter</h1>
       <p>Visual classroom sound feedback</p>
     </div>
-    <button class="icon-button" id="fullscreenBtn" type="button" aria-label="Enter fullscreen" title="Fullscreen">
-      <span aria-hidden="true">⛶</span><span class="button-label">Fullscreen</span>
-    </button>
+    <div class="topbar-actions">
+      <button class="icon-button" id="themeModeBtn" type="button" aria-label="Switch to light mode" title="Toggle dark mode">
+        <span class="mode-icon" aria-hidden="true">☀</span><span class="button-label" id="themeModeLabel">Light mode</span>
+      </button>
+      <button class="icon-button" id="fullscreenBtn" type="button" aria-label="Enter fullscreen" title="Fullscreen">
+        <span aria-hidden="true">⛶</span><span class="button-label">Fullscreen</span>
+      </button>
+    </div>
   </header>
 
   <main class="app-shell">
@@ -118,6 +123,12 @@
           <input id="warningSound" type="checkbox">
           <span class="toggle-ui" aria-hidden="true"></span>
         </label>
+
+        <label class="toggle-row">
+          <span><b>Dark mode</b><small>Apply your Chalkbox theme preference</small></span>
+          <input id="darkModeToggle" type="checkbox" checked>
+          <span class="toggle-ui" aria-hidden="true"></span>
+        </label>
       </section>
     </aside>
 
@@ -143,11 +154,14 @@
         <div class="target-badge" id="targetBadge"><span class="target-dot"></span> Target ≤ <b id="targetBadgeValue">55</b></div>
 
         <div class="visual theme-traffic" data-theme="traffic">
-          <div class="traffic-hanger"></div>
+          <div class="traffic-pole"></div>
+          <div class="traffic-arm"></div>
           <div class="traffic-body">
-            <div class="traffic-light red"></div>
-            <div class="traffic-light amber"></div>
-            <div class="traffic-light green"></div>
+            <div class="traffic-light light-1"></div>
+            <div class="traffic-light light-2"></div>
+            <div class="traffic-light light-3"></div>
+            <div class="traffic-light light-4"></div>
+            <div class="traffic-light light-5"></div>
           </div>
           <div class="traffic-stand"></div>
         </div>
