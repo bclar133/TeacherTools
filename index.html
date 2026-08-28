@@ -276,23 +276,6 @@
       font-weight:800;
     }
 
-    .coming {
-      border-style:dashed;
-      color:var(--chalk);
-      background:rgba(10,31,27,.48);
-      box-shadow:inset 0 0 32px rgba(0,0,0,.12);
-    }
-
-    .coming .tool-icon {
-      color:var(--chalk);
-      border-color:rgba(245,240,223,.22);
-      background:rgba(245,240,223,.08);
-      box-shadow:none;
-    }
-
-    .coming h3 { color:var(--chalk); }
-    .coming p { color:var(--chalk-muted); }
-
     footer {
       display:flex;
       align-items:center;
@@ -385,11 +368,12 @@
           <span class="open">Open tool <span aria-hidden="true">→</span></span>
         </a>
 
-        <div class="tool-card coming" aria-label="More Chalkbox tools coming soon">
-          <div class="tool-icon" aria-hidden="true">＋</div>
-          <h3>More coming soon</h3>
-          <p>This is the launch point for the Chalkbox collection. New classroom apps will appear here as they are built.</p>
-        </div>
+        <a class="tool-card" href="tools/noise-meter/">
+          <div class="tool-icon" aria-hidden="true">🎤</div>
+          <h3>Noise Meter</h3>
+          <p>Use your device microphone to monitor relative classroom noise with adjustable targets, calibration and ten animated visual themes.</p>
+          <span class="open">Open tool <span aria-hidden="true">→</span></span>
+        </a>
       </div>
     </section>
 
