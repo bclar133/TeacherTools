@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const storageKey = 'chalkbox-site-colour-mode';
+  const storageKey = 'teacherToolsTheme';
   const body = document.body;
   const traffic = document.querySelector('.theme-traffic');
   const levelNumber = document.getElementById('levelNumber');
