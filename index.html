@@ -316,6 +316,7 @@
       .site-link, .tool-card { transition:none; }
     }
   </style>
+  <link rel="stylesheet" href="assets/css/site-colour-mode.css">
 </head>
 <body>
   <main class="shell">
@@ -324,9 +325,14 @@
         <img src="assets/teacher-tools-icon.svg" alt="">
         <span>Chalkbox</span>
       </div>
-      <a class="site-link" href="https://www.brent-clark.com/" rel="external">
-        brent-clark.com <span aria-hidden="true">↗</span>
-      </a>
+      <div class="site-theme-actions">
+        <button class="site-theme-toggle" type="button" data-site-theme-toggle aria-label="Switch to light mode" title="Switch to light mode">
+          <span data-theme-icon aria-hidden="true">☀</span><span class="site-theme-label" data-theme-label>Light mode</span>
+        </button>
+        <a class="site-link" href="https://www.brent-clark.com/" rel="external">
+          brent-clark.com <span aria-hidden="true">↗</span>
+        </a>
+      </div>
     </header>
 
     <section class="hero">
@@ -382,5 +388,6 @@
       <a href="https://www.brent-clark.com/" rel="external">www.brent-clark.com</a>
     </footer>
   </main>
+  <script src="assets/js/site-colour-mode.js"></script>
 </body>
 </html>
