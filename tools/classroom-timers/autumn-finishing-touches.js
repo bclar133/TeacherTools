@@ -126,3 +126,38 @@
 
   requestAnimationFrame(tick);
 })();
+
+/* Keep Classroom Timers on the same site-wide light/dark preference as Chalkbox. */
+(() => {
+  'use strict';
+  const sharedKey='teacherToolsTheme';
+  const timerKey='ttTimers.dark';
+  const button=document.getElementById('themeBtn');
+
+  function applyShared(theme){
+    const dark=theme==='dark';
+    document.documentElement.dataset.theme=dark?'dark':'light';
+    if(button){
+      button.textContent=dark?'☀️':'🌙';
+      button.setAttribute('aria-pressed',String(dark));
+      button.setAttribute('aria-label',dark?'Turn on light mode':'Turn on dark mode');
+      button.title=dark?'Turn on light mode':'Turn on dark mode';
+    }
+    try{localStorage.setItem(timerKey,JSON.stringify(dark));}catch(_){ }
+  }
+
+  let shared=null;
+  try{shared=localStorage.getItem(sharedKey);}catch(_){ }
+  if(shared==='dark'||shared==='light') applyShared(shared);
+  else {
+    const current=document.documentElement.dataset.theme==='dark'?'dark':'light';
+    try{localStorage.setItem(sharedKey,current);}catch(_){ }
+  }
+
+  button?.addEventListener('click',()=>{
+    setTimeout(()=>{
+      const current=document.documentElement.dataset.theme==='dark'?'dark':'light';
+      try{localStorage.setItem(sharedKey,current);}catch(_){ }
+    },0);
+  });
+})();
