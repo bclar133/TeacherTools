@@ -2,6 +2,7 @@
   'use strict';
 
   const storageKey = 'teacherToolsTheme';
+  const birdFilterStorageKey = 'chalkbox-noise-bird-filter-v1';
   const body = document.body;
   const traffic = document.querySelector('.theme-traffic');
   const levelNumber = document.getElementById('levelNumber');
@@ -10,6 +11,10 @@
   const topButton = document.getElementById('themeModeBtn');
   const topLabel = document.getElementById('themeModeLabel');
   const darkToggle = document.getElementById('darkModeToggle');
+  const warningToggle = document.getElementById('warningSound');
+  const calibrateBtn = document.getElementById('calibrateBtn');
+  let birdFilterToggle = null;
+  let birdFilterEnabled = localStorage.getItem(birdFilterStorageKey) === 'true';
 
   function applyMode(mode, persist = true) {
     const next = mode === 'light' ? 'light' : 'dark';
@@ -28,6 +33,107 @@
     const value = Math.max(0, Math.min(100, Number(levelNumber.textContent) || 0));
     const tier = value <= 20 ? 1 : value <= 40 ? 2 : value <= 60 ? 3 : value <= 80 ? 4 : 5;
     traffic.dataset.level = String(tier);
+  }
+
+  function installBirdFilterToggle() {
+    if (document.getElementById('birdNoiseFilter')) {
+      birdFilterToggle = document.getElementById('birdNoiseFilter');
+      return;
+    }
+
+    const row = document.createElement('label');
+    row.className = 'toggle-row';
+    row.innerHTML = `
+      <span><b>Bird / outdoor noise filter</b><small>Softens short, sharp bird calls and similar outdoor spikes</small></span>
+      <input id="birdNoiseFilter" type="checkbox" ${birdFilterEnabled ? 'checked' : ''}>
+      <span class="toggle-ui" aria-hidden="true"></span>
+    `;
+
+    const darkRow = darkToggle?.closest('.toggle-row');
+    const warningRow = warningToggle?.closest('.toggle-row');
+    if (darkRow?.parentElement) darkRow.parentElement.insertBefore(row, darkRow);
+    else if (warningRow?.parentElement) warningRow.after(row);
+    else return;
+
+    birdFilterToggle = row.querySelector('#birdNoiseFilter');
+    birdFilterToggle.addEventListener('change', () => {
+      birdFilterEnabled = birdFilterToggle.checked;
+      localStorage.setItem(birdFilterStorageKey, String(birdFilterEnabled));
+    });
+  }
+
+  function installBirdFilterProcessing() {
+    const proto = window.AnalyserNode?.prototype;
+    if (!proto || proto.__chalkboxBirdFilterPatched) return;
+
+    const originalFloat = proto.getFloatTimeDomainData;
+    const originalFreq = proto.getByteFrequencyData;
+    if (typeof originalFloat !== 'function' || typeof originalFreq !== 'function') return;
+
+    const analyserState = new WeakMap();
+
+    Object.defineProperty(proto, '__chalkboxBirdFilterPatched', {
+      value: true,
+      configurable: false,
+      enumerable: false,
+      writable: false
+    });
+
+    proto.getFloatTimeDomainData = function(array) {
+      originalFloat.call(this, array);
+      if (!birdFilterEnabled || !array?.length) return;
+
+      let local = analyserState.get(this);
+      if (!local || local.spectrum.length !== this.frequencyBinCount) {
+        local = {
+          prevDb: -100,
+          suppressUntil: 0,
+          spectrum: new Uint8Array(this.frequencyBinCount)
+        };
+        analyserState.set(this, local);
+      }
+
+      originalFreq.call(this, local.spectrum);
+
+      let sumSquares = 0;
+      for (let i = 0; i < array.length; i += 1) sumSquares += array[i] * array[i];
+      const rms = Math.sqrt(sumSquares / array.length);
+      const db = rms > 0 ? 20 * Math.log10(rms) : -100;
+
+      const sampleRate = this.context?.sampleRate || 48000;
+      const binHz = sampleRate / this.fftSize;
+      let totalPower = 0;
+      let midHighPower = 0;
+      let weightedFrequency = 0;
+
+      for (let i = 1; i < local.spectrum.length; i += 1) {
+        const frequency = i * binHz;
+        if (frequency < 150 || frequency > 7500) continue;
+        const magnitude = local.spectrum[i] / 255;
+        const power = magnitude * magnitude;
+        totalPower += power;
+        weightedFrequency += power * frequency;
+        if (frequency >= 700) midHighPower += power;
+      }
+
+      const centroid = totalPower > 0 ? weightedFrequency / totalPower : 0;
+      const midHighRatio = totalPower > 0 ? midHighPower / totalPower : 0;
+      const spectralProfile = totalPower > 0.004 && centroid > 850 && midHighRatio > 0.56;
+      const riseDb = db - local.prevDb;
+      const now = performance.now();
+      const calibrationActive = calibrateBtn?.textContent?.includes('Listening');
+
+      if ((riseDb > 5.5 && spectralProfile) || (calibrationActive && spectralProfile)) {
+        local.suppressUntil = Math.max(local.suppressUntil, now + (calibrationActive ? 1300 : 950));
+      }
+
+      if (now < local.suppressUntil && spectralProfile) {
+        const factor = calibrationActive ? 0.25 : 0.42;
+        for (let i = 0; i < array.length; i += 1) array[i] *= factor;
+      }
+
+      local.prevDb = db;
+    };
   }
 
   /* Session average: time-weighted from microphone start until stop. */
@@ -127,6 +233,8 @@
 
   const saved = localStorage.getItem(storageKey);
   applyMode(saved === 'light' ? 'light' : 'dark', false);
+  installBirdFilterToggle();
+  installBirdFilterProcessing();
   installSessionAverage();
   updateTrafficTier();
   syncMicSession();
