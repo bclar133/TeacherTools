@@ -1,6 +1,6 @@
 # Random Student Picker
 
-A classroom-friendly random picker and random group maker for Teacher Tools.
+A classroom-friendly random picker and random group maker for Chalkbox.
 
 ## V2 highlights
 
