@@ -59,7 +59,6 @@
           <span class="sr-only">Noise meter theme</span>
           <select id="themeSelect">
             <option value="traffic">🚦 Traffic Lights</option>
-            <option value="volcano">🌋 Volcano</option>
             <option value="rocket">🚀 Rocket Challenge</option>
             <option value="balloon">🎈 Balloon</option>
             <option value="thermometer">🌡️ Thermometer</option>
@@ -167,14 +166,8 @@
           <div class="traffic-stand"></div>
         </div>
 
-        <div class="visual theme-volcano" data-theme="volcano" hidden>
-          <div class="volcano-sky">
-            <span class="smoke smoke-a"></span><span class="smoke smoke-b"></span><span class="smoke smoke-c"></span>
-            <span class="lava-drop lava-a"></span><span class="lava-drop lava-b"></span><span class="lava-drop lava-c"></span>
-          </div>
-          <div class="volcano-cone"><div class="crater"><div class="lava-surface"></div></div></div>
-          <div class="volcano-ground"></div>
-        </div>
+        <!-- Compatibility stub for older JS; Volcano is no longer a selectable or rendered theme. -->
+        <div class="theme-volcano" hidden aria-hidden="true"></div>
 
         <div class="visual theme-rocket" data-theme="rocket" hidden>
           <div class="space-stars" aria-hidden="true"></div>
@@ -259,6 +252,16 @@
     </section>
   </main>
 
+  <script>
+    try {
+      const key = 'chalkbox-noise-meter-v1';
+      const saved = JSON.parse(localStorage.getItem(key) || '{}');
+      if (saved.theme === 'volcano') {
+        saved.theme = 'traffic';
+        localStorage.setItem(key, JSON.stringify(saved));
+      }
+    } catch (_) {}
+  </script>
   <script src="app.js"></script>
   <script src="traffic-darkmode-upgrade.js"></script>
 </body>
