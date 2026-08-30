@@ -224,3 +224,20 @@
   window.addEventListener('resize', resizeCanvas);
   requestAnimationFrame(frame);
 })();
+
+/* Load the Pressure Gauge enhancement after the main theme scripts. */
+(() => {
+  if (!document.querySelector('link[data-pressure-upgrade]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'pressure-upgrade.css';
+    link.dataset.pressureUpgrade = 'true';
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('script[data-pressure-upgrade]')) {
+    const script = document.createElement('script');
+    script.src = 'pressure-upgrade.js';
+    script.dataset.pressureUpgrade = 'true';
+    document.body.appendChild(script);
+  }
+})();
