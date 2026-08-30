@@ -103,6 +103,6 @@
   0% { opacity:0; }
   12% { opacity:var(--storm-flash-opacity,.28); }
   30% { opacity:.04; }
-  48% { opacity:calc(var(--storm-flash-opacity,.28) * .65); }
+  48% { opacity:.18; }
   100% { opacity:0; }
 }
