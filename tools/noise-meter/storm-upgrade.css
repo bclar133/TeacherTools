@@ -1,0 +1,108 @@
+/* Storm Cloud upgrade: smooth sky, falling droplets and cloud-to-ground lightning */
+.theme-storm {
+  overflow:hidden;
+  background:linear-gradient(var(--storm-sky-top,#8fcbe8),var(--storm-sky-bottom,#d9edf7));
+  transition:background .45s linear;
+}
+
+.theme-storm .storm-scene {
+  z-index:4;
+}
+
+.theme-storm .cloud {
+  transition:background .45s linear, filter .45s linear;
+  filter:brightness(var(--storm-cloud-brightness,1));
+}
+
+/* Hide the old symbolic rain/lightning; upgraded layers are added by storm-upgrade.js. */
+.theme-storm .rain,
+.theme-storm .lightning {
+  display:none!important;
+}
+
+.storm-rain-layer,
+.storm-lightning-layer,
+.storm-sky-flash {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.storm-rain-layer { z-index:5; overflow:hidden; }
+.storm-lightning-layer { z-index:6; width:100%; height:100%; overflow:visible; }
+.storm-sky-flash {
+  z-index:3;
+  opacity:0;
+  background:rgba(245,250,255,.82);
+  mix-blend-mode:screen;
+}
+
+.storm-sky-flash.is-flashing {
+  animation:stormSkyFlash .24s ease-out;
+}
+
+.storm-drop {
+  position:absolute;
+  top:-14%;
+  left:var(--drop-left,50%);
+  width:var(--drop-width,2px);
+  height:var(--drop-height,18px);
+  border-radius:999px;
+  opacity:var(--drop-opacity,0);
+  background:linear-gradient(to bottom,rgba(235,248,255,.18),rgba(183,224,248,.92));
+  box-shadow:0 0 2px rgba(220,245,255,.35);
+  transform:rotate(var(--drop-slant,5deg));
+  animation:stormDropFall var(--drop-duration,1.2s) linear infinite;
+  animation-delay:var(--drop-delay,0s);
+  will-change:transform,opacity;
+  transition:opacity .35s linear;
+}
+
+.storm-bolt {
+  fill:none;
+  stroke:#fff7b0;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 0 5px rgba(255,248,180,.95)) drop-shadow(0 0 14px rgba(224,238,255,.9));
+  opacity:0;
+  animation:stormBoltStrike .32s steps(2,end) forwards;
+}
+
+.storm-bolt-core {
+  fill:none;
+  stroke:white;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  opacity:0;
+  animation:stormBoltCore .24s steps(2,end) forwards;
+}
+
+@keyframes stormDropFall {
+  from { transform:translate3d(0,-10vh,0) rotate(var(--drop-slant,5deg)); }
+  to { transform:translate3d(var(--drop-drift,8px),125vh,0) rotate(var(--drop-slant,5deg)); }
+}
+
+@keyframes stormBoltStrike {
+  0% { opacity:0; }
+  10% { opacity:1; }
+  32% { opacity:.22; }
+  48% { opacity:1; }
+  66% { opacity:.14; }
+  100% { opacity:0; }
+}
+
+@keyframes stormBoltCore {
+  0% { opacity:0; }
+  14% { opacity:1; }
+  38% { opacity:.18; }
+  52% { opacity:.95; }
+  100% { opacity:0; }
+}
+
+@keyframes stormSkyFlash {
+  0% { opacity:0; }
+  12% { opacity:var(--storm-flash-opacity,.28); }
+  30% { opacity:.04; }
+  48% { opacity:calc(var(--storm-flash-opacity,.28) * .65); }
+  100% { opacity:0; }
+}
