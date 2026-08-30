@@ -62,7 +62,7 @@
 
     theme.style.setProperty('--storm-sky-top', mixRgb([139, 204, 235], [48, 52, 59], stormCurve));
     theme.style.setProperty('--storm-sky-bottom', mixRgb([216, 239, 248], [89, 94, 101], stormCurve));
-    theme.style.setProperty('--cloud-colour', mixRgb([244, 248, 249], [68, 73, 80], Math.pow(sky, 1.18)));
+    theme.style.setProperty('--storm-cloud-colour', mixRgb([244, 248, 249], [68, 73, 80], Math.pow(sky, 1.18)));
     theme.style.setProperty('--storm-cloud-brightness', String(lerp(1.04, .82, stormCurve).toFixed(3)));
 
     const rainIntensity = clamp((level - 40) / 60);
