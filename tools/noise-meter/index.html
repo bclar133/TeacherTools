@@ -66,7 +66,6 @@
             <option value="thermometer">🌡️ Thermometer</option>
             <option value="storm">⛈️ Storm Cloud</option>
             <option value="emoji">🙂 Emoji Face</option>
-            <option value="minecart">🛒 Minecart</option>
             <option value="pressure">⚙️ Pressure Gauge</option>
             <option value="equaliser">🎚️ Neon Equaliser</option>
           </select>
@@ -168,8 +167,9 @@
           <div class="traffic-stand"></div>
         </div>
 
-        <!-- Compatibility stub for older JS; Volcano is no longer a selectable or rendered theme. -->
+        <!-- Compatibility stubs for removed themes still referenced by the core visual updater. -->
         <div class="theme-volcano" hidden aria-hidden="true"></div>
+        <div id="minecartVisual" hidden aria-hidden="true"></div>
 
         <div class="visual theme-rocket" data-theme="rocket" hidden>
           <div class="space-stars" aria-hidden="true"></div>
@@ -215,16 +215,6 @@
           <div class="emoji-caption" id="emojiCaption">Calm classroom</div>
         </div>
 
-        <div class="visual theme-minecart" data-theme="minecart" hidden>
-          <div class="mine-scene">
-            <div class="cave-glow"></div>
-            <div class="track"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-            <div class="cliff"></div>
-            <div class="cart" id="minecartVisual"><div class="ore">◆ ◆ ◆</div><span class="wheel wheel-a"></span><span class="wheel wheel-b"></span></div>
-            <div class="danger-sign">!</div>
-          </div>
-        </div>
-
         <div class="visual theme-pressure" data-theme="pressure" hidden>
           <div class="gauge-wrap">
             <div class="gauge-face">
@@ -258,7 +248,7 @@
     try {
       const key = 'chalkbox-noise-meter-v1';
       const saved = JSON.parse(localStorage.getItem(key) || '{}');
-      if (saved.theme === 'volcano') {
+      if (saved.theme === 'volcano' || saved.theme === 'minecart') {
         saved.theme = 'traffic';
         localStorage.setItem(key, JSON.stringify(saved));
       }
