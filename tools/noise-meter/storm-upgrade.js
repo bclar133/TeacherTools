@@ -29,7 +29,7 @@
 
   const drops = Array.from({ length: 150 }, (_, i) => ({
     x: ((i * 73 + 17) % 997) / 997,
-    y: 0.42 + (((i * 47 + 9) % 101) / 101) * 0.75,
+    y: -0.08 + (((i * 47 + 9) % 101) / 101) * 1.16,
     speed: 0.36 + (((i * 61 + 21) % 97) / 97) * 0.72,
     length: 0.65 + (((i * 31 + 5) % 89) / 89) * 0.75,
     opacity: 0.72 + (((i * 19 + 11) % 83) / 83) * 0.28
@@ -76,7 +76,7 @@
 
   function resetDrop(drop) {
     drop.x = 0.04 + Math.random() * 0.92;
-    drop.y = 0.40 - Math.random() * 0.22;
+    drop.y = -0.18 - Math.random() * 0.28;
     drop.speed = 0.36 + Math.random() * 0.72;
     drop.length = 0.65 + Math.random() * 0.75;
     drop.opacity = 0.72 + Math.random() * 0.28;
@@ -103,8 +103,6 @@
 
       const x = drop.x * width;
       const y = drop.y * height;
-      if (y < height * 0.40) continue;
-
       const length = baseLength * drop.length;
       ctx.globalAlpha = drop.opacity * (0.46 + intensity * 0.54);
       ctx.beginPath();
