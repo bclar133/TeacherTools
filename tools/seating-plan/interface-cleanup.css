@@ -204,6 +204,15 @@
   gap: 10px;
 }
 
+/* Explicitly honour hidden state. The base seating-plan CSS uses display:flex
+   on these components, so this needs to win whenever no item is selected. */
+#selectionBar.ui-context-popover[hidden],
+#fixtureSelectionBar.ui-context-popover[hidden],
+#fixtureSelectionBar.ui-context-popover .teacher-size-controls[hidden],
+#fixtureSelectionBar.ui-context-popover .window-size-controls[hidden] {
+  display: none !important;
+}
+
 #fixtureSelectionBar.ui-context-popover { width: min(480px, calc(100vw - 16px)); }
 
 #selectionBar.ui-context-popover > div:first-child,
@@ -217,8 +226,9 @@
   justify-content: flex-start;
 }
 
-#fixtureSelectionBar.ui-context-popover .teacher-size-controls,
-#fixtureSelectionBar.ui-context-popover .window-size-controls {
+#fixtureSelectionBar.ui-context-popover .teacher-size-controls:not([hidden]),
+#fixtureSelectionBar.ui-context-popover .window-size-controls:not([hidden]) {
+  display: flex !important;
   width: 100%;
 }
 
@@ -249,8 +259,8 @@
   .ui-cleanup-quickbar #groupSizeWrap { grid-column: 1 / -1; }
   .ui-cleanup-quickbar .quick-secondary { min-width: 0; }
 
-  #selectionBar.ui-context-popover,
-  #fixtureSelectionBar.ui-context-popover {
+  #selectionBar.ui-context-popover:not([hidden]),
+  #fixtureSelectionBar.ui-context-popover:not([hidden]) {
     left: 8px !important;
     right: 8px !important;
     top: auto !important;
