@@ -20,15 +20,19 @@
     const style = document.createElement('style');
     style.id = 'rocketRandomSkyStyles';
     style.textContent = `
-      .theme-rocket{position:relative;overflow:hidden}
-      .theme-rocket .space-stars{position:absolute;inset:0;z-index:1;background:none!important;background-image:none!important;opacity:1!important;pointer-events:none}
+      .theme-rocket{position:relative;overflow:hidden;isolation:isolate}
+      .theme-rocket .space-stars{position:absolute;inset:0;z-index:0!important;background:none!important;background-image:none!important;opacity:1!important;pointer-events:none}
       .rocket-random-star{position:absolute;border-radius:50%;background:#fff;opacity:var(--star-opacity,.7);box-shadow:0 0 var(--star-glow,5px) rgba(218,231,255,.88);animation:rocketRandomTwinkle var(--star-duration,4s) ease-in-out infinite;animation-delay:var(--star-delay,0s);will-change:transform,opacity}
       @keyframes rocketRandomTwinkle{0%,100%{transform:scale(.72);opacity:var(--star-dim,.35)}50%{transform:scale(1.28);opacity:var(--star-bright,.96)}}
-      .rocket-planet{position:absolute;z-index:1;border-radius:50%;opacity:1;pointer-events:none;box-shadow:inset -13px -17px 19px rgba(0,0,0,.22),0 12px 28px rgba(0,0,0,.22)}
+      .rocket-planet{position:absolute;z-index:0;border-radius:50%;opacity:1;pointer-events:none;box-shadow:inset -13px -17px 19px rgba(0,0,0,.22),0 12px 28px rgba(0,0,0,.22)}
       .rocket-planet-one{width:76px;height:76px;left:8%;top:23%;background:radial-gradient(circle at 31% 29%,rgba(255,255,255,.24) 0 9%,transparent 10%),radial-gradient(circle at 66% 60%,rgba(35,43,84,.34) 0 8%,transparent 9%),linear-gradient(135deg,#748bd0,#455b9b 72%)}
       .rocket-planet-two{width:54px;height:54px;right:16%;bottom:16%;background:radial-gradient(circle at 62% 31%,rgba(255,255,255,.2) 0 9%,transparent 10%),linear-gradient(135deg,#c58b55,#81513b 72%)}
       .rocket-planet-two::after{content:"";position:absolute;left:-12px;right:-12px;top:20px;height:13px;border:3px solid #d7c29d;border-radius:50%;transform:rotate(-17deg);box-shadow:0 1px 0 rgba(0,0,0,.15)}
-      .theme-rocket .rocket-track,.theme-rocket .challenge-label{z-index:3}
+      .theme-rocket .rocket-track{z-index:20!important;pointer-events:none}
+      .theme-rocket .rocket-track .moon{z-index:22!important}
+      .theme-rocket .rocket-track .rocket{z-index:23!important}
+      .theme-rocket .rocket-track .launch-pad{z-index:21!important}
+      .theme-rocket .challenge-label{position:absolute;z-index:24!important}
     `;
     document.head.appendChild(style);
 
@@ -71,7 +75,8 @@
     planetTwo.className = 'rocket-planet rocket-planet-two';
     planetTwo.setAttribute('aria-hidden', 'true');
 
-    rocketTheme.append(planetOne, planetTwo);
+    /* Keep every decorative sky element inside the dedicated background layer. */
+    starsHost.append(planetOne, planetTwo);
   }
 
   function positionRocket() {
