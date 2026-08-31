@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/teacher-tools.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <main class="app-shell">
@@ -36,11 +36,9 @@
     </div>
 
     <nav class="workspace-tabs" aria-label="Randomiser type">
-      <button class="workspace-tab active" type="button" data-workspace="numbers" aria-selected="true">
-        <span class="number-tab-icon" aria-hidden="true"><i>7</i><i>3</i><i>9</i></span> Numbers
-      </button>
-      <button class="workspace-tab" type="button" data-workspace="dice" aria-selected="false"><span>🎲</span> Dice</button>
-      <button class="workspace-tab" type="button" data-workspace="coin" aria-selected="false"><span>🪙</span> Coin</button>
+      <button class="workspace-tab active" type="button" data-workspace="numbers" aria-selected="true"><span class="tab-emoji" aria-hidden="true">🔢</span> Numbers</button>
+      <button class="workspace-tab" type="button" data-workspace="dice" aria-selected="false"><span class="tab-emoji" aria-hidden="true">🎲</span> Dice</button>
+      <button class="workspace-tab" type="button" data-workspace="coin" aria-selected="false"><span class="tab-emoji" aria-hidden="true">🪙</span> Coin</button>
     </nav>
 
     <section class="workspace-panel active" data-panel="numbers">
@@ -74,12 +72,12 @@
           <div class="panel-heading"><div><p class="eyebrow">Dice roller</p><h2>Roll the dice</h2></div><p>Choose the die and how many to roll. Each result is shown separately with a total.</p></div>
           <label class="field-label">Die type
             <select id="dieSides">
-              <option value="4">D4</option><option value="6" selected>D6</option><option value="8">D8</option><option value="10">D10</option><option value="12">D12</option><option value="20">D20</option><option value="custom">Custom die</option>
+              <option value="4">D4</option><option value="6" selected>D6</option><option value="8">D8</option><option value="10">D10</option><option value="12">D12</option><option value="20">D20</option><option value="custom">Custom die (D…)</option>
             </select>
           </label>
-          <label id="customSidesWrap" class="field-label" hidden>Number of sides on custom die
+          <label id="customSidesWrap" class="field-label" hidden>Number of sides
             <input id="customSides" type="number" min="2" max="1000" value="30" step="1">
-            <small class="field-help">For example, enter 50 to roll a D50.</small>
+            <small class="field-help">Creates a non-standard die: 50 means D50, producing a result from 1 to 50.</small>
           </label>
           <label class="field-label">Number of dice<input id="diceCount" type="number" inputmode="numeric" min="1" max="12" value="2" step="1"></label>
           <label id="pipToggleRow" class="toggle-row"><input id="usePips" type="checkbox"><span><strong>Classic dice dots</strong><small>Show traditional pip patterns on D6 dice instead of numbers.</small></span></label>
@@ -155,6 +153,6 @@
 
     <p class="keyboard-tip"><kbd>Space</kbd> repeat current action · <kbd>1</kbd> Numbers · <kbd>2</kbd> Dice · <kbd>3</kbd> Coin · <kbd>F</kbd> presentation</p>
   </main>
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
