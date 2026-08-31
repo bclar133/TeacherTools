@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/teacher-tools.css">
   <link rel="stylesheet" href="styles.css?v=3">
-  <link rel="stylesheet" href="refinements.css?v=3">
+  <link rel="stylesheet" href="refinements.css?v=4">
 </head>
 <body>
   <main class="app-shell">
@@ -80,7 +80,15 @@
             <input id="customSides" type="number" min="2" max="1000" value="30" step="1" disabled aria-disabled="true">
             <small class="field-help">Creates a non-standard die: 50 means D50, producing a result from 1 to 50.</small>
           </label>
-          <label class="field-label">Number of dice<input id="diceCount" type="number" inputmode="numeric" min="1" max="12" value="2" step="1"></label>
+          <label class="field-label">Number of dice
+            <span class="dice-count-stepper">
+              <input id="diceCount" type="number" inputmode="numeric" min="1" max="12" value="2" step="1">
+              <span class="dice-step-buttons" aria-hidden="false">
+                <button id="diceCountUp" class="dice-step-button" type="button" aria-label="Increase number of dice">▲</button>
+                <button id="diceCountDown" class="dice-step-button" type="button" aria-label="Decrease number of dice">▼</button>
+              </span>
+            </span>
+          </label>
           <label id="pipToggleRow" class="toggle-row"><input id="usePips" type="checkbox"><span><strong>Classic dice dots</strong><small>Show traditional pip patterns on D6 dice instead of numbers.</small></span></label>
           <button id="rollDiceBtn" class="action-button primary wide" type="button">Roll dice</button>
           <p id="diceError" class="error-message" role="alert" aria-live="polite"></p>
@@ -154,7 +162,6 @@
 
     <p class="keyboard-tip"><kbd>Space</kbd> repeat current action · <kbd>1</kbd> Numbers · <kbd>2</kbd> Dice · <kbd>3</kbd> Coin · <kbd>F</kbd> presentation</p>
   </main>
-  <script src="app.js?v=3"></script>
-  <script src="custom-die-lock.js?v=2"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>
