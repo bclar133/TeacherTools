@@ -32,3 +32,54 @@
   cursor:not-allowed;
   filter:grayscale(.65);
 }
+
+/* Keep presentation-only controls hidden until presentation mode is actually active. */
+.presentation-toolbar[hidden],
+body:not(.presentation-mode) .presentation-toolbar {
+  display:none !important;
+}
+
+body.presentation-mode .presentation-toolbar:not([hidden]) {
+  display:flex !important;
+}
+
+/* Polyhedral dice need an outline that follows the clipped shape, not a box border. */
+.die[data-sides="8"] {
+  --poly-shape:polygon(50% 0,100% 50%,50% 100%,0 50%);
+}
+
+.die[data-sides="10"] {
+  --poly-shape:polygon(50% 0,92% 24%,100% 66%,70% 100%,30% 100%,0 66%,8% 24%);
+}
+
+.die[data-sides="12"] {
+  --poly-shape:polygon(50% 0,79% 9%,97% 35%,97% 65%,79% 91%,50% 100%,21% 91%,3% 65%,3% 35%,21% 9%);
+}
+
+.die[data-sides="20"] {
+  --poly-shape:polygon(50% 0,76% 8%,94% 28%,100% 52%,91% 78%,68% 97%,39% 100%,15% 85%,1% 60%,5% 31%,24% 9%);
+}
+
+.die:is([data-sides="8"],[data-sides="10"],[data-sides="12"],[data-sides="20"]) {
+  position:relative;
+  border:0;
+  clip-path:var(--poly-shape);
+  background:#a97f2d;
+  box-shadow:none;
+  filter:drop-shadow(0 15px 15px rgba(68,52,15,.2));
+  isolation:isolate;
+}
+
+.die:is([data-sides="8"],[data-sides="10"],[data-sides="12"],[data-sides="20"])::before {
+  content:"";
+  position:absolute;
+  inset:3px;
+  clip-path:var(--poly-shape);
+  background:linear-gradient(145deg,#fff8dc,#e8cb76);
+  z-index:-1;
+}
+
+.die:is([data-sides="8"],[data-sides="10"],[data-sides="12"],[data-sides="20"]) > * {
+  position:relative;
+  z-index:1;
+}
