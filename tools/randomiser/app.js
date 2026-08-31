@@ -3,79 +3,50 @@
 
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   const state = {
     mode: 'numbers',
     muted: localStorage.getItem('chalkboxRandomiserMuted') === 'true',
     busy: false,
     history: [],
-    audioContext: null
+    audioContext: null,
+    lastCoinSide: 'heads'
   };
 
   try {
-    const savedHistory = JSON.parse(localStorage.getItem('chalkboxRandomiserHistory') || '[]');
-    if (Array.isArray(savedHistory)) state.history = savedHistory.slice(0, 20);
+    const saved = JSON.parse(localStorage.getItem('chalkboxRandomiserHistory') || '[]');
+    if (Array.isArray(saved)) state.history = saved.slice(0, 20);
   } catch (_) {}
 
   const els = {
-    tabs: $$('.workspace-tab'),
-    panels: $$('.workspace-panel'),
-    muteBtn: $('#muteBtn'),
-    themeBtn: $('#themeBtn'),
-    fullscreenBtn: $('#fullscreenBtn'),
-    presentationToolbar: $('#presentationToolbar'),
-    presentationMuteBtn: $('#presentationMuteBtn'),
-    presentationExitBtn: $('#presentationExitBtn'),
-
-    minNumber: $('#minNumber'),
-    maxNumber: $('#maxNumber'),
-    numberCount: $('#numberCount'),
-    noRepeats: $('#noRepeats'),
-    generateNumberBtn: $('#generateNumberBtn'),
-    generateNumberAgainBtn: $('#generateNumberAgainBtn'),
-    numberResults: $('#numberResults'),
-    numberStatus: $('#numberStatus'),
-    numberError: $('#numberError'),
-
-    dieSides: $('#dieSides'),
-    customSidesWrap: $('#customSidesWrap'),
-    customSides: $('#customSides'),
-    diceCount: $('#diceCount'),
-    rollDiceBtn: $('#rollDiceBtn'),
-    rollDiceAgainBtn: $('#rollDiceAgainBtn'),
-    diceResults: $('#diceResults'),
-    diceEquation: $('#diceEquation'),
-    diceTotal: $('#diceTotal'),
-    diceStatus: $('#diceStatus'),
-    diceError: $('#diceError'),
-
-    flipCoinBtn: $('#flipCoinBtn'),
-    flipCoinAgainBtn: $('#flipCoinAgainBtn'),
-    coin: $('#coin'),
-    coinResult: $('#coinResult'),
-    coinStatus: $('#coinStatus'),
-
-    historyList: $('#historyList'),
-    clearHistoryBtn: $('#clearHistoryBtn')
+    tabs: $$('.workspace-tab'), panels: $$('.workspace-panel'),
+    muteBtn: $('#muteBtn'), themeBtn: $('#themeBtn'), fullscreenBtn: $('#fullscreenBtn'),
+    presentationToolbar: $('#presentationToolbar'), presentationMuteBtn: $('#presentationMuteBtn'), presentationExitBtn: $('#presentationExitBtn'),
+    minNumber: $('#minNumber'), maxNumber: $('#maxNumber'), numberCount: $('#numberCount'), noRepeats: $('#noRepeats'),
+    generateNumberBtn: $('#generateNumberBtn'), generateNumberAgainBtn: $('#generateNumberAgainBtn'), numberResults: $('#numberResults'), numberStatus: $('#numberStatus'), numberError: $('#numberError'),
+    dieSides: $('#dieSides'), customSidesWrap: $('#customSidesWrap'), customSides: $('#customSides'), diceCount: $('#diceCount'), usePips: $('#usePips'), pipToggleRow: $('#pipToggleRow'),
+    rollDiceBtn: $('#rollDiceBtn'), rollDiceAgainBtn: $('#rollDiceAgainBtn'), diceResults: $('#diceResults'), diceEquation: $('#diceEquation'), diceTotal: $('#diceTotal'), diceStatus: $('#diceStatus'), diceError: $('#diceError'),
+    flipCoinBtn: $('#flipCoinBtn'), flipCoinAgainBtn: $('#flipCoinAgainBtn'), coin: $('#coin'), coinResult: $('#coinResult'), coinStatus: $('#coinStatus'),
+    headsLabel: $('#headsLabel'), tailsLabel: $('#tailsLabel'), headsPreview: $('#headsPreview'), tailsPreview: $('#tailsPreview'), coinFrontLabel: $('#coinFrontLabel'), coinBackLabel: $('#coinBackLabel'),
+    historyList: $('#historyList'), clearHistoryBtn: $('#clearHistoryBtn')
   };
 
   function randomInt(min, max) {
     const span = max - min + 1;
-    if (span <= 0) return min;
     if (window.crypto?.getRandomValues) {
       const maxUint = 0x100000000;
       const limit = maxUint - (maxUint % span);
-      const array = new Uint32Array(1);
-      do window.crypto.getRandomValues(array); while (array[0] >= limit);
-      return min + (array[0] % span);
+      const values = new Uint32Array(1);
+      do window.crypto.getRandomValues(values); while (values[0] >= limit);
+      return min + (values[0] % span);
     }
     return min + Math.floor(Math.random() * span);
   }
 
   function clampInt(value, min, max, fallback) {
     const n = Number.parseInt(value, 10);
-    if (!Number.isFinite(n)) return fallback;
-    return Math.min(max, Math.max(min, n));
+    return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
   }
 
   function setMode(mode) {
@@ -88,7 +59,6 @@
     });
     els.panels.forEach(panel => panel.classList.toggle('active', panel.dataset.panel === mode));
   }
-
   els.tabs.forEach(tab => tab.addEventListener('click', () => setMode(tab.dataset.workspace)));
 
   function getAudioContext() {
@@ -102,57 +72,60 @@
     return state.audioContext;
   }
 
-  function tone(freq = 440, duration = 0.08, volume = 0.035, type = 'sine', delay = 0) {
+  function tone(freq = 440, duration = .06, volume = .03, type = 'sine', delay = 0) {
     const ctx = getAudioContext();
     if (!ctx) return;
     const start = ctx.currentTime + delay;
-    const oscillator = ctx.createOscillator();
+    const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(freq, start);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(volume, start + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    oscillator.connect(gain).connect(ctx.destination);
-    oscillator.start(start);
-    oscillator.stop(start + duration + 0.02);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    gain.gain.setValueAtTime(.0001, start);
+    gain.gain.exponentialRampToValueAtTime(volume, start + .006);
+    gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + duration + .02);
   }
 
-  function soundNumber() {
-    tone(470, .06, .025, 'triangle');
-    tone(650, .10, .035, 'triangle', .07);
+  function startShuffleSound() {
+    if (state.muted) return () => {};
+    let step = 0;
+    const tick = () => {
+      tone(180 + (step % 5) * 24, .025, .012, 'square');
+      step += 1;
+    };
+    tick();
+    const id = setInterval(tick, 72);
+    return () => clearInterval(id);
   }
 
-  function soundDice() {
-    [0, .07, .14, .22, .31].forEach((delay, i) => tone(150 + i * 24, .045, .025, 'square', delay));
-    tone(310, .08, .032, 'triangle', .43);
+  function numberFinishSound() {
+    tone(520, .08, .025, 'triangle');
+    tone(710, .11, .033, 'triangle', .08);
+    tone(900, .13, .028, 'sine', .18);
   }
-
-  function soundCoin() {
-    tone(780, .045, .025, 'triangle');
-    tone(1050, .05, .022, 'sine', .18);
-    tone(720, .09, .035, 'triangle', .78);
+  function diceSound() {
+    [0,.07,.14,.22,.31].forEach((delay,i) => tone(145 + i*28,.045,.023,'square',delay));
+    tone(320,.09,.03,'triangle',.43);
+  }
+  function coinSound() {
+    tone(720,.05,.02,'triangle'); tone(980,.05,.018,'sine',.2); tone(650,.1,.03,'triangle',1.15);
   }
 
   function updateMuteUI() {
     const icon = state.muted ? '🔇' : '🔊';
     const label = state.muted ? 'Unmute sounds' : 'Mute sounds';
     [els.muteBtn, els.presentationMuteBtn].forEach(btn => {
-      if (!btn) return;
-      btn.textContent = icon;
-      btn.title = label;
-      btn.setAttribute('aria-label', label);
-      btn.setAttribute('aria-pressed', String(state.muted));
+      btn.textContent = icon; btn.title = label; btn.setAttribute('aria-label', label); btn.setAttribute('aria-pressed', String(state.muted));
     });
   }
-
   function toggleMute() {
     state.muted = !state.muted;
     localStorage.setItem('chalkboxRandomiserMuted', String(state.muted));
     updateMuteUI();
-    if (!state.muted) tone(520, .07, .025, 'sine');
+    if (!state.muted) tone(520,.07,.025);
   }
-
   els.muteBtn.addEventListener('click', toggleMute);
   els.presentationMuteBtn.addEventListener('click', toggleMute);
   updateMuteUI();
@@ -163,320 +136,126 @@
     els.themeBtn.textContent = dark ? '☀️' : '🌙';
     els.themeBtn.title = dark ? 'Turn on light mode' : 'Turn on dark mode';
     els.themeBtn.setAttribute('aria-label', els.themeBtn.title);
-    els.themeBtn.setAttribute('aria-pressed', String(dark));
     localStorage.setItem('chalkboxRandomiserTheme', dark ? 'dark' : 'light');
   }
-
-  const savedTheme = localStorage.getItem('chalkboxRandomiserTheme');
-  const preferredTheme = savedTheme || (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  applyTheme(preferredTheme);
+  applyTheme(localStorage.getItem('chalkboxRandomiserTheme') || (matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
   els.themeBtn.addEventListener('click', () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
 
   function setPresentation(on) {
     document.body.classList.toggle('presentation-mode', on);
     els.presentationToolbar.hidden = !on;
     els.fullscreenBtn.textContent = on ? '↙' : '⛶';
-    els.fullscreenBtn.title = on ? 'Exit presentation mode' : 'Presentation mode';
   }
-
   async function enterPresentation() {
     setPresentation(true);
-    try {
-      if (!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
-    } catch (_) {}
+    try { if (!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen(); } catch (_) {}
   }
-
   async function exitPresentation() {
     setPresentation(false);
-    try {
-      if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
-    } catch (_) {}
+    try { if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen(); } catch (_) {}
   }
-
   els.fullscreenBtn.addEventListener('click', () => document.body.classList.contains('presentation-mode') ? exitPresentation() : enterPresentation());
   els.presentationExitBtn.addEventListener('click', exitPresentation);
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && document.body.classList.contains('presentation-mode')) setPresentation(false);
-  });
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) setPresentation(false); });
 
-  function saveHistory() {
-    localStorage.setItem('chalkboxRandomiserHistory', JSON.stringify(state.history.slice(0, 20)));
-  }
-
-  function addHistory(type, label, icon) {
-    state.history.unshift({ type, label, icon, time: Date.now() });
-    state.history = state.history.slice(0, 20);
-    saveHistory();
-    renderHistory();
-  }
-
-  function timeLabel(timestamp) {
-    try {
-      return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(timestamp));
-    } catch (_) {
-      return '';
-    }
-  }
-
+  function saveHistory() { localStorage.setItem('chalkboxRandomiserHistory', JSON.stringify(state.history.slice(0,20))); }
+  function addHistory(type,label,icon) { state.history.unshift({type,label,icon,time:Date.now()}); state.history=state.history.slice(0,20); saveHistory(); renderHistory(); }
+  function timeLabel(ts) { try { return new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(ts)); } catch (_) { return ''; } }
   function renderHistory() {
-    els.historyList.innerHTML = '';
-    if (!state.history.length) {
-      const empty = document.createElement('li');
-      empty.className = 'history-empty';
-      empty.textContent = 'Your latest results will appear here.';
-      els.historyList.append(empty);
-      return;
-    }
-
+    els.historyList.innerHTML='';
+    if (!state.history.length) { const li=document.createElement('li'); li.className='history-empty'; li.textContent='Your latest results will appear here.'; els.historyList.append(li); return; }
     state.history.forEach(item => {
-      const li = document.createElement('li');
-      li.className = 'history-item';
-      const icon = document.createElement('span');
-      icon.className = 'history-icon';
-      icon.textContent = item.icon;
-      const copy = document.createElement('span');
-      copy.className = 'history-copy';
-      const strong = document.createElement('strong');
-      strong.textContent = item.label;
-      const small = document.createElement('small');
-      small.textContent = `${item.type} · ${timeLabel(item.time)}`;
-      copy.append(strong, small);
-      li.append(icon, copy);
-      els.historyList.append(li);
+      const li=document.createElement('li'); li.className='history-item';
+      const icon=document.createElement('span'); icon.className='history-icon'; icon.textContent=item.icon;
+      const copy=document.createElement('span'); copy.className='history-copy';
+      const strong=document.createElement('strong'); strong.textContent=item.label;
+      const small=document.createElement('small'); small.textContent=`${item.type} · ${timeLabel(item.time)}`;
+      copy.append(strong,small); li.append(icon,copy); els.historyList.append(li);
     });
   }
+  els.clearHistoryBtn.addEventListener('click',()=>{state.history=[];saveHistory();renderHistory();}); renderHistory();
 
-  els.clearHistoryBtn.addEventListener('click', () => {
-    state.history = [];
-    saveHistory();
-    renderHistory();
-  });
-  renderHistory();
-
-  function numberValues(min, max, count, unique) {
-    if (!unique) return Array.from({ length: count }, () => randomInt(min, max));
-    const available = max - min + 1;
-    const chosen = new Set();
-    while (chosen.size < count && chosen.size < available) chosen.add(randomInt(min, max));
-    return [...chosen];
+  function numberValues(min,max,count,unique) {
+    if (!unique) return Array.from({length:count},()=>randomInt(min,max));
+    const chosen=new Set(); while(chosen.size<count) chosen.add(randomInt(min,max)); return [...chosen];
   }
-
-  function setNumberClass(count) {
-    els.numberResults.classList.remove('single', 'multiple', 'many');
-    els.numberResults.classList.add(count === 1 ? 'single' : count >= 8 ? 'many' : 'multiple');
+  function setNumberClass(count) { els.numberResults.className=`number-results ${count===1?'single':count>=8?'many':'multiple'}`; }
+  function renderNumbers(values,shuffling=false) {
+    els.numberResults.innerHTML=''; setNumberClass(values.length);
+    values.forEach(value=>{const chip=document.createElement('span');chip.className=`number-chip${shuffling?' shuffling':''}`;chip.textContent=value;els.numberResults.append(chip);});
   }
-
-  function makeNumberChips(values, shuffling = false) {
-    els.numberResults.innerHTML = '';
-    setNumberClass(values.length);
-    values.forEach(value => {
-      const chip = document.createElement('span');
-      chip.className = `number-chip${shuffling ? ' shuffling' : ''}`;
-      chip.textContent = value;
-      els.numberResults.append(chip);
-    });
-  }
-
   async function generateNumbers() {
-    if (state.busy) return;
-    els.numberError.textContent = '';
-
-    const rawMin = Number.parseInt(els.minNumber.value, 10);
-    const rawMax = Number.parseInt(els.maxNumber.value, 10);
-    let count = clampInt(els.numberCount.value, 1, 20, 1);
-    els.numberCount.value = count;
-
-    if (!Number.isFinite(rawMin) || !Number.isFinite(rawMax)) {
-      els.numberError.textContent = 'Enter a valid minimum and maximum.';
-      return;
-    }
-    const min = Math.min(rawMin, rawMax);
-    const max = Math.max(rawMin, rawMax);
-    if (rawMin !== min) {
-      els.minNumber.value = min;
-      els.maxNumber.value = max;
-    }
-
-    const rangeSize = max - min + 1;
-    if (els.noRepeats.checked && count > rangeSize) {
-      els.numberError.textContent = `Only ${rangeSize} unique number${rangeSize === 1 ? '' : 's'} exist in this range.`;
-      return;
-    }
-
-    state.busy = true;
-    els.numberStatus.textContent = 'Choosing…';
-    const finalValues = numberValues(min, max, count, els.noRepeats.checked);
-    makeNumberChips(numberValues(min, max, count, false), true);
-    soundNumber();
-
-    const chips = $$('.number-chip', els.numberResults);
-    const ticker = window.setInterval(() => {
-      chips.forEach(chip => chip.textContent = randomInt(min, max));
-    }, 62);
-
-    await new Promise(resolve => window.setTimeout(resolve, 660));
-    window.clearInterval(ticker);
-    makeNumberChips(finalValues, false);
-    els.numberStatus.textContent = count === 1 ? 'Number selected' : `${count} numbers selected`;
-    addHistory('Numbers', finalValues.join(', '), '🔢');
-    state.busy = false;
+    if(state.busy)return; els.numberError.textContent='';
+    const rawMin=parseInt(els.minNumber.value,10), rawMax=parseInt(els.maxNumber.value,10); let count=clampInt(els.numberCount.value,1,20,1); els.numberCount.value=count;
+    if(!Number.isFinite(rawMin)||!Number.isFinite(rawMax)){els.numberError.textContent='Enter a valid minimum and maximum.';return;}
+    const min=Math.min(rawMin,rawMax),max=Math.max(rawMin,rawMax); els.minNumber.value=min; els.maxNumber.value=max;
+    const range=max-min+1; if(els.noRepeats.checked&&count>range){els.numberError.textContent=`Only ${range} unique number${range===1?'':'s'} exist in this range.`;return;}
+    state.busy=true; els.numberStatus.textContent='Shuffling…';
+    const finalValues=numberValues(min,max,count,els.noRepeats.checked); renderNumbers(numberValues(min,max,count,false),true);
+    const stopSound=startShuffleSound();
+    const ticker=setInterval(()=>$$('.number-chip',els.numberResults).forEach(chip=>chip.textContent=randomInt(min,max)),62);
+    await wait(900); clearInterval(ticker); stopSound(); renderNumbers(finalValues); numberFinishSound();
+    els.numberStatus.textContent=count===1?'Number selected':`${count} numbers selected`; addHistory('Numbers',finalValues.join(', '),'🔢'); state.busy=false;
   }
+  els.generateNumberBtn.addEventListener('click',generateNumbers); els.generateNumberAgainBtn.addEventListener('click',generateNumbers);
 
-  els.generateNumberBtn.addEventListener('click', generateNumbers);
-  els.generateNumberAgainBtn.addEventListener('click', generateNumbers);
-  $$('.quick-ranges button').forEach(btn => btn.addEventListener('click', () => {
-    els.minNumber.value = btn.dataset.min;
-    els.maxNumber.value = btn.dataset.max;
-    els.numberError.textContent = '';
-  }));
-
-  function currentSides() {
-    if (els.dieSides.value === 'custom') return clampInt(els.customSides.value, 2, 1000, 30);
-    return Number.parseInt(els.dieSides.value, 10);
+  function currentSides() { return els.dieSides.value==='custom'?clampInt(els.customSides.value,2,1000,30):parseInt(els.dieSides.value,10); }
+  function dieShapeValue(sides){return [4,6,8,10,12,20].includes(sides)?String(sides):'custom';}
+  const pipMap={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+  function pipFace(value){const face=document.createElement('div');face.className='pip-face';pipMap[value].forEach(pos=>{const pip=document.createElement('span');pip.className=`pip p${pos}`;face.append(pip);});return face;}
+  function createDie(value,sides,rolling=false){
+    const die=document.createElement('div'); die.className=`die ${rolling?'rolling':'landed'}`; die.dataset.sides=dieShapeValue(sides);
+    const useDots=sides===6&&els.usePips.checked;
+    if(useDots) die.append(pipFace(value)); else {const num=document.createElement('span');num.textContent=value;die.append(num);}
+    if(!useDots){const label=document.createElement('small');label.textContent=`D${sides}`;die.append(label);} return die;
   }
-
-  function dieShapeValue(sides) {
-    return [4, 6, 8, 10, 12, 20].includes(sides) ? String(sides) : 'custom';
+  function renderDice(values,sides,rolling=false){els.diceResults.innerHTML='';values.forEach(v=>els.diceResults.append(createDie(v,sides,rolling)));}
+  function updatePipAvailability(){const enabled=els.dieSides.value==='6';els.usePips.disabled=!enabled;els.pipToggleRow.classList.toggle('disabled',!enabled);if(!enabled)els.usePips.checked=false;}
+  async function rollDice(){
+    if(state.busy)return; els.diceError.textContent=''; const sides=currentSides(),count=clampInt(els.diceCount.value,1,12,1);els.diceCount.value=count;
+    if(!Number.isFinite(sides)||sides<2||sides>1000){els.diceError.textContent='Choose between 2 and 1000 sides.';return;}
+    state.busy=true;els.diceStatus.textContent='Rolling…';els.diceTotal.hidden=true;els.diceEquation.textContent='Rolling…';
+    const finalValues=Array.from({length:count},()=>randomInt(1,sides));renderDice(Array.from({length:count},()=>randomInt(1,sides)),sides,true);diceSound();
+    const ticker=setInterval(()=>renderDice(Array.from({length:count},()=>randomInt(1,sides)),sides,true),100);await wait(760);clearInterval(ticker);renderDice(finalValues,sides,false);
+    const total=finalValues.reduce((a,b)=>a+b,0);els.diceEquation.textContent=count===1?`D${sides} → ${finalValues[0]}`:finalValues.join(' + ');$('strong',els.diceTotal).textContent=total;els.diceTotal.hidden=false;els.diceStatus.textContent=`${count} × D${sides}`;addHistory('Dice',count===1?`D${sides}: ${total}`:`${finalValues.join(' + ')} = ${total}`,'🎲');state.busy=false;
   }
+  els.dieSides.addEventListener('change',()=>{els.customSidesWrap.hidden=els.dieSides.value!=='custom';updatePipAvailability();els.diceError.textContent='';});updatePipAvailability();
+  els.rollDiceBtn.addEventListener('click',rollDice);els.rollDiceAgainBtn.addEventListener('click',rollDice);
 
-  function createDie(value, sides, rolling = false) {
-    const die = document.createElement('div');
-    die.className = `die ${rolling ? 'rolling' : 'landed'}`;
-    die.dataset.sides = dieShapeValue(sides);
-    const number = document.createElement('span');
-    number.textContent = value;
-    const label = document.createElement('small');
-    label.textContent = `D${sides}`;
-    die.append(number, label);
-    return die;
+  function cleanLabel(input,fallback){const value=input.value.trim().slice(0,24);return value||fallback;}
+  function syncCoinLabels(){
+    const heads=cleanLabel(els.headsLabel,'Heads'),tails=cleanLabel(els.tailsLabel,'Tails');
+    els.headsPreview.textContent=heads;els.tailsPreview.textContent=tails;els.coinFrontLabel.textContent=heads.toUpperCase();els.coinBackLabel.textContent=tails.toUpperCase();
+    localStorage.setItem('chalkboxRandomiserCoinLabels',JSON.stringify({heads,tails}));
   }
+  try{const labels=JSON.parse(localStorage.getItem('chalkboxRandomiserCoinLabels')||'null');if(labels){els.headsLabel.value=labels.heads||'Heads';els.tailsLabel.value=labels.tails||'Tails';}}catch(_){}
+  syncCoinLabels();els.headsLabel.addEventListener('input',syncCoinLabels);els.tailsLabel.addEventListener('input',syncCoinLabels);
 
-  function renderDice(values, sides, rolling = false) {
-    els.diceResults.innerHTML = '';
-    values.forEach(value => els.diceResults.append(createDie(value, sides, rolling)));
+  async function flipCoin(){
+    if(state.busy)return;state.busy=true;syncCoinLabels();
+    const isHeads=randomInt(0,1)===0,result=isHeads?cleanLabel(els.headsLabel,'Heads'):cleanLabel(els.tailsLabel,'Tails');
+    els.coinStatus.textContent='Flipping…';els.coinResult.textContent='…';
+    els.coin.classList.remove('show-heads','show-tails','flipping-to-heads','flipping-to-tails');void els.coin.offsetWidth;
+    els.coin.classList.add(isHeads?'flipping-to-heads':'flipping-to-tails');coinSound();
+    await wait(1360);els.coin.classList.remove('flipping-to-heads','flipping-to-tails');els.coin.classList.add(isHeads?'show-heads':'show-tails');state.lastCoinSide=isHeads?'heads':'tails';
+    els.coinResult.textContent=result;els.coinStatus.textContent=result;addHistory('Coin',result,isHeads?'👑':'🦎');state.busy=false;
   }
+  els.flipCoinBtn.addEventListener('click',flipCoin);els.flipCoinAgainBtn.addEventListener('click',flipCoin);
 
-  async function rollDice() {
-    if (state.busy) return;
-    els.diceError.textContent = '';
-    const sides = currentSides();
-    const count = clampInt(els.diceCount.value, 1, 12, 1);
-    els.diceCount.value = count;
-    if (!Number.isFinite(sides) || sides < 2 || sides > 1000) {
-      els.diceError.textContent = 'Choose between 2 and 1000 sides.';
-      return;
-    }
-    if (els.dieSides.value === 'custom') els.customSides.value = sides;
-
-    state.busy = true;
-    els.diceStatus.textContent = 'Rolling…';
-    els.diceTotal.hidden = true;
-    els.diceEquation.textContent = 'Rolling…';
-
-    const finalValues = Array.from({ length: count }, () => randomInt(1, sides));
-    renderDice(Array.from({ length: count }, () => randomInt(1, sides)), sides, true);
-    soundDice();
-
-    const ticker = window.setInterval(() => {
-      $$('.die span', els.diceResults).forEach(span => span.textContent = randomInt(1, sides));
-    }, 85);
-
-    await new Promise(resolve => window.setTimeout(resolve, 760));
-    window.clearInterval(ticker);
-    renderDice(finalValues, sides, false);
-
-    const total = finalValues.reduce((sum, value) => sum + value, 0);
-    els.diceEquation.textContent = count === 1 ? `D${sides} → ${finalValues[0]}` : finalValues.join(' + ');
-    $('strong', els.diceTotal).textContent = total;
-    els.diceTotal.hidden = false;
-    els.diceStatus.textContent = `${count} × D${sides}`;
-    addHistory('Dice', count === 1 ? `D${sides}: ${total}` : `${finalValues.join(' + ')} = ${total}`, '🎲');
-    state.busy = false;
+  function clearMode(mode){
+    if(state.busy)return;
+    if(mode==='numbers'){els.numberResults.className='number-results single';els.numberResults.innerHTML='<span class="placeholder-mark">?</span>';els.numberStatus.textContent='Ready';els.numberError.textContent='';}
+    if(mode==='dice'){els.diceResults.innerHTML='<span class="placeholder-mark">?</span>';els.diceEquation.textContent='Choose your dice and roll.';els.diceTotal.hidden=true;els.diceStatus.textContent='Ready';els.diceError.textContent='';}
+    if(mode==='coin'){els.coin.classList.remove('flipping-to-heads','flipping-to-tails','show-tails');els.coin.classList.add('show-heads');els.coinResult.textContent='Ready to flip';els.coinStatus.textContent='Ready';}
   }
+  $$('[data-clear-mode]').forEach(btn=>btn.addEventListener('click',()=>clearMode(btn.dataset.clearMode)));
 
-  els.dieSides.addEventListener('change', () => {
-    els.customSidesWrap.hidden = els.dieSides.value !== 'custom';
-    els.diceError.textContent = '';
-  });
-  els.rollDiceBtn.addEventListener('click', rollDice);
-  els.rollDiceAgainBtn.addEventListener('click', rollDice);
-  $$('.dice-presets button').forEach(btn => btn.addEventListener('click', () => {
-    els.diceCount.value = btn.dataset.dice;
-    els.dieSides.value = btn.dataset.sides;
-    els.customSidesWrap.hidden = true;
-    els.diceError.textContent = '';
-  }));
-
-  async function flipCoin() {
-    if (state.busy) return;
-    state.busy = true;
-    const result = randomInt(0, 1) === 0 ? 'Heads' : 'Tails';
-    els.coinStatus.textContent = 'Flipping…';
-    els.coinResult.textContent = '…';
-    els.coin.classList.remove('show-heads', 'show-tails', 'flipping');
-    void els.coin.offsetWidth;
-    els.coin.classList.add('flipping');
-    soundCoin();
-
-    await new Promise(resolve => window.setTimeout(resolve, 1060));
-    els.coin.classList.remove('flipping');
-    els.coin.classList.add(result === 'Heads' ? 'show-heads' : 'show-tails');
-    els.coinResult.textContent = result;
-    els.coinStatus.textContent = result;
-    addHistory('Coin', result, result === 'Heads' ? '🟡' : '🪙');
-    state.busy = false;
-  }
-
-  els.flipCoinBtn.addEventListener('click', flipCoin);
-  els.flipCoinAgainBtn.addEventListener('click', flipCoin);
-
-  function clearMode(mode) {
-    if (state.busy) return;
-    if (mode === 'numbers') {
-      els.numberResults.className = 'number-results single';
-      els.numberResults.innerHTML = '<span class="placeholder-mark">?</span>';
-      els.numberStatus.textContent = 'Ready';
-      els.numberError.textContent = '';
-    }
-    if (mode === 'dice') {
-      els.diceResults.innerHTML = '<span class="placeholder-mark">?</span>';
-      els.diceEquation.textContent = 'Choose your dice and roll.';
-      els.diceTotal.hidden = true;
-      els.diceStatus.textContent = 'Ready';
-      els.diceError.textContent = '';
-    }
-    if (mode === 'coin') {
-      els.coin.classList.remove('flipping', 'show-tails');
-      els.coin.classList.add('show-heads');
-      els.coinResult.textContent = 'Ready to flip';
-      els.coinStatus.textContent = 'Ready';
-    }
-  }
-
-  $$('[data-clear-mode]').forEach(btn => btn.addEventListener('click', () => clearMode(btn.dataset.clearMode)));
-
-  function repeatCurrent() {
-    if (state.mode === 'numbers') generateNumbers();
-    else if (state.mode === 'dice') rollDice();
-    else flipCoin();
-  }
-
-  document.addEventListener('keydown', event => {
-    const tag = event.target?.tagName?.toLowerCase();
-    const typing = ['input', 'select', 'textarea'].includes(tag);
-    if (typing && event.key !== 'Escape') return;
-
-    if (event.code === 'Space') {
-      event.preventDefault();
-      repeatCurrent();
-    } else if (event.key === '1') setMode('numbers');
-    else if (event.key === '2') setMode('dice');
-    else if (event.key === '3') setMode('coin');
-    else if (event.key.toLowerCase() === 'f') {
-      event.preventDefault();
-      document.body.classList.contains('presentation-mode') ? exitPresentation() : enterPresentation();
-    } else if (event.key === 'Escape' && document.body.classList.contains('presentation-mode')) {
-      exitPresentation();
-    }
+  function repeatCurrent(){if(state.mode==='numbers')generateNumbers();else if(state.mode==='dice')rollDice();else flipCoin();}
+  document.addEventListener('keydown',event=>{
+    const tag=event.target?.tagName?.toLowerCase();if(['input','select','textarea'].includes(tag)&&event.key!=='Escape')return;
+    if(event.code==='Space'){event.preventDefault();repeatCurrent();}
+    else if(event.key==='1')setMode('numbers');else if(event.key==='2')setMode('dice');else if(event.key==='3')setMode('coin');
+    else if(event.key.toLowerCase()==='f'){event.preventDefault();document.body.classList.contains('presentation-mode')?exitPresentation():enterPresentation();}
+    else if(event.key==='Escape'&&document.body.classList.contains('presentation-mode'))exitPresentation();
   });
 })();
