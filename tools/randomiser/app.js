@@ -492,6 +492,45 @@
   els.headsLabel.addEventListener('input', syncCoinLabels);
   els.tailsLabel.addEventListener('input', syncCoinLabels);
 
+  function animateCoinX(isHeads) {
+    const startsTails = els.coin.classList.contains('show-tails');
+    const startAngle = startsTails ? 180 : 0;
+    const endAngle = 1440 + (isHeads ? 0 : 180);
+    const duration = 1450;
+    const shadow = $('.coin-shadow');
+
+    els.coin.classList.remove('show-heads', 'show-tails', 'flipping-to-heads', 'flipping-to-tails');
+
+    return new Promise(resolve => {
+      const started = performance.now();
+
+      function frame(now) {
+        const progress = Math.min(1, (now - started) / duration);
+        const eased = 1 - Math.pow(1 - progress, 2.15);
+        const angle = startAngle + (endAngle - startAngle) * eased;
+        const arc = Math.sin(Math.PI * progress);
+        const lift = -92 * arc;
+        const scale = 1 - (.075 * arc);
+
+        els.coin.style.transform = `translateY(${lift.toFixed(1)}px) rotateX(${angle.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
+
+        if (shadow) {
+          const shadowScale = 1 - (.5 * arc);
+          shadow.style.transform = `scale(${shadowScale.toFixed(3)})`;
+          shadow.style.opacity = String((1 - (.7 * arc)).toFixed(3));
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          resolve();
+        }
+      }
+
+      requestAnimationFrame(frame);
+    });
+  }
+
   async function flipCoin() {
     if (state.busy) return;
     state.busy = true;
@@ -500,12 +539,16 @@
     const result = isHeads ? cleanLabel(els.headsLabel, 'Heads') : cleanLabel(els.tailsLabel, 'Tails');
     els.coinStatus.textContent = 'Flipping…';
     els.coinResult.textContent = '…';
-    els.coin.classList.remove('show-heads', 'show-tails', 'flipping-to-heads', 'flipping-to-tails');
-    void els.coin.offsetWidth;
-    els.coin.classList.add(isHeads ? 'flipping-to-heads' : 'flipping-to-tails');
     coinSound();
-    await wait(1360);
-    els.coin.classList.remove('flipping-to-heads', 'flipping-to-tails');
+
+    await animateCoinX(isHeads);
+
+    els.coin.style.transform = '';
+    const shadow = $('.coin-shadow');
+    if (shadow) {
+      shadow.style.transform = '';
+      shadow.style.opacity = '';
+    }
     els.coin.classList.add(isHeads ? 'show-heads' : 'show-tails');
     els.coinResult.textContent = result;
     els.coinStatus.textContent = result;
@@ -529,6 +572,12 @@
       els.diceStatus.textContent = 'Ready';
       els.diceError.textContent = '';
     } else if (mode === 'coin') {
+      els.coin.style.transform = '';
+      const shadow = $('.coin-shadow');
+      if (shadow) {
+        shadow.style.transform = '';
+        shadow.style.opacity = '';
+      }
       els.coin.classList.remove('flipping-to-heads', 'flipping-to-tails', 'show-tails');
       els.coin.classList.add('show-heads');
       els.coinResult.textContent = 'Ready to flip';
