@@ -16,6 +16,10 @@
   const savedClassBox = classPanel?.querySelector('.saved-class-box');
   const selectionBar = $('#selectionBar');
   const fixtureSelectionBar = $('#fixtureSelectionBar');
+  const teacherSizeControls = $('#teacherSizeControls');
+  const windowSizeControls = $('#windowSizeControls');
+  const closeSelectionBtn = $('#closeSelectionBtn');
+  const closeFixtureSelectionBtn = $('#closeFixtureSelectionBtn');
   const planInstructions = planPanel?.querySelector('.plan-instructions');
   const resetRoomBtn = $('#resetRoomBtn');
   const presentationBtn = $('#presentationBtn');
@@ -128,6 +132,14 @@
   selectionBar?.classList.add('ui-context-popover');
   fixtureSelectionBar?.classList.add('ui-context-popover');
 
+  // The base page ships these controls in the DOM before anything is selected.
+  // Force a clean initial state; the core app will unhide the right popover when
+  // a real student/fixture is selected.
+  if (selectionBar) selectionBar.hidden = true;
+  if (fixtureSelectionBar) fixtureSelectionBar.hidden = true;
+  if (teacherSizeControls) teacherSizeControls.hidden = true;
+  if (windowSizeControls) windowSizeControls.hidden = true;
+
   let positionQueued = false;
 
   function placePopover(popover, target) {
@@ -159,10 +171,15 @@
     if (window.innerWidth <= 650) return;
 
     if (selectionBar && !selectionBar.hidden) {
-      placePopover(selectionBar, document.querySelector('.student-card.selected'));
+      const target = document.querySelector('.student-card.selected');
+      if (target) placePopover(selectionBar, target);
+      else selectionBar.hidden = true;
     }
+
     if (fixtureSelectionBar && !fixtureSelectionBar.hidden) {
-      placePopover(fixtureSelectionBar, document.querySelector('.fixture-card.selected'));
+      const target = document.querySelector('.fixture-card.selected');
+      if (target) placePopover(fixtureSelectionBar, target);
+      else fixtureSelectionBar.hidden = true;
     }
   }
 
@@ -170,6 +187,20 @@
     if (positionQueued) return;
     positionQueued = true;
     requestAnimationFrame(() => requestAnimationFrame(positionContextPopovers));
+  }
+
+  function closeOpenPopover() {
+    if (selectionBar && !selectionBar.hidden) {
+      if (closeSelectionBtn) closeSelectionBtn.click();
+      else selectionBar.hidden = true;
+      return true;
+    }
+    if (fixtureSelectionBar && !fixtureSelectionBar.hidden) {
+      if (closeFixtureSelectionBtn) closeFixtureSelectionBtn.click();
+      else fixtureSelectionBar.hidden = true;
+      return true;
+    }
+    return false;
   }
 
   const observer = new MutationObserver(schedulePopoverPosition);
@@ -182,6 +213,20 @@
 
   window.addEventListener('resize', schedulePopoverPosition);
   window.addEventListener('scroll', schedulePopoverPosition, true);
-  document.addEventListener('click', schedulePopoverPosition);
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeOpenPopover();
+  });
+
+  // Clicking away from the contextual card dismisses it. Clicks on a student,
+  // fixture or inside the popover itself are left to the core seating-plan logic.
+  document.addEventListener('click', event => {
+    const insidePopover = event.target.closest?.('.ui-context-popover');
+    const selectingItem = event.target.closest?.('.student-card, .fixture-card');
+    const setupDialog = event.target.closest?.('.ui-cleanup-dialog');
+    if (!insidePopover && !selectingItem && !setupDialog) closeOpenPopover();
+    schedulePopoverPosition();
+  });
+
   schedulePopoverPosition();
 })();
