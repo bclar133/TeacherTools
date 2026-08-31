@@ -20,7 +20,7 @@
     const style = document.createElement('style');
     style.id = 'rocketRandomSkyStyles';
     style.textContent = `
-      .theme-rocket{position:relative;overflow:hidden;isolation:isolate}
+      .theme-rocket{position:absolute!important;inset:0!important;overflow:hidden;isolation:isolate}
       .theme-rocket .space-stars{position:absolute;inset:0;z-index:0!important;background:none!important;background-image:none!important;opacity:1!important;pointer-events:none}
       .rocket-random-star{position:absolute;border-radius:50%;background:#fff;opacity:var(--star-opacity,.7);box-shadow:0 0 var(--star-glow,5px) rgba(218,231,255,.88);animation:rocketRandomTwinkle var(--star-duration,4s) ease-in-out infinite;animation-delay:var(--star-delay,0s);will-change:transform,opacity}
       @keyframes rocketRandomTwinkle{0%,100%{transform:scale(.72);opacity:var(--star-dim,.35)}50%{transform:scale(1.28);opacity:var(--star-bright,.96)}}
