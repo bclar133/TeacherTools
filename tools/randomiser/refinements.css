@@ -83,3 +83,34 @@ body.presentation-mode .presentation-toolbar:not([hidden]) {
   position:relative;
   z-index:1;
 }
+
+/* Dice roll: quick irregular shake rather than a full 3D tumble. */
+.die.rolling {
+  animation:diceShake .34s steps(1,end) infinite !important;
+  transform-origin:50% 52%;
+}
+
+@keyframes diceShake {
+  0%   { transform:translate(0,0) rotate(0deg); }
+  8%   { transform:translate(-5px,3px) rotate(-2.2deg); }
+  17%  { transform:translate(4px,-4px) rotate(1.7deg); }
+  26%  { transform:translate(-3px,-2px) rotate(-1.2deg); }
+  35%  { transform:translate(6px,2px) rotate(2.4deg); }
+  44%  { transform:translate(-4px,5px) rotate(-1.8deg); }
+  53%  { transform:translate(2px,-5px) rotate(.9deg); }
+  62%  { transform:translate(5px,4px) rotate(1.6deg); }
+  71%  { transform:translate(-6px,-1px) rotate(-2.5deg); }
+  80%  { transform:translate(3px,5px) rotate(1.3deg); }
+  89%  { transform:translate(-2px,-4px) rotate(-.8deg); }
+  100% { transform:translate(4px,1px) rotate(2deg); }
+}
+
+.die.landed {
+  animation:diceSettle .2s ease-out !important;
+}
+
+@keyframes diceSettle {
+  0% { transform:translate(3px,-2px) rotate(1.5deg) scale(.985); }
+  65% { transform:translate(-1px,1px) rotate(-.4deg) scale(1.01); }
+  100% { transform:translate(0,0) rotate(0deg) scale(1); }
+}
