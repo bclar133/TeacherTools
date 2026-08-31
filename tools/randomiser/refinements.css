@@ -25,15 +25,15 @@
 }
 
 .custom-sides-field.disabled {
-  opacity:.5;
+  opacity:.48;
 }
 
 .custom-sides-field.disabled input {
   cursor:not-allowed;
   filter:grayscale(.65);
+  background:color-mix(in srgb,var(--panel-strong) 76%,#c9cec9);
 }
 
-/* Keep presentation-only controls hidden until presentation mode is actually active. */
 .presentation-toolbar[hidden],
 body:not(.presentation-mode) .presentation-toolbar {
   display:none !important;
@@ -43,7 +43,84 @@ body.presentation-mode .presentation-toolbar:not([hidden]) {
   display:flex !important;
 }
 
-/* Polyhedral dice need an outline that follows the clipped shape, not a box border. */
+/* Larger dice controls */
+.controls-panel .field-label {
+  font-size:1rem;
+  line-height:1.35;
+}
+
+#dieSides,
+#customSides,
+#diceCount {
+  min-height:60px;
+  font-size:1.18rem;
+  font-weight:900;
+  padding-left:16px;
+}
+
+#dieSides {
+  padding-right:46px;
+}
+
+.custom-sides-field .field-help {
+  font-size:.88rem;
+  line-height:1.45;
+}
+
+.dice-count-stepper {
+  position:relative;
+  display:block;
+  width:100%;
+}
+
+.dice-count-stepper #diceCount {
+  width:100%;
+  padding-right:68px;
+  appearance:textfield;
+  -moz-appearance:textfield;
+}
+
+.dice-count-stepper #diceCount::-webkit-inner-spin-button,
+.dice-count-stepper #diceCount::-webkit-outer-spin-button {
+  appearance:none;
+  margin:0;
+}
+
+.dice-step-buttons {
+  position:absolute;
+  top:4px;
+  right:4px;
+  bottom:4px;
+  width:54px;
+  display:grid;
+  grid-template-rows:1fr 1fr;
+  overflow:hidden;
+  border-left:1px solid var(--line);
+  border-radius:0 10px 10px 0;
+}
+
+.dice-step-button {
+  min-width:50px;
+  min-height:0;
+  padding:0;
+  border:0;
+  background:color-mix(in srgb,var(--panel-strong) 88%,var(--gold-soft));
+  color:var(--ink);
+  font-size:1.3rem;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+}
+
+.dice-step-button + .dice-step-button {
+  border-top:1px solid var(--line);
+}
+
+.dice-step-button:hover {
+  background:var(--gold-soft);
+}
+
+/* Polyhedral dice: full border follows the clipped polygon. */
 .die[data-sides="8"] {
   --poly-shape:polygon(50% 0,100% 50%,50% 100%,0 50%);
 }
@@ -84,33 +161,14 @@ body.presentation-mode .presentation-toolbar:not([hidden]) {
   z-index:1;
 }
 
-/* Dice roll: quick irregular shake rather than a full 3D tumble. */
-.die.rolling {
-  animation:diceShake .34s steps(1,end) infinite !important;
-  transform-origin:50% 52%;
+/* Dice motion is driven directly by app.js. */
+#diceResults .die {
+  animation:none !important;
+  transform-style:flat !important;
+  transition:transform 140ms ease-out;
 }
 
-@keyframes diceShake {
-  0%   { transform:translate(0,0) rotate(0deg); }
-  8%   { transform:translate(-5px,3px) rotate(-2.2deg); }
-  17%  { transform:translate(4px,-4px) rotate(1.7deg); }
-  26%  { transform:translate(-3px,-2px) rotate(-1.2deg); }
-  35%  { transform:translate(6px,2px) rotate(2.4deg); }
-  44%  { transform:translate(-4px,5px) rotate(-1.8deg); }
-  53%  { transform:translate(2px,-5px) rotate(.9deg); }
-  62%  { transform:translate(5px,4px) rotate(1.6deg); }
-  71%  { transform:translate(-6px,-1px) rotate(-2.5deg); }
-  80%  { transform:translate(3px,5px) rotate(1.3deg); }
-  89%  { transform:translate(-2px,-4px) rotate(-.8deg); }
-  100% { transform:translate(4px,1px) rotate(2deg); }
-}
-
-.die.landed {
-  animation:diceSettle .2s ease-out !important;
-}
-
-@keyframes diceSettle {
-  0% { transform:translate(3px,-2px) rotate(1.5deg) scale(.985); }
-  65% { transform:translate(-1px,1px) rotate(-.4deg) scale(1.01); }
-  100% { transform:translate(0,0) rotate(0deg) scale(1); }
+#diceResults .die.shaking {
+  transition:transform 45ms linear;
+  will-change:transform;
 }
