@@ -22,4 +22,11 @@
   const saved = localStorage.getItem(storageKey);
   apply(saved === 'light' ? 'light' : 'dark', false);
   buttons.forEach((button) => button.addEventListener('click', () => apply(body.dataset.colourMode === 'dark' ? 'light' : 'dark')));
+
+  /* Keep the production homepage card aligned with the current Noise Meter build. */
+  const noiseMeterCard = [...document.querySelectorAll('.tool-card')].find((card) => card.getAttribute('href') === 'tools/noise-meter/');
+  const noiseMeterCopy = noiseMeterCard?.querySelector('p');
+  if (noiseMeterCopy) {
+    noiseMeterCopy.textContent = 'Use your device microphone to monitor relative classroom noise with adjustable targets, calibration and seven animated visual themes.';
+  }
 })();
