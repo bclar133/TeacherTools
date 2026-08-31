@@ -19,3 +19,16 @@
 .dice-total strong {
   line-height:.88;
 }
+
+.custom-sides-field {
+  transition:opacity .18s ease;
+}
+
+.custom-sides-field.disabled {
+  opacity:.5;
+}
+
+.custom-sides-field.disabled input {
+  cursor:not-allowed;
+  filter:grayscale(.65);
+}
