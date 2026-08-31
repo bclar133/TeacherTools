@@ -19,10 +19,7 @@
     <header class="topbar">
       <div class="brand-lockup">
         <span class="tool-badge" aria-hidden="true">🎲</span>
-        <div>
-          <p class="eyebrow">Chalkbox</p>
-          <h1>Randomiser</h1>
-        </div>
+        <div><p class="eyebrow">Chalkbox</p><h1>Randomiser</h1></div>
       </div>
       <div class="top-actions">
         <a class="header-nav-link" href="../../" title="Back to Chalkbox">← Chalkbox</a>
@@ -39,7 +36,9 @@
     </div>
 
     <nav class="workspace-tabs" aria-label="Randomiser type">
-      <button class="workspace-tab active" type="button" data-workspace="numbers" aria-selected="true"><span>123</span> Numbers</button>
+      <button class="workspace-tab active" type="button" data-workspace="numbers" aria-selected="true">
+        <span class="number-tab-icon" aria-hidden="true"><i>7</i><i>3</i><i>9</i></span> Numbers
+      </button>
       <button class="workspace-tab" type="button" data-workspace="dice" aria-selected="false"><span>🎲</span> Dice</button>
       <button class="workspace-tab" type="button" data-workspace="coin" aria-selected="false"><span>🪙</span> Coin</button>
     </nav>
@@ -51,41 +50,19 @@
             <div><p class="eyebrow">Number generator</p><h2>Pick a number</h2></div>
             <p>Choose a range and draw one or more random whole numbers.</p>
           </div>
-
           <div class="form-grid two-col">
             <label>Minimum<input id="minNumber" type="number" inputmode="numeric" value="1" step="1"></label>
             <label>Maximum<input id="maxNumber" type="number" inputmode="numeric" value="100" step="1"></label>
           </div>
-
-          <label class="field-label">How many numbers?
-            <input id="numberCount" type="number" inputmode="numeric" min="1" max="20" value="1" step="1">
-          </label>
-
-          <label class="toggle-row">
-            <input id="noRepeats" type="checkbox">
-            <span><strong>No repeats</strong><small>Every number in this draw must be different.</small></span>
-          </label>
-
-          <div class="quick-ranges" aria-label="Quick number ranges">
-            <button type="button" data-min="1" data-max="10">1–10</button>
-            <button type="button" data-min="1" data-max="20">1–20</button>
-            <button type="button" data-min="1" data-max="50">1–50</button>
-            <button type="button" data-min="1" data-max="100">1–100</button>
-          </div>
-
+          <label class="field-label">How many numbers?<input id="numberCount" type="number" inputmode="numeric" min="1" max="20" value="1" step="1"></label>
+          <label class="toggle-row"><input id="noRepeats" type="checkbox"><span><strong>No repeats</strong><small>Every number in this draw must be different.</small></span></label>
           <button id="generateNumberBtn" class="action-button primary wide" type="button">Generate</button>
           <p id="numberError" class="error-message" role="alert" aria-live="polite"></p>
         </aside>
 
         <section class="result-panel panel">
-          <div class="stage-header">
-            <div><p class="eyebrow">Result</p><p id="numberStatus" class="stage-status">Ready</p></div>
-            <button class="soft-button" type="button" data-clear-mode="numbers">Clear</button>
-          </div>
-          <div id="numberStage" class="result-stage number-stage" aria-live="polite">
-            <div id="numberResults" class="number-results single"><span class="placeholder-mark">?</span></div>
-            <p class="stage-hint">Press Generate or hit <kbd>Space</kbd></p>
-          </div>
+          <div class="stage-header"><div><p class="eyebrow">Result</p><p id="numberStatus" class="stage-status">Ready</p></div><button class="soft-button" type="button" data-clear-mode="numbers">Clear</button></div>
+          <div class="result-stage number-stage" aria-live="polite"><div id="numberResults" class="number-results single"><span class="placeholder-mark">?</span></div><p class="stage-hint">Press Generate or hit <kbd>Space</kbd></p></div>
           <button id="generateNumberAgainBtn" class="action-button primary result-action" type="button">Generate again</button>
         </section>
       </div>
@@ -94,48 +71,25 @@
     <section class="workspace-panel" data-panel="dice">
       <div class="workspace-layout">
         <aside class="controls-panel panel">
-          <div class="panel-heading">
-            <div><p class="eyebrow">Dice roller</p><h2>Roll the dice</h2></div>
-            <p>Roll one die or a whole handful. Each result is shown separately with the total.</p>
-          </div>
-
+          <div class="panel-heading"><div><p class="eyebrow">Dice roller</p><h2>Roll the dice</h2></div><p>Choose the die and how many to roll. Each result is shown separately with a total.</p></div>
           <label class="field-label">Die type
             <select id="dieSides">
-              <option value="4">D4</option>
-              <option value="6" selected>D6</option>
-              <option value="8">D8</option>
-              <option value="10">D10</option>
-              <option value="12">D12</option>
-              <option value="20">D20</option>
-              <option value="custom">Custom</option>
+              <option value="4">D4</option><option value="6" selected>D6</option><option value="8">D8</option><option value="10">D10</option><option value="12">D12</option><option value="20">D20</option><option value="custom">Custom die</option>
             </select>
           </label>
-
-          <label id="customSidesWrap" class="field-label" hidden>Custom sides
+          <label id="customSidesWrap" class="field-label" hidden>Number of sides on custom die
             <input id="customSides" type="number" min="2" max="1000" value="30" step="1">
+            <small class="field-help">For example, enter 50 to roll a D50.</small>
           </label>
-
-          <label class="field-label">Number of dice
-            <input id="diceCount" type="number" inputmode="numeric" min="1" max="12" value="2" step="1">
-          </label>
-
-          <div class="dice-presets" aria-label="Dice presets">
-            <button type="button" data-dice="1" data-sides="6">1 × D6</button>
-            <button type="button" data-dice="2" data-sides="6">2 × D6</button>
-            <button type="button" data-dice="1" data-sides="20">1 × D20</button>
-            <button type="button" data-dice="2" data-sides="10">2 × D10</button>
-          </div>
-
+          <label class="field-label">Number of dice<input id="diceCount" type="number" inputmode="numeric" min="1" max="12" value="2" step="1"></label>
+          <label id="pipToggleRow" class="toggle-row"><input id="usePips" type="checkbox"><span><strong>Classic dice dots</strong><small>Show traditional pip patterns on D6 dice instead of numbers.</small></span></label>
           <button id="rollDiceBtn" class="action-button primary wide" type="button">Roll dice</button>
           <p id="diceError" class="error-message" role="alert" aria-live="polite"></p>
         </aside>
 
         <section class="result-panel panel">
-          <div class="stage-header">
-            <div><p class="eyebrow">Result</p><p id="diceStatus" class="stage-status">Ready</p></div>
-            <button class="soft-button" type="button" data-clear-mode="dice">Clear</button>
-          </div>
-          <div id="diceStage" class="result-stage dice-stage" aria-live="polite">
+          <div class="stage-header"><div><p class="eyebrow">Result</p><p id="diceStatus" class="stage-status">Ready</p></div><button class="soft-button" type="button" data-clear-mode="dice">Clear</button></div>
+          <div class="result-stage dice-stage" aria-live="polite">
             <div id="diceResults" class="dice-results"><span class="placeholder-mark">?</span></div>
             <div id="diceEquation" class="dice-equation">Choose your dice and roll.</div>
             <div id="diceTotal" class="dice-total" hidden><span>Total</span><strong>0</strong></div>
@@ -148,32 +102,42 @@
     <section class="workspace-panel" data-panel="coin">
       <div class="workspace-layout coin-layout">
         <aside class="controls-panel panel">
-          <div class="panel-heading">
-            <div><p class="eyebrow">Coin flip</p><h2>Heads or tails?</h2></div>
-            <p>A simple 50/50 classroom decision with a proper animated flip.</p>
+          <div class="panel-heading"><div><p class="eyebrow">Coin flip</p><h2>Two-way choice</h2></div><p>Use Heads/Tails, or rename both sides for any 50/50 classroom decision.</p></div>
+          <div class="form-grid two-col coin-label-fields">
+            <label>First side<input id="headsLabel" type="text" maxlength="24" value="Heads"></label>
+            <label>Second side<input id="tailsLabel" type="text" maxlength="24" value="Tails"></label>
           </div>
-
+          <p class="field-help coin-help">Try Yes / No, On / Off, True / False or Team A / Team B.</p>
           <div class="coin-choice-note">
-            <span class="mini-coin heads">H</span>
-            <span>Heads</span>
-            <span class="versus">or</span>
-            <span class="mini-coin tails">T</span>
-            <span>Tails</span>
+            <span class="mini-coin heads">👑</span><span id="headsPreview">Heads</span><span class="versus">or</span><span class="mini-coin tails">🦎</span><span id="tailsPreview">Tails</span>
           </div>
-
           <button id="flipCoinBtn" class="action-button primary wide coin-button" type="button">Flip coin</button>
         </aside>
 
         <section class="result-panel panel">
-          <div class="stage-header">
-            <div><p class="eyebrow">Result</p><p id="coinStatus" class="stage-status">Ready</p></div>
-            <button class="soft-button" type="button" data-clear-mode="coin">Clear</button>
-          </div>
-          <div id="coinStage" class="result-stage coin-stage" aria-live="polite">
+          <div class="stage-header"><div><p class="eyebrow">Result</p><p id="coinStatus" class="stage-status">Ready</p></div><button class="soft-button" type="button" data-clear-mode="coin">Clear</button></div>
+          <div class="result-stage coin-stage" aria-live="polite">
             <div class="coin-scene">
-              <div id="coin" class="coin" aria-hidden="true">
-                <div class="coin-face coin-front"><span>H</span><small>HEADS</small></div>
-                <div class="coin-face coin-back"><span>T</span><small>TAILS</small></div>
+              <div id="coin" class="coin show-heads" aria-hidden="true">
+                <div class="coin-face coin-front">
+                  <svg class="lizard-art king-lizard" viewBox="0 0 180 180" aria-hidden="true">
+                    <path class="crown" d="M49 47 62 19 83 43 103 13 124 44 143 20 142 59 51 59Z"/>
+                    <path class="lizard-head" d="M45 92c0-35 24-52 51-52 34 0 57 23 53 56-4 34-29 52-59 49-29-3-47-23-45-53Z"/>
+                    <circle class="eye-white" cx="72" cy="79" r="17"/><circle class="eye-white" cx="119" cy="76" r="17"/>
+                    <circle class="pupil" cx="77" cy="82" r="7"/><circle class="pupil" cx="114" cy="80" r="7"/>
+                    <ellipse class="nostril" cx="84" cy="107" rx="4" ry="3"/><ellipse class="nostril" cx="107" cy="106" rx="4" ry="3"/>
+                    <path class="mouth" d="M72 120q23 18 49-2"/><path class="tongue" d="M96 130q6 14 16 4"/>
+                  </svg>
+                  <small id="coinFrontLabel">HEADS</small>
+                </div>
+                <div class="coin-face coin-back">
+                  <svg class="lizard-art tail-lizard" viewBox="0 0 180 180" aria-hidden="true">
+                    <path class="tail" d="M35 52c73-31 118 7 105 47-9 28-42 38-64 22-17-13-9-37 9-42 18-5 32 12 23 25-6 9-20 9-26 1"/>
+                    <path class="tail-tip" d="M32 52 13 42 22 65Z"/>
+                    <circle class="tail-spark" cx="138" cy="52" r="5"/><circle class="tail-spark" cx="150" cy="67" r="3"/>
+                  </svg>
+                  <small id="coinBackLabel">TAILS</small>
+                </div>
               </div>
               <div class="coin-shadow"></div>
             </div>
@@ -185,18 +149,12 @@
     </section>
 
     <section class="history-panel panel" aria-labelledby="historyHeading">
-      <div class="history-heading">
-        <div><p class="eyebrow">Recent results</p><h2 id="historyHeading">History</h2></div>
-        <button id="clearHistoryBtn" class="soft-button" type="button">Clear history</button>
-      </div>
-      <ol id="historyList" class="history-list">
-        <li class="history-empty">Your latest results will appear here.</li>
-      </ol>
+      <div class="history-heading"><div><p class="eyebrow">Recent results</p><h2 id="historyHeading">History</h2></div><button id="clearHistoryBtn" class="soft-button" type="button">Clear history</button></div>
+      <ol id="historyList" class="history-list"><li class="history-empty">Your latest results will appear here.</li></ol>
     </section>
 
     <p class="keyboard-tip"><kbd>Space</kbd> repeat current action · <kbd>1</kbd> Numbers · <kbd>2</kbd> Dice · <kbd>3</kbd> Coin · <kbd>F</kbd> presentation</p>
   </main>
-
   <script src="app.js"></script>
 </body>
 </html>
