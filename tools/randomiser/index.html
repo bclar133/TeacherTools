@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/teacher-tools.css">
   <link rel="stylesheet" href="styles.css?v=3">
-  <link rel="stylesheet" href="refinements.css?v=1">
+  <link rel="stylesheet" href="refinements.css?v=2">
 </head>
 <body>
   <main class="app-shell">
@@ -76,8 +76,8 @@
               <option value="4">D4</option><option value="6" selected>D6</option><option value="8">D8</option><option value="10">D10</option><option value="12">D12</option><option value="20">D20</option><option value="custom">Custom die (D…)</option>
             </select>
           </label>
-          <label id="customSidesWrap" class="field-label" hidden>Number of sides
-            <input id="customSides" type="number" min="2" max="1000" value="30" step="1">
+          <label id="customSidesWrap" class="field-label custom-sides-field disabled">Number of sides
+            <input id="customSides" type="number" min="2" max="1000" value="30" step="1" disabled aria-disabled="true">
             <small class="field-help">Creates a non-standard die: 50 means D50, producing a result from 1 to 50.</small>
           </label>
           <label class="field-label">Number of dice<input id="diceCount" type="number" inputmode="numeric" min="1" max="12" value="2" step="1"></label>
@@ -155,5 +155,6 @@
     <p class="keyboard-tip"><kbd>Space</kbd> repeat current action · <kbd>1</kbd> Numbers · <kbd>2</kbd> Dice · <kbd>3</kbd> Coin · <kbd>F</kbd> presentation</p>
   </main>
   <script src="app.js?v=3"></script>
+  <script src="custom-die-lock.js?v=1"></script>
 </body>
 </html>
