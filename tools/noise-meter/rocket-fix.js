@@ -12,6 +12,68 @@
 
   const clamp01 = (value) => Math.max(0, Math.min(1, value));
 
+  function installRocketSky() {
+    const starsHost = rocketTheme.querySelector('.space-stars');
+    if (!starsHost || starsHost.dataset.randomised === 'true') return;
+    starsHost.dataset.randomised = 'true';
+
+    const style = document.createElement('style');
+    style.id = 'rocketRandomSkyStyles';
+    style.textContent = `
+      .theme-rocket{position:relative;overflow:hidden}
+      .theme-rocket .space-stars{position:absolute;inset:0;z-index:1;background:none!important;background-image:none!important;opacity:1!important;pointer-events:none}
+      .rocket-random-star{position:absolute;border-radius:50%;background:#fff;opacity:var(--star-opacity,.7);box-shadow:0 0 var(--star-glow,5px) rgba(218,231,255,.88);animation:rocketRandomTwinkle var(--star-duration,4s) ease-in-out infinite;animation-delay:var(--star-delay,0s);will-change:transform,opacity}
+      @keyframes rocketRandomTwinkle{0%,100%{transform:scale(.72);opacity:var(--star-dim,.35)}50%{transform:scale(1.28);opacity:var(--star-bright,.96)}}
+      .rocket-planet{position:absolute;z-index:1;border-radius:50%;opacity:1;pointer-events:none;box-shadow:inset -13px -17px 19px rgba(0,0,0,.22),0 12px 28px rgba(0,0,0,.22)}
+      .rocket-planet-one{width:76px;height:76px;left:8%;top:23%;background:radial-gradient(circle at 31% 29%,rgba(255,255,255,.24) 0 9%,transparent 10%),radial-gradient(circle at 66% 60%,rgba(35,43,84,.34) 0 8%,transparent 9%),linear-gradient(135deg,#748bd0,#455b9b 72%)}
+      .rocket-planet-two{width:54px;height:54px;right:16%;bottom:16%;background:radial-gradient(circle at 62% 31%,rgba(255,255,255,.2) 0 9%,transparent 10%),linear-gradient(135deg,#c58b55,#81513b 72%)}
+      .rocket-planet-two::after{content:"";position:absolute;left:-12px;right:-12px;top:20px;height:13px;border:3px solid #d7c29d;border-radius:50%;transform:rotate(-17deg);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+      .theme-rocket .rocket-track,.theme-rocket .challenge-label{z-index:3}
+    `;
+    document.head.appendChild(style);
+
+    starsHost.textContent = '';
+    const starCount = 155;
+    const fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < starCount; i += 1) {
+      const star = document.createElement('span');
+      star.className = 'rocket-random-star';
+
+      const size = 0.8 + Math.random() * 2.8;
+      const baseOpacity = 0.28 + Math.random() * 0.67;
+      const dimOpacity = Math.max(0.12, baseOpacity * (0.42 + Math.random() * 0.22));
+      const brightOpacity = Math.min(1, baseOpacity + 0.18 + Math.random() * 0.22);
+      const glow = 1.5 + size * (1.2 + Math.random() * 1.7);
+      const duration = 2.2 + Math.random() * 5.8;
+      const delay = -Math.random() * duration;
+
+      star.style.left = `${(1 + Math.random() * 98).toFixed(2)}%`;
+      star.style.top = `${(1 + Math.random() * 98).toFixed(2)}%`;
+      star.style.width = `${size.toFixed(2)}px`;
+      star.style.height = `${size.toFixed(2)}px`;
+      star.style.setProperty('--star-opacity', baseOpacity.toFixed(2));
+      star.style.setProperty('--star-dim', dimOpacity.toFixed(2));
+      star.style.setProperty('--star-bright', brightOpacity.toFixed(2));
+      star.style.setProperty('--star-glow', `${glow.toFixed(2)}px`);
+      star.style.setProperty('--star-duration', `${duration.toFixed(2)}s`);
+      star.style.setProperty('--star-delay', `${delay.toFixed(2)}s`);
+      fragment.appendChild(star);
+    }
+
+    starsHost.appendChild(fragment);
+
+    const planetOne = document.createElement('div');
+    planetOne.className = 'rocket-planet rocket-planet-one';
+    planetOne.setAttribute('aria-hidden', 'true');
+
+    const planetTwo = document.createElement('div');
+    planetTwo.className = 'rocket-planet rocket-planet-two';
+    planetTwo.setAttribute('aria-hidden', 'true');
+
+    rocketTheme.append(planetOne, planetTwo);
+  }
+
   function positionRocket() {
     if (rocketTheme.hidden || track.clientWidth <= 0 || track.clientHeight <= 0) {
       requestAnimationFrame(positionRocket);
@@ -53,6 +115,7 @@
     requestAnimationFrame(positionRocket);
   }
 
+  installRocketSky();
   requestAnimationFrame(positionRocket);
 })();
 
