@@ -1,0 +1,21 @@
+.tab-emoji {
+  display:inline-block;
+  margin-right:8px;
+  font-size:1.25rem;
+  line-height:1;
+  vertical-align:-0.12em;
+}
+
+.dice-total {
+  align-items:flex-start;
+}
+
+.dice-total span {
+  padding-top:0;
+  line-height:1;
+  margin-top:.12rem;
+}
+
+.dice-total strong {
+  line-height:.88;
+}
