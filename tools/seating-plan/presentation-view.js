@@ -73,11 +73,11 @@
 (() => {
   const style = document.createElement('link');
   style.rel = 'stylesheet';
-  style.href = 'interface-cleanup.css?v=1';
+  style.href = 'interface-cleanup.css?v=2';
   document.head.append(style);
 
   const script = document.createElement('script');
-  script.src = 'interface-cleanup.js?v=1';
+  script.src = 'interface-cleanup.js?v=2';
   script.defer = true;
   document.body.append(script);
 })();
