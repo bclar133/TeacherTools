@@ -11,10 +11,21 @@
   const grid = document.getElementById('contrastBasicColourGrid');
   const hexField = document.getElementById('contrastMiniHex');
   const preview = document.getElementById('contrastMiniPreview');
-  const useButton = document.getElementById('contrastMiniUse');
-  const cancelButton = document.getElementById('contrastMiniCancel');
-  const closeButton = document.getElementById('contrastMiniClose');
   const title = document.getElementById('contrastMiniTitle');
+
+  function cleanButton(id) {
+    const oldButton = document.getElementById(id);
+    if (!oldButton) return null;
+    const button = oldButton.cloneNode(true);
+    oldButton.replaceWith(button);
+    return button;
+  }
+
+  // Remove any earlier click handlers from the footer controls so there is one
+  // authoritative action for Apply/Cancel/Close.
+  const useButton = cleanButton('contrastMiniUse');
+  const cancelButton = cleanButton('contrastMiniCancel');
+  const closeButton = cleanButton('contrastMiniClose');
 
   const basicColours = [
     '#F4CCCC','#FCE5CD','#FFF2CC','#D9EAD3','#D0E0E3','#CFE2F3','#D9D2E9','#EAD1DC',
@@ -102,6 +113,8 @@
   grid?.addEventListener('dblclick', (event) => {
     const button = event.target.closest('.basic-colour');
     if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
     syncPreview(button.dataset.colour);
     applyChoice();
   });
@@ -121,27 +134,27 @@
 
   if (useButton) {
     useButton.type = 'button';
-    useButton.onclick = (event) => {
+    useButton.addEventListener('click', (event) => {
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       applyChoice();
-    };
+    });
   }
   if (cancelButton) {
     cancelButton.type = 'button';
-    cancelButton.onclick = (event) => {
+    cancelButton.addEventListener('click', (event) => {
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       closeDialog();
-    };
+    });
   }
   if (closeButton) {
     closeButton.type = 'button';
-    closeButton.onclick = (event) => {
+    closeButton.addEventListener('click', (event) => {
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       closeDialog();
-    };
+    });
   }
 
   hexField?.addEventListener('input', () => {
