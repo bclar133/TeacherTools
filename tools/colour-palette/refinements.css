@@ -281,3 +281,29 @@
   .basic-colour-grid { gap:5px; }
   .gradient-colour-button { width:42px; }
 }
+
+/* Keep the scheme generator controls inside the panel at all desktop widths. */
+.scheme-generator-controls {
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:stretch;
+}
+.scheme-base-field {
+  grid-column:1 / -1;
+}
+.scheme-generator-controls .secondary-button,
+.scheme-generator-controls .ghost-button {
+  width:100%;
+  min-width:0;
+  padding-left:12px;
+  padding-right:12px;
+  justify-content:center;
+}
+
+@media (max-width:430px) {
+  .scheme-generator-controls {
+    grid-template-columns:1fr;
+  }
+  .scheme-base-field {
+    grid-column:auto;
+  }
+}
