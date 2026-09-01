@@ -1,4 +1,4 @@
-@import url("coin-art.css?v=2");
+@import url("coin-art.css?v=3");
 
 .tab-emoji {
   display:inline-block;
@@ -198,4 +198,14 @@ body.presentation-mode .presentation-toolbar:not([hidden]) {
 
 .coin.show-tails {
   transform:rotateX(180deg);
+}
+
+/* The base button hover rule uses transform:translateY(), which replaces the
+   translateX() used to centre fixed presentation buttons. Keep the button
+   anchored while still allowing its hover colour/brightness effect. */
+body.presentation-mode .result-action,
+body.presentation-mode .result-action:hover,
+body.presentation-mode .result-action:focus,
+body.presentation-mode .result-action:active {
+  transform:translateX(-50%) !important;
 }
