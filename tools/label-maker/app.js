@@ -8,7 +8,8 @@
     id,
     name,
     thumb,
-    art: Array.from({ length: 7 }, (_, index) => `assets/themes/${id}/${index + 1}.webp`)
+    art: Array.from({ length: 7 }, (_, index) => `assets/themes/${id}/${index + 1}.webp`),
+    frames: Array.from({ length: 7 }, (_, index) => `assets/frames/${id}/${index + 1}.webp`)
   });
 
   const themes = [
@@ -174,8 +175,12 @@
 
   function applySheetVariables(sheet, layout, print) {
     const vars = sheet.style;
+    const mainArtWidth = layout.cols >= 4 ? 30 : layout.cols === 3 ? 34 : 36;
     vars.setProperty('--cols', layout.cols);
     vars.setProperty('--rows', layout.rows);
+    vars.setProperty('--main-art-width', `${mainArtWidth}%`);
+    vars.setProperty('--name-zone-width', `${92 - mainArtWidth}%`);
+    vars.setProperty('--name-zone-left', `${(100 - mainArtWidth) / 2}%`);
     if (print) {
       vars.setProperty('--label-w', `${layout.width}mm`);
       vars.setProperty('--label-h', `${layout.height}mm`);
@@ -212,17 +217,19 @@
     else if (compactLength > 14) nameElement.classList.add('name-long');
     nameElement.textContent = name;
 
-    const decorationPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-    const decorationOffsets = [0, 1, 3, 5];
-    decorationPositions.forEach((position, index) => {
-      const image = document.createElement('img');
-      image.className = `label-art art-${position}`;
-      image.src = theme.art[(variationIndex + decorationOffsets[index]) % theme.art.length];
-      image.alt = '';
-      image.setAttribute('aria-hidden', 'true');
-      label.append(image);
-    });
-    label.append(nameElement);
+    const frame = document.createElement('img');
+    frame.className = 'label-frame';
+    frame.src = theme.frames[variationIndex % theme.frames.length];
+    frame.alt = '';
+    frame.setAttribute('aria-hidden', 'true');
+
+    const mainImage = document.createElement('img');
+    mainImage.className = 'label-main-art';
+    mainImage.src = theme.art[variationIndex % theme.art.length];
+    mainImage.alt = '';
+    mainImage.setAttribute('aria-hidden', 'true');
+
+    label.append(frame, mainImage, nameElement);
     return label;
   }
 
