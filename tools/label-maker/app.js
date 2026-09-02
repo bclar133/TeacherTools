@@ -44,6 +44,7 @@
     sheetLayout: $('#sheetLayout'),
     startPosition: $('#startPosition'),
     fontSize: $('#fontSize'),
+    extraBlankLabels: $('#extraBlankLabels'),
     themePicker: $('#themePicker'),
     pageSummary: $('#pageSummary'),
     emptyState: $('#emptyState'),
@@ -54,7 +55,7 @@
     toast: $('#toast')
   };
 
-  const state = { theme: 'woodland', names: [], toastTimer: 0, renderTimer: 0 };
+  const state = { theme: 'woodland', names: [], blankCount: 0, toastTimer: 0, renderTimer: 0 };
 
   function normalizeLine(line) {
     return line.trim().replace(/\s+/g, ' ');
@@ -205,36 +206,17 @@
     }
   }
 
-  function makeLabel(name, theme, variationIndex = 0) {
+  function makeLabel(name, theme, variationIndex = 0, decoratedBlank = false) {
     const label = document.createElement('article');
     label.className = 'label-slot';
     label.dataset.labelTheme = theme.id;
-    if (!name) {
+    if (!name && !decoratedBlank) {
       label.classList.add('blank');
       label.setAttribute('aria-hidden', 'true');
       return label;
     }
 
-    label.setAttribute('aria-label', `Label for ${name}`);
-    const nameElement = document.createElement('span');
-    nameElement.className = 'label-name';
-    const words = name.trim().split(/\s+/).filter(Boolean);
-    const compactLength = name.replace(/\s/g, '').length;
-    const longestWord = Math.max(1, ...words.map((word) => word.length));
-    const scale = words.length <= 1
-      ? Math.min(1, 7.2 / longestWord)
-      : Math.min(1, 8.5 / longestWord, 18 / compactLength);
-    const safeScale = Math.max(.38, scale);
-    nameElement.style.setProperty('--name-scale', safeScale.toFixed(3));
-    nameElement.classList.add(words.length <= 1 ? 'single-name' : 'multi-name');
-    if (safeScale < .58) nameElement.classList.add('name-xxlong');
-    else if (safeScale < .72) nameElement.classList.add('name-xlong');
-    else if (safeScale < .9) nameElement.classList.add('name-long');
-
-    const nameText = document.createElement('span');
-    nameText.className = 'label-name-text';
-    nameText.textContent = name.replace(/-/g, '\u2011');
-    nameElement.append(nameText);
+    label.setAttribute('aria-label', name ? `Label for ${name}` : 'Blank decorated label');
 
     const frame = document.createElement('div');
     frame.className = 'label-frame';
@@ -247,7 +229,27 @@
     mainImage.alt = '';
     mainImage.setAttribute('aria-hidden', 'true');
 
-    label.append(frame, mainImage, nameElement);
+    label.append(frame, mainImage);
+
+    if (name) {
+      const nameElement = document.createElement('span');
+      nameElement.className = 'label-name';
+      const words = name.trim().split(/\s+/).filter(Boolean);
+      const compactLength = name.replace(/\s/g, '').length;
+      const longestWord = Math.max(1, ...words.map((word) => word.length));
+      const scale = words.length <= 1
+        ? Math.min(1, 7.2 / longestWord)
+        : Math.min(1, 8.5 / longestWord, 18 / compactLength);
+      const safeScale = Math.max(.38, scale);
+      nameElement.style.setProperty('--name-scale', safeScale.toFixed(3));
+      nameElement.classList.add(words.length <= 1 ? 'single-name' : 'multi-name');
+
+      const nameText = document.createElement('span');
+      nameText.className = 'label-name-text';
+      nameText.textContent = name.replace(/-/g, '\u2011');
+      nameElement.append(nameText);
+      label.append(nameElement);
+    }
     return label;
   }
 
@@ -261,7 +263,10 @@
     for (let position = 0; position < capacity; position += 1) {
       const globalPosition = pageIndex * capacity + position;
       const nameIndex = globalPosition - startOffset;
-      sheet.append(makeLabel(nameIndex >= 0 ? state.names[nameIndex] : '', theme, Math.max(0, nameIndex)));
+      const totalLabels = state.names.length + state.blankCount;
+      const hasName = nameIndex >= 0 && nameIndex < state.names.length;
+      const isExtraBlank = nameIndex >= state.names.length && nameIndex < totalLabels;
+      sheet.append(makeLabel(hasName ? state.names[nameIndex] : '', theme, Math.max(0, nameIndex), isExtraBlank));
     }
     return sheet;
   }
@@ -269,6 +274,9 @@
   function render() {
     const entries = rawRosterEntries(refs.namesInput.value);
     state.names = formatEntries(entries);
+    const requestedBlanks = Number.parseInt(refs.extraBlankLabels.value, 10) || 0;
+    state.blankCount = Math.min(50, Math.max(0, requestedBlanks));
+    if (String(state.blankCount) !== refs.extraBlankLabels.value) refs.extraBlankLabels.value = state.blankCount;
     refs.studentCount.textContent = state.names.length;
 
     const layout = layouts[refs.sheetLayout.value] || layouts.standard24;
@@ -278,20 +286,24 @@
     const startPosition = Math.min(capacity, Math.max(1, requestedStart));
     if (String(startPosition) !== refs.startPosition.value) refs.startPosition.value = startPosition;
     const startOffset = startPosition - 1;
-    const pageCount = state.names.length ? Math.ceil((startOffset + state.names.length) / capacity) : 0;
+    const totalLabels = state.names.length + state.blankCount;
+    const pageCount = totalLabels ? Math.ceil((startOffset + totalLabels) / capacity) : 0;
     const theme = themes.find((item) => item.id === state.theme) || themes[0];
 
-    refs.emptyState.hidden = state.names.length > 0;
+    refs.emptyState.hidden = totalLabels > 0;
     refs.printPages.replaceChildren();
     refs.printOutput.replaceChildren();
     refs.printOutput.setAttribute('aria-hidden', 'true');
 
-    if (!state.names.length) {
-      refs.pageSummary.textContent = 'Add names to begin';
+    if (!totalLabels) {
+      refs.pageSummary.textContent = 'Add names or blank labels to begin';
       return;
     }
 
-    refs.pageSummary.textContent = `${layout.label} · ${state.names.length} label${state.names.length === 1 ? '' : 's'} · ${pageCount} page${pageCount === 1 ? '' : 's'}`;
+    const labelSummary = state.blankCount
+      ? `${state.names.length} named + ${state.blankCount} blank`
+      : `${state.names.length} label${state.names.length === 1 ? '' : 's'}`;
+    refs.pageSummary.textContent = `${layout.label} · ${labelSummary} · ${pageCount} page${pageCount === 1 ? '' : 's'}`;
     for (let page = 0; page < pageCount; page += 1) {
       refs.printPages.append(makeSheet(page, layout, startOffset, theme, false));
       refs.printOutput.append(makeSheet(page, layout, startOffset, theme, true));
@@ -338,16 +350,16 @@
   refs.sheetLayout.addEventListener('change', render);
   refs.startPosition.addEventListener('input', scheduleRender);
   refs.fontSize.addEventListener('change', render);
+  refs.extraBlankLabels.addEventListener('input', scheduleRender);
   refs.cleanBtn.addEventListener('click', cleanNames);
   refs.sortBtn.addEventListener('click', sortNames);
   refs.clearBtn.addEventListener('click', clearNames);
   refs.printBtn.addEventListener('click', async () => {
-    if (!state.names.length) {
-      toast('Add at least one student name first.');
-      refs.namesInput.focus();
+    render();
+    if (!state.names.length && !state.blankCount) {
+      toast('Add student names or choose some blank labels first.');
       return;
     }
-    render();
     refs.printOutput.setAttribute('aria-hidden', 'false');
     if (document.fonts?.ready) await document.fonts.ready;
     window.print();

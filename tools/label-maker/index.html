@@ -97,7 +97,11 @@
               </select>
             </label>
           </div>
-          <p class="helper">Choose a simple size for labels you will cut out, or match a common pre-cut label sheet. Use “Start at label” when the first sheet is partly used.</p>
+          <div class="format-row">
+            <label class="field-label" for="extraBlankLabels">Extra blank labels</label>
+            <input id="extraBlankLabels" type="number" min="0" max="50" value="0" inputmode="numeric">
+          </div>
+          <p class="helper">Blank labels are added after the student names using the same theme. Use “Start at label” when the first sheet is partly used.</p>
         </section>
 
         <button class="print-button" id="printBtn" type="button"><span aria-hidden="true">🖨️</span> Print / Save as PDF</button>
