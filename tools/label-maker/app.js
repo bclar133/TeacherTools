@@ -175,7 +175,7 @@
 
   function applySheetVariables(sheet, layout, print) {
     const vars = sheet.style;
-    const mainArtWidth = layout.cols >= 4 ? 30 : layout.cols === 3 ? 34 : 36;
+    const mainArtWidth = layout.cols >= 4 ? 28 : layout.cols === 3 ? 31 : 34;
     vars.setProperty('--cols', layout.cols);
     vars.setProperty('--rows', layout.rows);
     vars.setProperty('--main-art-width', `${mainArtWidth}%`);
@@ -211,11 +211,23 @@
     label.setAttribute('aria-label', `Label for ${name}`);
     const nameElement = document.createElement('span');
     nameElement.className = 'label-name';
+    const words = name.trim().split(/\s+/).filter(Boolean);
     const compactLength = name.replace(/\s/g, '').length;
-    if (compactLength > 30) nameElement.classList.add('name-xxlong');
-    else if (compactLength > 22) nameElement.classList.add('name-xlong');
-    else if (compactLength > 14) nameElement.classList.add('name-long');
-    nameElement.textContent = name;
+    const longestWord = Math.max(1, ...words.map((word) => word.length));
+    const scale = words.length <= 1
+      ? Math.min(1, 7.2 / longestWord)
+      : Math.min(1, 8.5 / longestWord, 18 / compactLength);
+    const safeScale = Math.max(.38, scale);
+    nameElement.style.setProperty('--name-scale', safeScale.toFixed(3));
+    nameElement.classList.add(words.length <= 1 ? 'single-name' : 'multi-name');
+    if (safeScale < .58) nameElement.classList.add('name-xxlong');
+    else if (safeScale < .72) nameElement.classList.add('name-xlong');
+    else if (safeScale < .9) nameElement.classList.add('name-long');
+
+    const nameText = document.createElement('span');
+    nameText.className = 'label-name-text';
+    nameText.textContent = name.replace(/-/g, '\u2011');
+    nameElement.append(nameText);
 
     const frame = document.createElement('img');
     frame.className = 'label-frame';

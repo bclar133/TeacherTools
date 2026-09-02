@@ -214,25 +214,27 @@ textarea:focus,select:focus,input:focus { border-color:var(--accent); box-shadow
   top:50%;
   width:var(--name-zone-width);
   max-height:78%;
-  padding:3.2% 4.5%;
+  padding:2.6% 3%;
   transform:translate(-50%,-50%);
   border:1px solid var(--name-plate-border);
   border-radius:999px;
   background:var(--name-plate-bg);
   box-shadow:0 1px 5px rgba(25,38,58,.12);
+  display:grid;
+  place-items:center;
   font-family:var(--label-font);
-  font-size:var(--screen-name-size);
+  font-size:calc(var(--screen-name-size) * var(--name-scale,1));
   font-weight:900;
-  line-height:.94;
-  word-break:normal;
-  overflow-wrap:anywhere;
+  line-height:1;
   text-align:center;
-  text-wrap:balance;
   text-shadow:0 1px 0 rgba(255,255,255,.72);
 }
-.label-name.name-long { font-size:calc(var(--screen-name-size) * .8); border-radius:18px; }
-.label-name.name-xlong { font-size:calc(var(--screen-name-size) * .66); border-radius:16px; }
-.label-name.name-xxlong { font-size:calc(var(--screen-name-size) * .54); border-radius:14px; }
+.label-name-text { display:block; width:100%; max-width:100%; hyphens:none; -webkit-hyphens:none; }
+.label-name.single-name .label-name-text { white-space:nowrap; word-break:keep-all; overflow-wrap:normal; }
+.label-name.multi-name .label-name-text { white-space:normal; word-break:normal; overflow-wrap:normal; text-wrap:balance; }
+.label-name.name-long { border-radius:18px; }
+.label-name.name-xlong { border-radius:16px; }
+.label-name.name-xxlong { border-radius:14px; }
 .label-frame { position:absolute; z-index:2; inset:0; width:100%; height:100%; object-fit:fill; pointer-events:none; }
 .label-main-art { position:absolute; z-index:3; top:3%; right:1.5%; width:var(--main-art-width); height:94%; object-fit:contain; object-position:center; pointer-events:none; }
 
@@ -299,10 +301,7 @@ textarea:focus,select:focus,input:focus { border-color:var(--accent); box-shadow
   }
   .print-sheet:last-child { break-after:auto; page-break-after:auto; }
   .print-sheet .label-slot { border-width:.25mm; }
-  .print-sheet .label-name { font-size:var(--print-name-size); }
-  .print-sheet .label-name.name-long { font-size:calc(var(--print-name-size) * .8); }
-  .print-sheet .label-name.name-xlong { font-size:calc(var(--print-name-size) * .66); }
-  .print-sheet .label-name.name-xxlong { font-size:calc(var(--print-name-size) * .54); }
+  .print-sheet .label-name { font-size:calc(var(--print-name-size) * var(--name-scale,1)); }
 }
 
 @media (prefers-reduced-motion:reduce) {
