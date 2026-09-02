@@ -176,10 +176,11 @@
   function applySheetVariables(sheet, layout, print) {
     const vars = sheet.style;
     const mainArtWidth = layout.cols >= 4 ? 28 : layout.cols === 3 ? 31 : 34;
-    const nameZoneStart = 9;
-    const nameZoneEnd = 100 - mainArtWidth - 3;
     const frameX = 90 / 600 * 100;
     const frameY = 72 / 600 * (layout.width / layout.height) * 100;
+    const mainArtRight = 1.5;
+    const nameZoneStart = frameX;
+    const nameZoneEnd = 100 - mainArtRight - mainArtWidth;
     vars.setProperty('--cols', layout.cols);
     vars.setProperty('--rows', layout.rows);
     vars.setProperty('--main-art-width', `${mainArtWidth}%`);
