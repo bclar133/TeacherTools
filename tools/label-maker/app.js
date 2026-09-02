@@ -206,15 +206,23 @@
     label.setAttribute('aria-label', `Label for ${name}`);
     const nameElement = document.createElement('span');
     nameElement.className = 'label-name';
-    if (name.length > 27) nameElement.classList.add('name-xlong');
-    else if (name.length > 18) nameElement.classList.add('name-long');
+    const compactLength = name.replace(/\s/g, '').length;
+    if (compactLength > 30) nameElement.classList.add('name-xxlong');
+    else if (compactLength > 22) nameElement.classList.add('name-xlong');
+    else if (compactLength > 14) nameElement.classList.add('name-long');
     nameElement.textContent = name;
 
-    const image = document.createElement('img');
-    image.className = 'label-art';
-    image.src = theme.art[variationIndex % theme.art.length];
-    image.alt = '';
-    label.append(nameElement, image);
+    const decorationPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    const decorationOffsets = [0, 1, 3, 5];
+    decorationPositions.forEach((position, index) => {
+      const image = document.createElement('img');
+      image.className = `label-art art-${position}`;
+      image.src = theme.art[(variationIndex + decorationOffsets[index]) % theme.art.length];
+      image.alt = '';
+      image.setAttribute('aria-hidden', 'true');
+      label.append(image);
+    });
+    label.append(nameElement);
     return label;
   }
 
