@@ -176,11 +176,17 @@
   function applySheetVariables(sheet, layout, print) {
     const vars = sheet.style;
     const mainArtWidth = layout.cols >= 4 ? 28 : layout.cols === 3 ? 31 : 34;
+    const nameZoneStart = 9;
+    const nameZoneEnd = 100 - mainArtWidth - 3;
+    const frameX = 90 / 600 * 100;
+    const frameY = 72 / 600 * (layout.width / layout.height) * 100;
     vars.setProperty('--cols', layout.cols);
     vars.setProperty('--rows', layout.rows);
     vars.setProperty('--main-art-width', `${mainArtWidth}%`);
-    vars.setProperty('--name-zone-width', `${92 - mainArtWidth}%`);
-    vars.setProperty('--name-zone-left', `${(100 - mainArtWidth) / 2}%`);
+    vars.setProperty('--name-zone-width', `${nameZoneEnd - nameZoneStart}%`);
+    vars.setProperty('--name-zone-left', `${(nameZoneStart + nameZoneEnd) / 2}%`);
+    vars.setProperty('--frame-border-x', `${frameX}%`);
+    vars.setProperty('--frame-border-y', `${frameY}%`);
     if (print) {
       vars.setProperty('--label-w', `${layout.width}mm`);
       vars.setProperty('--label-h', `${layout.height}mm`);
@@ -229,10 +235,9 @@
     nameText.textContent = name.replace(/-/g, '\u2011');
     nameElement.append(nameText);
 
-    const frame = document.createElement('img');
+    const frame = document.createElement('div');
     frame.className = 'label-frame';
-    frame.src = theme.frames[variationIndex % theme.frames.length];
-    frame.alt = '';
+    frame.style.setProperty('--frame-image', `url("${theme.frames[variationIndex % theme.frames.length]}")`);
     frame.setAttribute('aria-hidden', 'true');
 
     const mainImage = document.createElement('img');
