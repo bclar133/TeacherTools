@@ -22,7 +22,17 @@
     makeTheme('celebration', 'Celebration', '#ffedc2'),
     makeTheme('science', 'Science Lab', '#deeffa'),
     makeTheme('garden', 'Flower Garden', '#ffe1eb'),
-    makeTheme('robots', 'Robot Workshop', '#e1e9ee')
+    makeTheme('robots', 'Robot Workshop', '#e1e9ee'),
+    makeTheme('maths', 'Maths', '#e8f1ff'),
+    makeTheme('digital', 'Digital Technologies', '#e7f4ff'),
+    makeTheme('construction', 'Mining & Construction', '#fff0c9'),
+    makeTheme('music', 'Music', '#f2e7ff'),
+    makeTheme('art', 'Art', '#fff0db'),
+    makeTheme('literature', 'Literature', '#f4eadf'),
+    makeTheme('geography', 'Geography', '#e3f4df'),
+    makeTheme('ancient', 'Ancient History', '#f2e3c4'),
+    makeTheme('surf', 'Surf & Beach', '#dff7fa'),
+    makeTheme('workshop', 'Workshop', '#edf0f2')
   ];
 
   const layouts = {
@@ -141,10 +151,9 @@
       button.tabIndex = theme.id === state.theme ? 0 : -1;
       button.innerHTML = `
         <div class="theme-thumb" style="--thumb-bg:${theme.thumb}">
-          ${theme.art.slice(0, 3).map((art) => `<img src="${art}" alt="">`).join('')}
+          <img src="${theme.art[0]}" alt="">
         </div>
         <span class="theme-name">${theme.name}</span>
-        <span class="theme-count">7 designs</span>
       `;
       button.addEventListener('click', () => selectTheme(theme.id));
       button.addEventListener('keydown', (event) => {
