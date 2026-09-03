@@ -235,7 +235,7 @@ textarea:focus,select:focus,input:focus { border-color:var(--accent); box-shadow
   border-image-source:var(--frame-image);
   border-image-slice:72 90;
   border-image-width:var(--frame-border-y) var(--frame-border-x);
-  border-image-repeat:stretch;
+  border-image-repeat:stretch round;
   pointer-events:none;
 }
 .label-main-art { position:absolute; z-index:3; top:3%; right:1.5%; width:var(--main-art-width); height:94%; object-fit:contain; object-position:center; pointer-events:none; }

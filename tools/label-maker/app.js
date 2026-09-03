@@ -9,7 +9,7 @@
     name,
     thumb,
     art: Array.from({ length: 7 }, (_, index) => `assets/themes/${id}/${index + 1}.webp`),
-    frames: Array.from({ length: 7 }, (_, index) => `assets/frames/${id}/${index + 1}.webp?v=2`)
+    frames: Array.from({ length: 7 }, (_, index) => `assets/frames/${id}/${index + 1}.webp?v=3`)
   });
 
   const themes = [
